@@ -27,4 +27,6 @@ router.get('/get/',  Institute.get);
 
 router.post('/get/type',  Institute.gettype);
 
+router.post('/get/users',  Institute.getusers);
+
 module.exports = router;

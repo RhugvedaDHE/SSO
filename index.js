@@ -3,7 +3,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const application = express(); // initialize our express app
 
-
+const cors = require('cors');
+application.use(cors({
+    origin: '*'
+}));
  
 // Setting up port
 // const connUri = process.env.MONGO_LOCAL_CONN_URL;
