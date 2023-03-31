@@ -3,6 +3,7 @@ const router = express.Router();
 require('dotenv').config();
 const {check} = require('express-validator');
 const validate = require('../middlewares/validate');
+const authenticate = require('../middlewares/authenticate');
 const Institute = require('../controllers/instituteController');
 
 
@@ -23,7 +24,7 @@ router.post('/create', [
     check('contact_person_email').not().isEmpty().withMessage('Contact person email is required'),
 ], validate, Institute.create);
 
-router.get('/get/',  Institute.get);
+router.get('/get/', authenticate, Institute.get);
 
 router.post('/get/type',  Institute.gettype);
 

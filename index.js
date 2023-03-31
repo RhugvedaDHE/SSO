@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const application = express(); // initialize our express app
+const passport = require("passport");
 
 const cors = require('cors');
 application.use(cors({
@@ -13,6 +14,10 @@ application.use(cors({
 let PORT = process.env.PORT || 3000;
 application.use(bodyParser.urlencoded({ extended: true })); // parse requests of content-type - application/x-www-form-urlencoded
 application.use(bodyParser.json()); // parse requests of content-type - application/json
+
+//=== 3 - INITIALIZE PASSPORT MIDDLEWARE
+application.use(passport.initialize());
+require("./middlewares/jwt")(passport);
 
 //setting flash 
 // application.use(flash());
