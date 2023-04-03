@@ -35,6 +35,13 @@ var classRouter = require('./routes/class');
 var instituteRouter = require('./routes/institute');
 var instituteProgrammeRouter = require('./routes/instituteProgramme');
 var authRouter = require('./routes/auth');
+var entityTypeRouter = require('./routes/entityType');
+var subjectRouter = require('./routes/subject');
+var courseRouter = require('./routes/course');
+var departmentRouter = require('./routes/department');
+var organisationTypeRouter = require('./routes/organisationType');
+var semesterRouter = require('./routes/semester');
+var progSubRouter = require('./routes/programmeSubject');
 
 application.use('/api/v1/country', countryRouter);
 application.use('/api/v1/role', roleRouter);
@@ -50,6 +57,13 @@ application.use('/api/v1/class', classRouter);
 application.use('/api/v1/institute', instituteRouter);
 application.use('/api/v1/instprog', instituteProgrammeRouter);
 application.use('/api/v1/auth', authRouter);
+application.use('/api/v1/enttype', entityTypeRouter);
+application.use('/api/v1/subject', subjectRouter);
+application.use('/api/v1/course', courseRouter);
+application.use('/api/v1/department', departmentRouter);
+application.use('/api/v1/organisationtype', organisationTypeRouter);
+application.use('/api/v1/semester', semesterRouter);
+application.use('/api/v1/programmesubject', progSubRouter);
 
 //=== 5 - START SERVER
 application.listen(PORT, () => console.log('hello:'+PORT+'/'));

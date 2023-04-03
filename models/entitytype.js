@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Programme extends Model {
+  class EntityType extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -11,20 +11,9 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Programme.belongsToMany(models.Institute,{
-        through: "InstituteProgramme",
-        as: "programmeId",
-        foreignKey: "programme_id"
-      })
-
-      Programme.belongsToMany(models.Subject,{
-        through: "ProgrammeSubject",
-        as: "pId",
-        foreignKey: "programme_id"
-      })
     }
   }
-  Programme.init({
+  EntityType.init({
     name: DataTypes.STRING,
     is_active: {
       type: DataTypes.BOOLEAN,
@@ -32,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     sequelize,
-    modelName: 'Programme',
+    modelName: 'EntityType',
   });
-  return Programme;
+  return EntityType;
 };

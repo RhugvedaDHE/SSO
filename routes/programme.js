@@ -8,7 +8,13 @@ const Programme = require('../controllers/programmeController');
 
 router.post('/create', [
     check('name').not().isEmpty().withMessage('Programme name is required'),
+    check('duration').not().isEmpty().withMessage('Duration name is required'),
 ], validate, Programme.create);
+
+router.post('/update', [
+    check('programme_id').not().isEmpty().withMessage('Programme name is required'),
+    check('duration').not().isEmpty().withMessage('Duration name is required'),
+], validate, Programme.update);
 
 router.get('/get/',  Programme.get);
 

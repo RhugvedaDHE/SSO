@@ -4,10 +4,10 @@ const bcrypt = require('bcryptjs');
 
 const User = require('../models').User;
 const UserRole = require('../models').UserRole;
-const Faculty = require('../models').Faculty;
+const Staff = require('../models').Staff;
 const Role = require('../models').Role;
 const UserPersonalDetails = require('../models').UserPersonalDetails;
-const InstituteFaculty = require('../models').InstituteFaculty;
+const InstituteStaff = require('../models').InstituteStaff;
 const StudentEnrollment = require('../models').StudentEnrollment;
 
 const { success, errorResponse, validation } = require("../responseApi");
@@ -29,10 +29,8 @@ exports.register = function (req, res) {
             phone: req.body.phone,
             email: req.body.email,
         })
-        .then( (user) => {     
-            console.log("ushfdhvbdfhdsgsdgsd", user)      
-            console.log("ushfdhvbdfhdsgsdgsxdgsdgsdggd", user.id)      
-            //save user id and college id in students and faculties table
+        .then( (user) => { 
+            //save user id and college id in students and staff table
              UserRole.create({
                 user_id: user.id,
                 role_id: req.body.role_id,
@@ -60,22 +58,21 @@ exports.register = function (req, res) {
                             res.status(400).json(errorResponse("enrollment", 400));
                         })
                     }
-                    //check if faculty
+                    //check if staff
                     else if(req.body.role_id == 6){
-                        console.log("heeeeeeeeeeeeeerrrrrrrrrrrrrrrrrrrrrrrrrrr")
-                         Faculty.create({
+                         Staff.create({
                             user_id: user.id,
-                        }).then( (faculty) =>{
+                        }).then( (staff) =>{
                             if(req.body.institute_type_id == null && req.body.institute_id == null){
                                 res.status(400).json(errorResponse("Select valid Institute and programme!", 400));
                             }
-                             InstituteFaculty.create({
+                             InstituteStaff.create({
                                 institute_id: req.body.institute_id,
-                                faculty_id: faculty.id,
+                                staff_id: staff.id,
                                 role_id: req.body.role_id,
                                 institute_type_id: req.body.institute_type_id,    
-                            }).then((instituteFaculty)=> {
-                                res.status(200).json(success("Faculty-User created successfully"))  
+                            }).then((instituteStaff)=> {
+                                res.status(200).json(success("Staff-User created successfully"))  
                             }).catch((error)=>{
                                 res.status(400).json(errorResponse(error, 400));
                             })

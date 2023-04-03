@@ -13,6 +13,17 @@ exports.create = function (req, res){
     })
 }
 
+exports.update = function (req, res){
+    Programme.update(
+        { duration: req.body.duration },
+        { where: { id: req.body.programme_id} },       
+    ).then(programme => {
+        res.status(200).json(success("Programme updated successfully!", programme))
+    }).catch(error => {
+        res.status(400).json(errorResponse(error, 400));
+    })
+}
+
 exports.get = async function (req, res){
     await Programme.findAll({
         where: {

@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class InstituteFaculty extends Model {
+  class InstituteStaff extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -11,23 +11,23 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      InstituteFaculty.belongsTo(models.Institute, {
+      InstituteStaff.belongsTo(models.Institute, {
         foreignKey: 'institute_id'
       }),
-      InstituteFaculty.belongsTo(models.Faculty, {
-        foreignKey: 'faculty_id'
+      InstituteStaff.belongsTo(models.Staff, {
+        foreignKey: 'staff_id'
       }),
-      InstituteFaculty.belongsTo(models.Role, {
+      InstituteStaff.belongsTo(models.Role, {
         foreignKey: 'role_id'
       }),
-      InstituteFaculty.belongsTo(models.InstituteType, {
+      InstituteStaff.belongsTo(models.InstituteType, {
         foreignKey: 'institute_type_id'
       })
     }
   }
-  InstituteFaculty.init({
+  InstituteStaff.init({
     institute_id: DataTypes.INTEGER,
-    faculty_id: DataTypes.INTEGER,
+    staff_id: DataTypes.INTEGER,
     role_id: DataTypes.INTEGER,
     institute_type_id: DataTypes.INTEGER,
     current_sem: DataTypes.STRING,
@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     sequelize,
-    modelName: 'InstituteFaculty',
+    modelName: 'InstituteStaff',
   });
-  return InstituteFaculty;
+  return InstituteStaff;
 };
