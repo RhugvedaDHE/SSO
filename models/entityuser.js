@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class OTP extends Model {
+  class EntityUser extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -11,24 +11,25 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      EntityUser.belongsTo(models.User, {
+        foreignKey: 'user_id'
+      })
+      EntityUser.belongsTo(models.EntityType, {
+        foreignKey: 'entity_type_id'
+      })
     }
   }
-  OTP.init({
-    otp_type: DataTypes.STRING,
-    otp: DataTypes.STRING,
-    attempts: DataTypes.INTEGER,
-    details: DataTypes.STRING,
+  EntityUser.init({
+    user_id: DataTypes.INTEGER,
+    entity_type_id: DataTypes.INTEGER,
+    cio_id: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: 1
-    },
-    time:{
-      type: DataTypes.DATE, 
-      defaultValue: DataTypes.NOW 
     }
   }, {
     sequelize,
-    modelName: 'OTP',
+    modelName: 'EntityUser',
   });
-  return OTP;
+  return EntityUser;
 };

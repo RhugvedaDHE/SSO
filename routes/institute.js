@@ -24,7 +24,7 @@ router.post('/create', [
     check('contact_person_email').not().isEmpty().withMessage('Contact person email is required'),
 ], validate, Institute.create);
 
-router.get('/get/', authenticate, Institute.get);
+router.get('/get/', Institute.get);
 
 router.post('/get/type',  Institute.gettype);
 

@@ -18,6 +18,7 @@ exports.get = async function (req, res){
     await State.findAll({
         where: {
             is_active: true,
+            country_id: req.body.country_id
         },
         include: [{
             model: Country,

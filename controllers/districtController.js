@@ -18,6 +18,7 @@ exports.get = async function (req, res){
     await District.findAll({
         where: {
             is_active: true,
+            state_id: req.body.state_id
         },
         include: [{
             model: State,

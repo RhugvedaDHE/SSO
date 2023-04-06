@@ -2,33 +2,19 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('OTPs', {
+    await queryInterface.createTable('Designations', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      otp_type: {
+      name: {
         type: Sequelize.STRING
-      },
-      otp: {
-        type: Sequelize.STRING
-      },
-      attempts: {
-        type: Sequelize.INTEGER
-      },
-      details: {
-        type: Sequelize.STRING,
-        unique: true
       },
       is_active: {
         type: Sequelize.BOOLEAN,
         default: true
-      },
-      time: {
-        allowNull: false,
-        type: Sequelize.DATE
       },
       createdAt: {
         allowNull: false,
@@ -41,6 +27,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('OTPs');
+    await queryInterface.dropTable('Designations');
   }
 };

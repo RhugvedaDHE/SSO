@@ -44,4 +44,8 @@ router.post('/login', [
     check('password').not().isEmpty().isLength({min: 8}).withMessage('Must be at least 8 chars long'),
 ], validate, Auth.login);
 
+// router.post('/get-user-from-email', [
+//     check('email').not().isEmpty().withMessage('Your email is required'),
+// ], validate, Auth.getUserFromEmail);
+
 module.exports = router;

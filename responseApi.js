@@ -1,3 +1,4 @@
+const axios = require('axios');
 /**
  * @desc    Send any success response
  *
@@ -15,15 +16,6 @@ exports.success = (message, data) => {
       "message": message
     };
   };
-//   {
-//     "rs": "S",
-//     "rc": "PM000",
-//     "rd": "Success",
-//     "pd": "",
-//     "em": "",
-//     "message": "Student details saved successfully"
-// }
-
   
   /**
    * @desc    Send any error response
@@ -50,17 +42,6 @@ exports.success = (message, data) => {
       "message": "Please Check your Details!"
     };
   };
-  
-//   {
-//     "rs": "F",
-//     "rc": "400",
-//     "rd": "Failure",
-//     "pd": "",
-//     "em": {
-//         "mobile_no": "This mobile number already exists!"
-//     },
-//     "message": "Please check your details"
-// }
 
   /**
    * @desc    Send any validation response
@@ -75,3 +56,38 @@ exports.success = (message, data) => {
       errors
     };
   };
+
+  exports.getUserDetails = (email) => {
+    const URL = 'localhost:3000/api/v1/auth/get-user-from-email';
+   
+      try {
+        const response = axios.post(URL, {
+          email: email
+        });
+        return response;
+      } catch (err) {
+        return err;
+      }
+   
+  };
+
+  //call email microservice
+  exports.EmailNotification=(from, to , subject, template,otp,username,password)=>{
+    console.log("email microservice")
+        try {
+          const response = axios.post('http://localhost:3002/otp/send-email', {
+            from: from,
+            to: to,
+            subject:subject,
+            template:template,
+            otp:otp,
+            username:username,
+            password:password
+          });
+          return response;
+         
+        } catch (error) {
+          res.status(500).send('Error forwarding request to microservice');
+        }
+    
+      }

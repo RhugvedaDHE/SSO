@@ -42,6 +42,10 @@ var departmentRouter = require('./routes/department');
 var organisationTypeRouter = require('./routes/organisationType');
 var semesterRouter = require('./routes/semester');
 var progSubRouter = require('./routes/programmeSubject');
+var otpRouter = require('./routes/otp');
+var designationRouter = require('./routes/designation');
+var companyRouter = require('./routes/company');
+var userpersonaldetailsRouter = require('./routes/userpersonaldetails');
 
 application.use('/api/v1/country', countryRouter);
 application.use('/api/v1/role', roleRouter);
@@ -64,6 +68,10 @@ application.use('/api/v1/department', departmentRouter);
 application.use('/api/v1/organisationtype', organisationTypeRouter);
 application.use('/api/v1/semester', semesterRouter);
 application.use('/api/v1/programmesubject', progSubRouter);
+application.use('/api/v1/otp', otpRouter);
+application.use('/api/v1/designation', designationRouter);
+application.use('/api/v1/company', companyRouter);
+application.use('/api/v1/userpersonaldetails', userpersonaldetailsRouter);
 
 //=== 5 - START SERVER
 application.listen(PORT, () => console.log('hello:'+PORT+'/'));
