@@ -14,13 +14,18 @@ exports.create = function (req, res){
 }
 
 exports.get = async function (req, res){
-    await country.findAll({
-        where: {
-            is_active: true,
-        }
-    }).then(countries => {
-        res.status(200).json(success("Countries fetched successfully!", countries))
-    }).catch(error => {
-        res.status(400).json(errorResponse(error, 400));
+  await country
+    .findAll({
+      where: {
+        is_active: true,
+      },
     })
+    .then((countries) => {
+      res
+        .status(200)
+        .json(success("Countries fetched successfully!", countries));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
 }

@@ -12,11 +12,10 @@ const opts = {
 module.exports = passport => {
     passport.use(
         new JwtStrategy(opts, (jwt_payload, done) => {
-            console.log("user found(****************************************************************", jwt_payload);
+           
             User.findByPk(jwt_payload.userId)
                 .then(user => {
                     user.role_id = jwt_payload.userRole;
-                    console.log(user)
                     if (user) return done(null, user);
                     return done(null, false);
                 })

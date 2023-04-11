@@ -1,10 +1,10 @@
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
-const bcrypt = require('bcryptjs');
-const db = require('../models');
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const bcrypt = require("bcryptjs");
+const db = require("../models");
 //const uploadFile = require("../middleware/upload");
 
-const Company = require('../models').Company;
+const Company = require("../models").Company;
 //const Op = db.Sequelize.Op;
 
 const { success, errorResponse, validation } = require("../responseApi");
@@ -67,60 +67,61 @@ exports.create = async (req, res) => {
             });
         });
     });*/
-  
 };
 
-
-exports.findAll = async function (req, res){
+exports.findAll = async function (req, res) {
   await Company.findAll({
-      where: {
-          active: true,
-      }
-  }).then(companies => {
-      res.status(200).json(success("Companies fetched successfully!", companies))
-  }).catch(error => {
-      res.status(400).json(errorResponse(error, 400));
+    where: {
+      active: true,
+    },
   })
-}
+    .then((companies) => {
+      res
+        .status(200)
+        .json(success("Companies fetched successfully!", companies));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};
 
-
-exports.findOne = async function (req, res){
+exports.findOne = async function (req, res) {
   await Company.findAll({
-      where: {
-          id: req.body.id,
-      }
-  }).then(companies => {
-      res.status(200).json(success("Company Details!", companies))
-  }).catch(error => {
-      res.status(400).json(errorResponse(error, 400));
+    where: {
+      id: req.body.id,
+    },
   })
-}
-
+    .then((companies) => {
+      res.status(200).json(success("Company Details!", companies));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};
 
 // Find a single Company with an id
-
 
 // Update a Company by the id in the request
 exports.update = (req, res) => {
   const id = req.params.id;
 
   Company.update(req.body, {
-    where: { id: id }
+    where: { id: id },
   })
-    .then(num => {
+    .then((num) => {
       if (num == 1) {
         res.send({
-          message: "Company was updated successfully."
+          message: "Company was updated successfully.",
         });
       } else {
         res.send({
-          message: `Cannot update Company with id=${id}. Maybe Company was not found or req.body is empty!`
+          message: `Cannot update Company with id=${id}. Maybe Company was not found or req.body is empty!`,
         });
       }
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(500).send({
-        message: "Error updating Company with id=" + id
+        message: "Error updating Company with id=" + id,
       });
     });
 };
@@ -130,22 +131,22 @@ exports.delete = (req, res) => {
   const id = req.params.id;
 
   Company.destroy({
-    where: { id: id }
+    where: { id: id },
   })
-    .then(num => {
+    .then((num) => {
       if (num == 1) {
         res.send({
-          message: "Comapany was deleted successfully!"
+          message: "Comapany was deleted successfully!",
         });
       } else {
         res.send({
-          message: `Cannot delete Comapany with id=${id}. Maybe Comapany was not found!`
+          message: `Cannot delete Comapany with id=${id}. Maybe Comapany was not found!`,
         });
       }
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(500).send({
-        message: "Could not delete Comapany with id=" + id
+        message: "Could not delete Comapany with id=" + id,
       });
     });
 };
@@ -154,15 +155,15 @@ exports.delete = (req, res) => {
 exports.deleteAll = (req, res) => {
   Company.destroy({
     where: {},
-    truncate: false
+    truncate: false,
   })
-    .then(nums => {
+    .then((nums) => {
       res.send({ message: `${nums} Company were deleted successfully!` });
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while removing all companies."
+          err.message || "Some error occurred while removing all companies.",
       });
     });
 };
@@ -170,13 +171,13 @@ exports.deleteAll = (req, res) => {
 // Find all active Company
 exports.findAllActive = (req, res) => {
   Company.findAll({ where: { active: true } })
-    .then(data => {
+    .then((data) => {
       res.send(data);
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving tutorials."
+          err.message || "Some error occurred while retrieving tutorials.",
       });
     });
 };
@@ -184,14 +185,16 @@ exports.findAllActive = (req, res) => {
 exports.userCompanies = (req, res) => {
   const ownerTypeId = req.body.ownerTypeId;
   const userId = req.body.userId;
-  Company.findAll({ where: { OwnerTypeId: ownerTypeId, user_id: userId, active: true } })
-    .then(data => {
+  Company.findAll({
+    where: { OwnerTypeId: ownerTypeId, user_id: userId, active: true },
+  })
+    .then((data) => {
       res.send(data);
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving tutorials."
+          err.message || "Some error occurred while retrieving tutorials.",
       });
     });
 };
@@ -258,4 +261,3 @@ exports.upload = async (req,res) => {
         });
       });
 };*/
-

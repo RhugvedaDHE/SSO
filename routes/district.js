@@ -11,6 +11,6 @@ router.post('/create', [
     check('state_id').not().isEmpty().withMessage('State is required'),
 ], validate, District.create);
 
-router.get('/get/',  District.get);
+router.post('/get/',  District.get);
 
 module.exports = router;

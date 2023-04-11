@@ -11,6 +11,6 @@ router.post('/create', [
     check('district_id').not().isEmpty().withMessage('District is required'),
 ], validate, City.create);
 
-router.get('/get/',  City.get);
+router.post('/get/',  City.get);
 
 module.exports = router;

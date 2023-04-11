@@ -20,7 +20,6 @@ module.exports = {
       },
       details: {
         type: Sequelize.STRING,
-        unique: true
       },
       is_active: {
         type: Sequelize.BOOLEAN,
@@ -38,7 +37,15 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
-    });
+    },{
+      indexes: [
+          {
+              unique: true,
+              fields: ['otp_type', 'details']
+          }
+      ]
+    },
+    );
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('OTPs');

@@ -11,6 +11,6 @@ router.post('/create', [
     check('country_id').not().isEmpty().withMessage('Country is required'),
 ], validate, State.create);
 
-router.get('/get/',  State.get);
+router.post('/get/',  State.get);
 
 module.exports = router;

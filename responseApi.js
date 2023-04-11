@@ -71,11 +71,23 @@ exports.success = (message, data) => {
    
   };
 
+  exports.userCredentials=(email,phone)=>{
+     console.log("usernnamme is:  ", email, phone) 
+    // Create a username by taking the first part of the email address and adding the last four digits of the phone number
+    const username = email.split('@')[0] + phone.toString().slice(-4);
+    const password=phone
+    return{
+      username: username,
+      password: password
+    }
+  
+    };
+
   //call email microservice
   exports.EmailNotification=(from, to , subject, template,otp,username,password)=>{
     console.log("email microservice")
         try {
-          const response = axios.post('http://localhost:3002/otp/send-email', {
+          const response = axios.post('http://172.20.10.4:3002/otp/send-email', {
             from: from,
             to: to,
             subject:subject,
