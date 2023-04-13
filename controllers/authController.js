@@ -12,6 +12,7 @@ const InstituteStaff = require("../models").InstituteStaff;
 const StudentEnrollment = require("../models").StudentEnrollment;
 const UserDesignation = require("../models").UserDesignation;
 const EntityUser = require("../models").EntityUser;
+const InstituteProgramme = require("../models").InstituteProgramme;
 const OTP = require("../models").OTP;
 
 const Sequelize = require("sequelize");
@@ -99,20 +100,30 @@ exports.register = function (req, res) {
 
                 .then((userpersonaldetails) => {
                   //check if student
-                  if (req.body.role_id == 5) {
-                    StudentEnrollment.create({
-                      user_id: user.id,
-                      institute_programme_id: req.body.institute_programme_id,
-                      current_class: req.body.class,
-                    })
-                      .then((studentEnrollment) => {
-                        res
-                          .status(200)
-                          .json(success("Student-User created successfully"));
+                  if (req.body.role_id == 7) {
+                    InstituteProgramme.findOne({
+                      where: {
+                        institute_id: req.body.institute_id,
+                        programme_id: req.body.programme_id
+                      }
+                    }).then((instprog)=>{
+                      StudentEnrollment.create({
+                        user_id: user.id,
+                        institute_programme_id: instprog.id,
+                        current_class: req.body.class,
                       })
-                      .catch((error) => {
-                        res.status(400).json(errorResponse("enrollment", 400));
-                      });
+                        .then((studentEnrollment) => {
+                          res
+                            .status(200)
+                            .json(success("Student-User created successfully"));
+                        })
+                        .catch((error) => {
+                          res.status(400).json(errorResponse("enrollment", 400));
+                        });
+                    }).catch((error)=>{
+                      res.status(400).json(errorResponse("InstProg", 400));
+                    })
+                    
                   }
                   //check if staff or non-teaching
                   else if (req.body.role_id == 6 || req.body.role_id == 2) {
