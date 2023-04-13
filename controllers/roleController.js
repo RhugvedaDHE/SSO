@@ -30,6 +30,17 @@ exports.get = async function (req, res) {
     });
 };
 
+exports.getAll= async function (req, res) {
+  await Role.findAll({
+  })
+    .then((roles) => {
+      res.status(200).json(success("Roles fetched successfully!", roles));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};
+
 exports.getUserRole = function (req, res) {
   UserRole.findOne({
     attributes:["id"],

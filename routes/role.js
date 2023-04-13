@@ -12,6 +12,7 @@ router.post('/create', [
 ], validate, Role.create);
 
 router.get('/get/',  Role.get);
+router.get('/all/get',  Role.getAll);
 router.get('/get/user-role', authenticate, Role.getUserRole);
 
 module.exports = router;
