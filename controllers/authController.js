@@ -6,6 +6,7 @@ const User = require("../models").User;
 const UserRole = require("../models").UserRole;
 const Staff = require("../models").Staff;
 const Role = require("../models").Role;
+const Company = require("../models").Company;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
 const InstituteStaff = require("../models").InstituteStaff;
 const StudentEnrollment = require("../models").StudentEnrollment;
@@ -113,8 +114,8 @@ exports.register = function (req, res) {
                         res.status(400).json(errorResponse("enrollment", 400));
                       });
                   }
-                  //check if staff
-                  else if (req.body.role_id == 6) {
+                  //check if staff or non-teaching
+                  else if (req.body.role_id == 6 || req.body.role_id == 2) {
                     Staff.create({
                       user_id: user.id,
                     }).then((staff) => {
@@ -140,8 +141,8 @@ exports.register = function (req, res) {
                         .then((instituteStaff) => {
                           UserDesignation.create({
                             user_id: user.id,
-                            employment_type_id: req.body.employment_type_id,
-                            designation_id: designation_id,
+                            employementtype_id: req.body.employment_type_id,
+                            designation_id: req.body.designation_id,
                           })
                             .then((userDes) => {
                               res
@@ -151,16 +152,16 @@ exports.register = function (req, res) {
                                 );
                             })
                             .catch((error) => {
-                              res.status(400).json(errorResponse(error, 400));
+                              res.status(400).json(errorResponse("userdes here", 400));
                             });
                         })
                         .catch((error) => {
-                          res.status(400).json(errorResponse(error, 400));
+                          res.status(400).json(errorResponse("institutestaff", 400));
                         });
                     });
-                  } else if (req.body.role_id == 7) {
+                  } else if (req.body.role_id == 12) {
                     //Company admin
-                    console.log("In company create");
+                    console.log("In company create", req.body);
 
                     const companyData = {
                       organization_type_id: req.body.organization_type_id,
@@ -190,7 +191,7 @@ exports.register = function (req, res) {
                       .then((company) => {
                         const companyHRData = {
                           user_id: user.id,
-                          entity_type_id: 7,
+                          entity_type_id: 2,
                           cio_id: company.id,
                           active: req.body.active ? req.body.active : true,
                         };
@@ -213,9 +214,9 @@ exports.register = function (req, res) {
                           });
                       })
                       .catch((error) => {
-                        res.status(400).json(errorResponse(error, 400));
+                        res.status(400).json(errorResponse("comp create error", 400));
                       });
-                  } else if (req.body.role_id == 8 || req.body.role_id == 9) {
+                  } else if (req.body.role_id == 10 || req.body.role_id == 11) {
                     //Company HR or Guide
                     console.log("In company HR/Guide create");
 

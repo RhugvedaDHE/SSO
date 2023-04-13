@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('InstituteStaff', {
+    await queryInterface.createTable('InstituteStaffs', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -13,9 +13,9 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: { model: 'Institutes', key: 'id' },
       },
-      faculty_id: {
+      staff_id: {
         type: Sequelize.INTEGER,
-        references: { model: 'Staff', key: 'id' },
+        references: { model: 'Staffs', key: 'id' },
       },
       role_id: {
         type: Sequelize.INTEGER,
@@ -56,6 +56,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('InstituteFaculties');
+    await queryInterface.dropTable('InstituteStaffs');
   }
 };

@@ -34,11 +34,11 @@ module.exports = (sequelize, DataTypes) => {
     employee_id: DataTypes.STRING,
     is_teaching:  {
       type: DataTypes.BOOLEAN,
-      defaultValue: 0
+      defaultValue: true
     },
     is_active:  {
       type: DataTypes.BOOLEAN,
-      defaultValue: 1
+      defaultValue: true
     }
   }, {
     sequelize,
