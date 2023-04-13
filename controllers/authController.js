@@ -103,6 +103,7 @@ exports.register = function (req, res) {
                   if (req.body.role_id == 7) {
                     console.log("inside studenntttttttttttttttttttttttttttttt");
                     InstituteProgramme.findOne({
+                      attributes:["id"],
                       where: {
                         institute_id: req.body.institute_id,
                         programme_id: req.body.programme_id
