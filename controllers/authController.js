@@ -101,12 +101,15 @@ exports.register = function (req, res) {
                 .then((userpersonaldetails) => {
                   //check if student
                   if (req.body.role_id == 7) {
+                    console.log("inside studenntttttttttttttttttttttttttttttt");
                     InstituteProgramme.findOne({
                       where: {
                         institute_id: req.body.institute_id,
                         programme_id: req.body.programme_id
-                      }
-                    }).then((instprog)=>{
+                      },
+                    }).then((instprog) => {
+                      console.log("instprog", instprog)
+                      console.log("instprog", instprog.id)
                       StudentEnrollment.create({
                         user_id: user.id,
                         institute_programme_id: instprog.id,
