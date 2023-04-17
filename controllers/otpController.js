@@ -6,6 +6,7 @@ const {
   errorResponse,
   validation,
   EmailNotification,
+  SMSNotification
 } = require("../responseApi");
 const bcrypt = require("bcryptjs");
 require("dotenv").config();
@@ -49,8 +50,18 @@ exports.generate = async function (req, res) {
           res.status(400).json(errorResponse("Failed to Forward OTP", 400));
         }
       } else {
-        //send OTP to phone
-        res.status(200).json(success("OTP generated successfully!", otp));
+        const template = "Hello! OTP To verifyPhone is " + otp + ". OTP is valid for 10 minutes.-Directorate of Higher Education."
+        console.log(template);
+        response = SMSNotification(
+          req.body.to,
+          template
+        );
+        console.log("heyyy response id: ", response);
+        if (response) {
+          res.status(200).json(success("OTP generated successfully!", otp));
+        } else {
+          res.status(400).json(errorResponse("Failed to Forward OTP", 400));
+        }
       }
     } else if (!results) {
       OTP.create({
@@ -60,12 +71,41 @@ exports.generate = async function (req, res) {
         attempts: 1,
       })
         .then((result) => {
-          if (req.body.type == "email") {
+          if (req.body.type == "email" || req.body.type == "forgot_password") {
             //send OTP to email ;
-            res.status(200).json(success("OTP generated successfully!", otp));
+            
+            const subject = "";
+            ((req.body.type == "forgot_password") ? subject = "Forgot password OTP" : "OTP for SUGAM");
+            const template = "otp";
+            response = EmailNotification(
+              process.env.EMAIL_FROM,
+              req.body.to,
+              subject,
+              template,
+              otp,
+              "",
+              ""
+            );
+            console.log("heyyy response id: ", response);
+            if (response) {
+              res.status(200).json(success("OTP generated successfully!", otp));
+            } else {
+              res.status(400).json(errorResponse("Failed to Forward OTP", 400));
+            }
           } else {
             //send OTP to phone
-            res.status(200).json(success("OTP generated successfully!", otp));
+            const template = "Hello! OTP To verifyPhone is " + otp + ". OTP is valid for 10 minutes.-Directorate of Higher Education."
+            console.log(template);
+            response = SMSNotification(
+              req.body.to,
+              template
+            );
+            console.log("heyyy response id: ", response);
+            if (response) {
+              res.status(200).json(success("OTP generated successfully!", otp));
+            } else {
+              res.status(400).json(errorResponse("Failed to Forward OTP", 400));
+            }
           }
         })
         .catch((error) => {
