@@ -229,7 +229,7 @@ exports.register = function (req, res) {
                           });
                       })
                       .catch((error) => {
-                        res.status(400).json(errorResponse("comp create error", 400));
+                        res.status(400).json(errorResponse(error, 400));
                       });
                   } else if (req.body.role_id == 10 || req.body.role_id == 11) {
                     //Company HR or Guide
