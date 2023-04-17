@@ -559,11 +559,16 @@ exports.forgotPassword = function (req, res) {
     where: { email: req.body.email },
   })
   .then((user) => {
-    var salt = bcrypt.genSaltSync(10);
-    user.password = bcrypt.hashSync(req.body.password, salt);
-    user.save();
+    if(user){
+      var salt = bcrypt.genSaltSync(10);
+      user.password = bcrypt.hashSync(req.body.password, salt);
+      user.save();
 
-    res.status(200).json(success("User Password updated successfully!"));
+      res.status(200).json(success("User Password updated successfully!"));
+    }
+    else{
+      res.status(400).json(errorResponse("User Not Found!", 400));
+    }
   }).catch((error)=>{
     res.status(400).json(errorResponse("User Password not changed successsfully!", 400));
   });
