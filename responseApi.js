@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { Curl } = require("node-libcurl");
+// const { Curl } = require("node-libcurl");
 /**
  * @desc    Send any success response
  *
