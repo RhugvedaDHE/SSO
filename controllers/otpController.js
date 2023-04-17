@@ -18,8 +18,10 @@ exports.generate = async function (req, res) {
     where: {
       details: req.body.to,
       is_active: true,
+      otp_type: req.body.type
     },
   }).then((results) => {
+    console.log("results: ", results)
     if (results && results.attempts <= 2) {
       const attempts = results.attempts + 1;
       results.attempts = attempts;
