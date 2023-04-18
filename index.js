@@ -85,6 +85,7 @@ application.post('/q', function(req, res) {
 })
 
 //Error Handler
+var createError = require('http-errors');
 // catch 404 and forward to error handler
 application.use(function(req, res, next) {
     next(createError(400));
@@ -94,5 +95,5 @@ application.use(function(req, res, next) {
 application.use(function(err, req, res, next) {
 // set locals, only providing error in development
     console.log("inside Error Handler, ", err.message)
-    res.status(400).json(errorResponse(err.message, 400));
+    res.status().send(400); 
 });
