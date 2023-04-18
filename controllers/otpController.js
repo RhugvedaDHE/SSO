@@ -6,7 +6,7 @@ const {
   errorResponse,
   validation,
   EmailNotification,
-  SMSNotification
+  SMSNotification,
 } = require("../responseApi");
 const bcrypt = require("bcryptjs");
 require("dotenv").config();
@@ -19,10 +19,10 @@ exports.generate = async function (req, res) {
     where: {
       details: req.body.to,
       is_active: true,
-      otp_type: req.body.type
+      otp_type: req.body.type,
     },
   }).then((results) => {
-    console.log("results: ", results)
+    console.log("results: ", results);
     if (results && results.attempts <= 2) {
       const attempts = results.attempts + 1;
       results.attempts = attempts;
@@ -30,9 +30,12 @@ exports.generate = async function (req, res) {
       results.time = Date.now();
       results.save({ fields: ["attempts", "otp", "time"] });
 
-      if (req.body.type == "email") {
+      if (req.body.type == "email" || req.body.type == "forgot_password") {
         //send OTP to email ;
-        const subject = "OTP for SUGAM";
+        var subject = "";
+        req.body.type == "forgot_password"
+          ? (subject = "Forgot password OTP")
+          : "OTP for SUGAM";
         const template = "otp";
         response = EmailNotification(
           process.env.EMAIL_FROM,
@@ -50,12 +53,12 @@ exports.generate = async function (req, res) {
           res.status(400).json(errorResponse("Failed to Forward OTP", 400));
         }
       } else {
-        const template = "Hello! OTP To verifyPhone is " + otp + ". OTP is valid for 10 minutes.-Directorate of Higher Education."
+        const template =
+          "Hello! OTP To verifyPhone is " +
+          otp +
+          ". OTP is valid for 10 minutes.-Directorate of Higher Education.";
         console.log(template);
-        response = SMSNotification(
-          req.body.to,
-          template
-        );
+        response = SMSNotification(req.body.to, template);
         console.log("heyyy response id: ", response);
         if (response) {
           res.status(200).json(success("OTP generated successfully!", otp));
@@ -73,9 +76,11 @@ exports.generate = async function (req, res) {
         .then((result) => {
           if (req.body.type == "email" || req.body.type == "forgot_password") {
             //send OTP to email ;
-            
+
             const subject = "";
-            ((req.body.type == "forgot_password") ? subject = "Forgot password OTP" : "OTP for SUGAM");
+            req.body.type == "forgot_password"
+              ? (subject = "Forgot password OTP")
+              : "OTP for SUGAM";
             const template = "otp";
             response = EmailNotification(
               process.env.EMAIL_FROM,
@@ -94,12 +99,12 @@ exports.generate = async function (req, res) {
             }
           } else {
             //send OTP to phone
-            const template = "Hello! OTP To verifyPhone is " + otp + ". OTP is valid for 10 minutes.-Directorate of Higher Education."
+            const template =
+              "Hello! OTP To verifyPhone is " +
+              otp +
+              ". OTP is valid for 10 minutes.-Directorate of Higher Education.";
             console.log(template);
-            response = SMSNotification(
-              req.body.to,
-              template
-            );
+            response = SMSNotification(req.body.to, template);
             console.log("heyyy response id: ", response);
             if (response) {
               res.status(200).json(success("OTP generated successfully!", otp));
@@ -167,10 +172,10 @@ exports.verify = async function (req, res) {
             });
             email_verified = true;
           } else {
-            //forgot password           
-              otp_verified = true;
+            //forgot password
+            otp_verified = true;
           }
-          if (email_verified || phone_verified ||  otp_verified) {
+          if (email_verified || phone_verified || otp_verified) {
             res
               .status(200)
               .json(success(req.body.type + " verified successfully!"));
