@@ -54,7 +54,7 @@ exports.generate = async function (req, res) {
         }
       } else {
         const template =
-          "Hello! OTP To verifyPhone is " +
+          "Hello! OTP To verify Phone is " +
           otp +
           ". OTP is valid for 10 minutes.-Directorate of Higher Education.";
         console.log(template);
@@ -100,7 +100,7 @@ exports.generate = async function (req, res) {
           } else {
             //send OTP to phone
             const template =
-              "Hello! OTP To verifyPhone is " +
+              "Hello! OTP To verify Phone is " +
               otp +
               ". OTP is valid for 10 minutes.-Directorate of Higher Education.";
             console.log(template);

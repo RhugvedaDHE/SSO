@@ -103,37 +103,16 @@ exports.success = (message, data) => {
           res.status(500).send('Error forwarding request to microservice');
         }
     
-      }
+  }
 
       //call SMS microservice
   exports.SMSNotification=( to, template)=>{
-    // console.log("SMS microservice")
-    // const url = 'https://japi.instaalerts.zone/httpapi/QueryStringReceiver?ver=1.0&key=1XC7N4zUq8ct40avCum5AA==&dest='+ to + '&send=GOADHE&text=' + template + '';
-    //     try {
-    //       const response = axios.post(url, {
-    //         from: from,
-    //         to: to,
-    //         subject:subject,
-    //         template:template,
-    //         otp:otp,
-    //         username:username,
-    //         password:password
-    //       });
-    //       return response;
-         
-    //     } catch (error) {
-    //       res.status(500).send('Error forwarding request to microservice');
-    //     }
-    // const curlTest = new Curl();
-    // const terminate = curlTest.close.bind(curlTest);
-
-    // var Curl = require('node-libcurl').Curl;
-    // var curl = new Curl();
-    // curl.setOpt( Curl.option.URL, url);
-    // curl.setOpt( Curl.option.FOLLOWLOCATION, true );
-    // // curl.setOpt( Curl.option.HTTPPOST, [
-    // //     { name: 'login', contents: 'username' }
-    // // ]);
-    // curl.perform();
-    return 1;
+    console.log("SMS microservice")
+    const url = 'https://japi.instaalerts.zone/httpapi/QueryStringReceiver?ver=1.0&key=1XC7N4zUq8ct40avCum5AA==&dest='+ to + '&send=GOADHE&text=' + template + '';
+    try {
+      const response = axios.post(url, { });
+      return response;     
+    } catch (error) {
+      res.status(500).send('Error forwarding request to microservice');
+    }
   }
