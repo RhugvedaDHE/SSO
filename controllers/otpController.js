@@ -202,3 +202,85 @@ exports.verify = async function (req, res) {
       res.status(400).json(errorResponse(error, 400));
     });
 };
+
+exports.reset_attempts=async function (req, res) {
+  console.log("reached reset attempts")
+  const tenMinutesAgo = new Date();
+  tenMinutesAgo.setMinutes(tenMinutesAgo.getMinutes() - 10);
+
+  const results=await OTP.findOne({
+      attributes:['otp_type','details','attempts'],
+      where: {
+          attempts: 3,
+          time: {
+            [Op.lte]: tenMinutesAgo,
+          }
+      },
+    })
+    if(results){
+      // console.log('results=',results)
+      if(results.otp_type=='email'){
+          console.log("finding email is in User Table")
+          User.findOne({
+              where: {
+                email: results.details,
+              }
+            }).then((emailotp)=>{
+             console.log('email verified=',emailotp.email_verified)
+              if (emailotp.email_verified==false) {
+                  console.log("reached email verification setting attempts to 0")
+                  OTP.update({attempts:0},{where:{details:results.details}})
+                  console.log("finished resetting attempts to 0")
+                }
+            }) .catch((error) => {
+              res.status(400).json(errorResponse(error, 400));
+            });
+      }
+      if(results.otp_type=='phone'){
+          console.log("finding Phone is in User Table")
+          User.findOne({
+              where: {
+                phone: results.details,
+              }
+            }).then((phoneotp)=>{
+              if (phoneotp.phone_verified==false) {
+                  console.log("reached Phone verification setting attempts to 0")
+                  OTP.update({attempts:0},{where:{details:results.details}})
+                  console.log("finished resetting Phone attempts to 0")
+                }
+            }) .catch((error) => {
+              res.status(400).json(errorResponse(error, 400));
+            });
+      }
+     
+  }else{
+      console.log("no data to update")
+  }
+};
+
+
+
+exports.resetForgotPassword_attempts=async function (req, res) {
+  console.log("reached Forgot Password attempts")
+  const thirtyMinutesAgo = new Date();
+  thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
+
+  const results=await OTP.findOne({
+      attributes:['otp_type','details','attempts'],
+      where: {
+          attempts: 3,
+          otp_type:'forgot_password',
+          time: {
+            [Op.lte]: thirtyMinutesAgo,
+          }
+      },
+    })
+    if(results){
+                  console.log("reached forgot password resetting attemp")
+                  OTP.update({attempts:0},{where:{details:results.details,otp_type:results.otp_type}})
+                  console.log("finished resetting attempts to 0")
+             
+  }else{
+      console.log("no data to update")
+  }
+};

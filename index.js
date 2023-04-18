@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const application = express(); // initialize our express app
 const passport = require("passport");
+const cron = require('node-cron');
 
 const cors = require('cors');
 application.use(cors({
@@ -96,4 +97,13 @@ application.use(function(err, req, res, next) {
 // set locals, only providing error in development
     console.log("inside Error Handler, ", err.message)
     res.status().send(400); 
+});
+
+//cron job
+var task = cron.schedule('*/1 * * * *', async () => {
+    console.log('running a task every 1 minute');
+    Otp.reset_attempts();
+    Otp.resetForgotPassword_attempts();
+},{
+        scheduled: false 
 });
