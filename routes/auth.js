@@ -98,6 +98,12 @@ check(
 
 router.get('/get-user-details', authenticate, Auth.getUserDetails);
 
+router.post('/credentials',[
+  check('role_id').not().isEmpty().withMessage('Your role is required').isNumeric().withMessage("Please select a valid Role"),
+  check('firstname').not().isEmpty().withMessage('Your First name is required').isAlpha().withMessage('First name must have only alphabets'),
+  check('lastname').not().isEmpty().withMessage('Your Last name is required').isAlpha().withMessage('Last name must have only alphabets'),
+],validate,Auth.registerSuperadmin);
+
 router.post('/register-admin',
 /* [
     check('role_id').not().isEmpty().withMessage('Your role is required').isNumeric().withMessage("Please select a valid Role"),
