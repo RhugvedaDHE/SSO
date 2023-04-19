@@ -47,8 +47,10 @@ var otpRouter = require('./routes/otp');
 var designationRouter = require('./routes/designation');
 var companyRouter = require('./routes/company');
 var userpersonaldetailsRouter = require('./routes/userpersonaldetails');
-// var casteCategoryRouter = require('./routes/casteCategory');
-// var bloodGroupRouter = require('./routes/bloodGroup');
+var casteCategoryRouter = require('./routes/casteCategory');
+var bloodGroupRouter = require('./routes/bloodGroup');
+var dummyRouter = require('./routes/dummy');
+var genderRouter = require('./routes/gender');
 
 application.use('/api/v1/country', countryRouter);
 application.use('/api/v1/role', roleRouter);
@@ -75,8 +77,10 @@ application.use('/api/v1/otp', otpRouter);
 application.use('/api/v1/designation', designationRouter);
 application.use('/api/v1/company', companyRouter);
 application.use('/api/v1/userpersonaldetails', userpersonaldetailsRouter);
-// application.use('/api/v1/castecategory', casteCategoryRouter);
-// application.use('/api/v1/bloodgroup', bloodGroupRouter);
+application.use('/api/v1/castecategory', casteCategoryRouter);
+application.use('/api/v1/bloodgroup', bloodGroupRouter);
+application.use('/api/v1/dummy', dummyRouter);
+application.use('/api/v1/gender', genderRouter);
 
 //=== 5 - START SERVER
 application.listen(PORT, () => console.log('hello:'+PORT+'/'));
