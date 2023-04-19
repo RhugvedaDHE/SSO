@@ -1,24 +1,18 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-
 const bcrypt = require('bcryptjs');
 const db = require('../models');
-//const uploadFile = require("../middleware/upload");
 const CasteCategory = require('../models').CasteCategory;
 
-//const db = require("../models");
-
-//const CasteCategory = db.casteCategory;
 const Op = require('sequelize').Op;
+const { success, errorResponse, validation } = require("../responseApi");
 
 // Create and Save a new CasteCategory
 exports.create = async (req, res) => {
     console.log("in controller casteCategory");
 
     if (!req.body.name) {
-      res.status(400).send({
-        message: "CasteCategory name cannot be empty!"
-      });
+      res.status(400).json(success("Name is required!"));
       return;
     }
   
@@ -32,13 +26,10 @@ exports.create = async (req, res) => {
     // Save CasteCategory in the database
     CasteCategory.create(casteCategory)
       .then(data => {
-        res.send(data);
+        res.status(200).json(success("Cast category created successfully!"));
       })
       .catch(err => {
-        res.status(500).send({
-          message:
-            err.message || "Some error occurred while creating the CasteCategory."
-        });
+        res.status(400).json(success("Could not create Cast Category!"));
     });
 };
 
@@ -51,13 +42,10 @@ exports.findAll = (req, res) => {
 
   CasteCategory.findAll({ where: condition })
     .then(data => {
-      res.send(data);
+      res.status(200).json(success("Cast category fetched successfully!"));
     })
     .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving degrees."
-      });
+      res.status(400).json(success("Could not fetch Cast Categories!"));
     });
 };
 

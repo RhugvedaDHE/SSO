@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 
 const User = require("../models").User;
 const UserRole = require("../models").UserRole;
+const UserContact = require("../models").UserContact;
 const Staff = require("../models").Staff;
 const Role = require("../models").Role;
 const Company = require("../models").Company;
@@ -35,7 +36,7 @@ exports.getUserDetails = function (req, res) {
         {
           model: User,
           attributes:["email", "phone"],        
-        },
+        },         
       ],
     }
   )
@@ -51,9 +52,14 @@ exports.getUserDetails = function (req, res) {
         },
       ],
     }).then((userRole)=>{
+      const response = {
+        "User": user,
+        "user_role": userRole
+      };
+    
       res
       .status(200)
-      .json(success("User Details fetched successfully", user));
+      .json(success("User Details fetched successfully", response));
     }).catch((error)=>{
       res.status(400).json(errorResponse(error, 400));
     })
@@ -523,7 +529,7 @@ exports.login = function (req, res) {
               JSON.parse(JSON.stringify(tokendata)),
               process.env.JWT_SECRET,
               {
-                expiresIn: 86400 * 30,
+                expiresIn: 120,
               }
             );
             // jwt.verify(token, process.env.JWT_SECRET, function (err, data) {
@@ -626,7 +632,7 @@ exports.refreshToken = function (req, res) {
       }
     else{
       console.log("inside else")
-      res.status(404).json(success("User Not found!", token));
+      res.status(404).json(success("User Not found!"));
     }
     }).catch((error) =>{
       res.status(400).json(errorResponse(error, 400));

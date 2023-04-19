@@ -10,6 +10,7 @@ const BloodGroup = require('../models').BloodGroup;
 
 //const BloodGroup = db.bloodGroup;
 const Op = require('sequelize').Op;
+const { success, errorResponse, validation } = require("../responseApi");
 
 // Create and Save a new BloodGroup
 exports.create = async (req, res) => {
@@ -32,13 +33,10 @@ exports.create = async (req, res) => {
     // Save BloodGroup in the database
     BloodGroup.create(bloodGroup)
       .then(data => {
-        res.send(data);
+         res.status(200).json(success("Blood Group created successfully!"));
       })
       .catch(err => {
-        res.status(500).send({
-          message:
-            err.message || "Some error occurred while creating the BloodGroup."
-        });
+        res.status(400).json(success("Could not create Blood Group!"));
     });
 };
 
@@ -51,13 +49,10 @@ exports.findAll = (req, res) => {
 
   BloodGroup.findAll({ where: condition })
     .then(data => {
-      res.send(data);
+      res.status(200).json(success("Blood Group fetched successfully!", data));
     })
     .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving degrees."
-      });
+      res.status(400).json(success("Could not create Blood Group!"));
     });
 };
 
