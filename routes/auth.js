@@ -44,6 +44,8 @@ router.post('/login', [
     check('password').not().isEmpty().isLength({min: 8}).withMessage('Must be at least 8 chars long'),
 ], validate, Auth.login);
 
+router.post('/refresh-token', Auth.refreshToken);
+
 router.post('/update-password', [  
   check('password').isStrongPassword({
     minLength: 8,

@@ -14,6 +14,7 @@ const UserDesignation = require("../models").UserDesignation;
 const EntityUser = require("../models").EntityUser;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const OTP = require("../models").OTP;
+const tokenList = {}
 
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
@@ -508,6 +509,16 @@ exports.login = function (req, res) {
           const result = bcrypt.compareSync(req.body.password, user.password);
 
           if (result) {
+            console.log("hvhsdvfhvdfhvhdasf here!!!!!")
+            
+            var refreshToken = jwt.sign(
+              JSON.parse(JSON.stringify(tokendata)),
+              process.env.REFRESH_TOKEN_SECRET,
+              {
+                expiresIn: process.env.REFRESH_TOKEN_LIFE,
+              }
+            );
+            
             var token = jwt.sign(
               JSON.parse(JSON.stringify(tokendata)),
               process.env.JWT_SECRET,
@@ -515,12 +526,17 @@ exports.login = function (req, res) {
                 expiresIn: 86400 * 30,
               }
             );
-            jwt.verify(token, process.env.JWT_SECRET, function (err, data) {
-              // console.log(err, data);
-            });
+            // jwt.verify(token, process.env.JWT_SECRET, function (err, data) {
+            //   // console.log(err, data);
+            // });
+            const response = {
+              "token": token,
+              "refreshToken": refreshToken
+            }
+            tokenList[refreshToken] = response;
             res
               .status(200)
-              .json(success("User logged in successfully!", token));
+              .json(success("User logged in successfully!", response));
           } else {
             res
               .status(400)
@@ -573,3 +589,47 @@ exports.forgotPassword = function (req, res) {
     res.status(400).json(errorResponse("User Password not changed successsfully!", 400));
   });
 };
+
+//refresh the token
+exports.refreshToken = function (req, res) {
+  User.findOne({
+    where:{
+      id: req.body.user_id
+    }
+  }).then((user)=> {
+    // refresh the damn token
+    UserRole.findOne({
+      where: {
+        user_id: user.id,
+      },
+    })
+    .then((role) => {
+    
+      const postData = req.body;
+      // if refresh token exists
+      if((postData.refresh_token) && (postData.refresh_token in tokenList)) {
+        console.log("inside here")
+        const tokendata = {
+          username: user.username,
+          userId: user.id,
+          userRole: role.role_id,
+        };
+          const token = jwt.sign(tokendata, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_LIFE})
+          // const response = {
+          //     "token": token,
+          // }
+          // update the token in the list
+          console.log("inside reached on top here")
+          tokenList[postData.refresh_token].token = token
+          console.log("inside reached here")
+          res.status(200).json(success("User Role changed successfully!", token));
+      }
+    else{
+      console.log("inside else")
+      res.status(404).json(success("User Not found!", token));
+    }
+    }).catch((error) =>{
+      res.status(400).json(errorResponse(error, 400));
+    })
+  })  
+}

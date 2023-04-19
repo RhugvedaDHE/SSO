@@ -96,7 +96,7 @@ application.use(function(req, res, next) {
 application.use(function(err, req, res, next) {
 // set locals, only providing error in development
     console.log("inside Error Handler, ", err.message)
-    res.status().send(400); 
+    res.sendStatus(400); 
 });
 
 //cron job
