@@ -10,6 +10,6 @@ router.post('/create', [
     check('name').not().isEmpty().withMessage('City name is required'),
 ], validate, Dummy.create);
 
-router.post('/get/',  Dummy.get);
+router.get('/get/',  Dummy.get);
 
 module.exports = router;
