@@ -40,11 +40,11 @@ exports.getUserDetails = function (req, res) {
       ],
     }
   )
-  .then((user) => {
+  .then((userPersonalDetails) => {
     UserRole.findOne({
       attributes:["id"],
       where: {
-        user_id: user.user_id,       
+        user_id: userPersonalDetails.user_id,       
       },include: [
         {
           model: Role,
@@ -52,14 +52,27 @@ exports.getUserDetails = function (req, res) {
         },
       ],
     }).then((userRole)=>{
-      const response = {
-        "User": user,
-        "user_role": userRole
-      };
-    
-      res
-      .status(200)
-      .json(success("User Details fetched successfully", response));
+      UserContact.findOne(
+        {
+          where: {
+            user_id: req.user.id,
+          },include: [
+            {
+              model: User,
+              attributes:["email", "phone"],        
+            },         
+          ],
+        }
+      ).then((userContact)=>{
+        const response = {
+          "User": userPersonalDetails,
+          "user_role": userRole,
+          "user_Contact": userContact,
+        };      
+        res
+        .status(200)
+        .json(success("User Details fetched successfully", response));
+      })      
     }).catch((error)=>{
       res.status(400).json(errorResponse(error, 400));
     })
@@ -104,8 +117,10 @@ exports.register = function (req, res) {
                 phone: req.body.phone,
                 email: req.body.email,
               })
-
                 .then((userpersonaldetails) => {
+                  UserContact.create({
+                    user_id: user.id,
+                  }).then((userContact)=>{                  
                   //check if student
                   if (req.body.role_id == 7) {
                     console.log("inside studenntttttttttttttttttttttttttttttt");
@@ -268,6 +283,7 @@ exports.register = function (req, res) {
                       });
                   }
                 })
+              })
                 .catch((error) => {
                   res.status(400).json(errorResponse("here", 400));
                 });
