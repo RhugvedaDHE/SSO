@@ -546,13 +546,13 @@ exports.login = function (req, res) {
           if (result) {
             console.log("hvhsdvfhvdfhvhdasf here!!!!!")
             
-            var refreshToken = jwt.sign(
-              JSON.parse(JSON.stringify(tokendata)),
-              process.env.REFRESH_TOKEN_SECRET,
-              {
-                expiresIn: process.env.REFRESH_TOKEN_LIFE,
-              }
-            );
+            // var refreshToken = jwt.sign(
+            //   JSON.parse(JSON.stringify(tokendata)),
+            //   process.env.REFRESH_TOKEN_SECRET,
+            //   {
+            //     expiresIn: process.env.REFRESH_TOKEN_LIFE,
+            //   }
+            // );
             
             var token = jwt.sign(
               JSON.parse(JSON.stringify(tokendata)),
@@ -564,14 +564,14 @@ exports.login = function (req, res) {
             // jwt.verify(token, process.env.JWT_SECRET, function (err, data) {
             //   // console.log(err, data);
             // });
-            const response = {
-              "token": token,
-              "refreshToken": refreshToken
-            }
-            tokenList[refreshToken] = response;
+            // const response = {
+            //   "token": token,
+            //   "refreshToken": refreshToken
+            // }
+            // tokenList[refreshToken] = response;
             res
               .status(200)
-              .json(success("User logged in successfully!", response));
+              .json(success("User logged in successfully!", token));
           } else {
             res
               .status(400)
