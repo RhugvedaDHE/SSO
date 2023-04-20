@@ -11,5 +11,6 @@ router.post('/create', [
 ], validate, Department.create);
 
 router.get('/get/',  Department.get);
+router.post('/registerDepartmentUser/',  Department.registerDepartmentUser);
 
 module.exports = router;

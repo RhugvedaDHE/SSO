@@ -5,21 +5,19 @@ const bcrypt = require('bcryptjs');
 const db = require('../models');
 //const uploadFile = require("../middleware/upload");
 const BloodGroup = require('../models').BloodGroup;
+const { success, errorResponse, validation } = require("../responseApi");
 
 //const db = require("../models");
 
 //const BloodGroup = db.bloodGroup;
 const Op = require('sequelize').Op;
-const { success, errorResponse, validation } = require("../responseApi");
 
 // Create and Save a new BloodGroup
 exports.create = async (req, res) => {
     console.log("in controller bloodGroup");
 
     if (!req.body.name) {
-      res.status(400).send({
-        message: "BloodGroup name cannot be empty!"
-      });
+      res.status(400).json(errorResponse("BloodGroup name cannot be empty!", 400));
       return;
     }
   
@@ -33,10 +31,10 @@ exports.create = async (req, res) => {
     // Save BloodGroup in the database
     BloodGroup.create(bloodGroup)
       .then(data => {
-         res.status(200).json(success("Blood Group created successfully!"));
+        res.status(200).json(success("Bloodgroup created successfully!", data));
       })
-      .catch(err => {
-        res.status(400).json(success("Could not create Blood Group!"));
+      .catch(error => {
+        res.status(400).json(errorResponse(error, 400));
     });
 };
 
@@ -49,10 +47,11 @@ exports.findAll = (req, res) => {
 
   BloodGroup.findAll({ where: condition })
     .then(data => {
-      res.status(200).json(success("Blood Group fetched successfully!", data));
+      //res.send(data);
+      res.status(200).json(success("Bloodgroups fetched successfully!", data));
     })
-    .catch(err => {
-      res.status(400).json(success("Could not create Blood Group!"));
+    .catch(error => {
+      res.status(400).json(errorResponse(error, 400));
     });
 };
 
@@ -64,17 +63,14 @@ exports.findOne = (req, res) => {
   BloodGroup.findByPk(id)
     .then(data => {
       if (data) {
-        res.send(data);
+        res.status(200).json(success("Bloodgroup details fetched successfully!", data));
       } else {
-        res.status(404).send({
-          message: `Cannot find BloodGroup with id=${id}.`
-        });
+       
+        res.status(400).json(errorResponse(`Cannot find BloodGroup with id=${id}.`, 400));
       }
     })
     .catch(err => {
-      res.status(500).send({
-        message: "Error retrieving BloodGroup with id=" + id
-      });
+      res.status(400).json(errorResponse(err, 400));
     });
 };
 
@@ -87,19 +83,14 @@ exports.update = (req, res) => {
   })
     .then(num => {
       if (num == 1) {
-        res.send({
-          message: "BloodGroup was updated successfully."
-        });
+        res.status(200).json(success("BloodGroup was updated successfully/"));
+
       } else {
-        res.send({
-          message: `Cannot update BloodGroup with id=${id}. Maybe BloodGroup was not found or req.body is empty!`
-        });
+        res.status(400).json(errorResponse(`Cannot update BloodGroup with id=${id}. Maybe BloodGroup was not found or req.body is empty!`, 400));
       }
     })
     .catch(err => {
-      res.status(500).send({
-        message: "Error updating BloodGroup with id=" + id
-      });
+      res.status(400).json(errorResponse(err, 400));
     });
 };
 
@@ -112,19 +103,14 @@ exports.delete = (req, res) => {
   })
     .then(num => {
       if (num == 1) {
-        res.send({
-          message: "BloodGroup was deleted successfully!"
-        });
+        res.status(200).json(success("BloodGroup was deleted successfully/"));
+      
       } else {
-        res.send({
-          message: `Cannot delete BloodGroup with id=${id}. Maybe BloodGroup was not found!`
-        });
+        res.status(400).json(errorResponse(`Cannot delete BloodGroup with id=${id}. Maybe BloodGroup was not found!`, 400));
       }
     })
     .catch(err => {
-      res.status(500).send({
-        message: "Could not delete BloodGroup with id=" + id
-      });
+      res.status(400).json(errorResponse(err, 400));
     });
 };
 
@@ -135,13 +121,10 @@ exports.deleteAll = (req, res) => {
     truncate: false
   })
     .then(nums => {
-      res.send({ message: `${nums} BloodGroup were deleted successfully!` });
+      res.status(200).json(success(`${nums} BloodGroup were deleted successfully!`));
     })
     .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while removing all BloodGroup."
-      });
+      res.status(400).json(errorResponse(err, 400));
     });
 };
 
@@ -149,12 +132,10 @@ exports.deleteAll = (req, res) => {
 exports.findAllActive = (req, res) => {
     BloodGroup.findAll({ where: { is_active: true } })
     .then(data => {
-      res.send(data);
+      //res.send(data);
+      res.status(200).json(success("Bloodgroup Listed successfully!", data))
     })
     .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving Degrees."
-      });
+      res.status(400).json(errorResponse(err, 400));
     });
 };

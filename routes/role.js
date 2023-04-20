@@ -14,5 +14,10 @@ router.post('/create', [
 router.get('/get/',  Role.get);
 router.get('/all/get',  Role.getAll);
 router.get('/get/user-role', authenticate, Role.getUserRole);
+router.get('/get/admin-role', Role.getAllAdmins);
+
+router.get('/getInstituteAdmin/',  Role.getInstituteAdmin);
+router.get('/getUniversityAdmin/',  Role.getUniversityAdmin);
+router.get('/getDepartmentAdmin/',  Role.getDepartmentAdmin);
 
 module.exports = router;

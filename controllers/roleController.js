@@ -41,6 +41,20 @@ exports.getAll= async function (req, res) {
     });
 };
 
+exports.getAllAdmins= async function (req, res) {
+  await Role.findAll({
+    where: {
+      is_admin: true,
+    }
+  })
+    .then((roles) => {
+      res.status(200).json(success("Admin Roles fetched successfully!", roles));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};
+
 exports.getUserRole = function (req, res) {
   UserRole.findOne({
     attributes:["id"],
@@ -58,5 +72,44 @@ exports.getUserRole = function (req, res) {
     .json(success("User Role fetched successfully", userRole));
   }).catch((error)=>{
     res.status(400).json(errorResponse(error, 400));
+  })
+};
+
+//Count Institute Admin
+exports.getInstituteAdmin=async function(req,res){
+  const count = await Project.findAndCountAll({
+      where: {
+          role_id:8
+        } 
+    }).then(instAdmin => {
+      res.status(200).json(success("Institute Admin fetched successfully!", instAdmin))
+  }).catch(error => {
+      res.status(400).json(errorResponse(error, 400));
+  })
+};
+
+//Count University Admin
+exports.getUniversityAdmin=async function(req,res){
+  const count = await Project.findAndCountAll({
+      where: {
+          role_id:9
+        } 
+    }).then(uniAdmin => {
+      res.status(200).json(success("University Admin fetched successfully!", uniAdmin))
+  }).catch(error => {
+      res.status(400).json(errorResponse(error, 400));
+  })
+};
+
+//Count Department Admin
+exports.getDepartmentAdmin=async function(req,res){
+  const count = await Project.findAndCountAll({
+      where: {
+          role_id:10
+        } 
+    }).then(deptAdmin => {
+      res.status(200).json(success("Department Admin fetched successfully!", deptAdmin))
+  }).catch(error => {
+      res.status(400).json(errorResponse(error, 400));
   })
 };

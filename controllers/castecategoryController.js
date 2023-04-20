@@ -1,18 +1,26 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+
 const bcrypt = require('bcryptjs');
 const db = require('../models');
+//const uploadFile = require("../middleware/upload");
 const CasteCategory = require('../models').CasteCategory;
-
-const Op = require('sequelize').Op;
 const { success, errorResponse, validation } = require("../responseApi");
+
+//const db = require("../models");
+
+//const CasteCategory = db.casteCategory;
+const Op = require('sequelize').Op;
 
 // Create and Save a new CasteCategory
 exports.create = async (req, res) => {
     console.log("in controller casteCategory");
 
     if (!req.body.name) {
-      res.status(400).json(success("Name is required!"));
+      res.status(400).send({
+        message: "CasteCategory name cannot be empty!"
+      });
+      
       return;
     }
   
@@ -26,10 +34,11 @@ exports.create = async (req, res) => {
     // Save CasteCategory in the database
     CasteCategory.create(casteCategory)
       .then(data => {
-        res.status(200).json(success("Cast category created successfully!"));
+        //res.send(data);
+        res.status(200).json(success("Caste category created successfully!", data));
       })
-      .catch(err => {
-        res.status(400).json(success("Could not create Cast Category!"));
+      .catch(error => {
+        res.status(400).json(errorResponse(error, 400));
     });
 };
 
@@ -42,10 +51,11 @@ exports.findAll = (req, res) => {
 
   CasteCategory.findAll({ where: condition })
     .then(data => {
-      res.status(200).json(success("Cast category fetched successfully!"));
+      //res.send(data);
+      res.status(200).json(success("Caste categories fetched successfully!", data));
     })
-    .catch(err => {
-      res.status(400).json(success("Could not fetch Cast Categories!"));
+    .catch(error => {
+      res.status(400).json(errorResponse(error, 400));
     });
 };
 
@@ -57,17 +67,14 @@ exports.findOne = (req, res) => {
   CasteCategory.findByPk(id)
     .then(data => {
       if (data) {
-        res.send(data);
+        //res.send(data);
+        res.status(200).json(success("Caste category fetched successfully!", data));
       } else {
-        res.status(404).send({
-          message: `Cannot find CasteCategory with id=${id}.`
-        });
+        res.status(400).json(errorResponse("Cannot find caste category.", 400));
       }
     })
-    .catch(err => {
-      res.status(500).send({
-        message: "Error retrieving CasteCategory with id=" + id
-      });
+    .catch(error => {
+      res.status(400).json(errorResponse(error, 400));
     });
 };
 
@@ -80,19 +87,13 @@ exports.update = (req, res) => {
   })
     .then(num => {
       if (num == 1) {
-        res.send({
-          message: "CasteCategory was updated successfully."
-        });
+        res.status(200).json(success("Caste category was updated successfully!"));
       } else {
-        res.send({
-          message: `Cannot update CasteCategory with id=${id}. Maybe CasteCategory was not found or req.body is empty!`
-        });
+        res.status(400).json(errorResponse("Please check if caste exist, "+error, 400));
       }
     })
-    .catch(err => {
-      res.status(500).send({
-        message: "Error updating CasteCategory with id=" + id
-      });
+    .catch(error => {
+      res.status(400).json(errorResponse(error, 400));
     });
 };
 
@@ -105,19 +106,13 @@ exports.delete = (req, res) => {
   })
     .then(num => {
       if (num == 1) {
-        res.send({
-          message: "CasteCategory was deleted successfully!"
-        });
+        res.status(200).json(success("Caste Category deleted successfully!!"));
       } else {
-        res.send({
-          message: `Cannot delete CasteCategory with id=${id}. Maybe CasteCategory was not found!`
-        });
+        res.status(400).json(errorResponse(error, 400));
       }
     })
-    .catch(err => {
-      res.status(500).send({
-        message: "Could not delete CasteCategory with id=" + id
-      });
+    .catch(error => {
+      res.status(400).json(errorResponse(error, 400));
     });
 };
 
@@ -128,13 +123,11 @@ exports.deleteAll = (req, res) => {
     truncate: false
   })
     .then(nums => {
-      res.send({ message: `${nums} CasteCategory were deleted successfully!` });
+      res.status(200).json(success("Caste Categories deleted successfully!!", data));
+      
     })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while removing all CasteCategory."
-      });
+    .catch(error => {
+      res.status(400).json(errorResponse(error, 400));
     });
 };
 
@@ -142,12 +135,10 @@ exports.deleteAll = (req, res) => {
 exports.findAllActive = (req, res) => {
     CasteCategory.findAll({ where: { is_active: true } })
     .then(data => {
-      res.send(data);
+      //res.send(data);
+      res.status(200).json(success("Caste categories fetched successfully!", data))
     })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving Degrees."
-      });
+    .catch(error => {
+      res.status(400).json(errorResponse(error, 400));
     });
 };

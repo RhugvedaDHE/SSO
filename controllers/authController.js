@@ -7,6 +7,7 @@ const UserRole = require("../models").UserRole;
 const UserContact = require("../models").UserContact;
 const Staff = require("../models").Staff;
 const Role = require("../models").Role;
+const City = require("../models").City;
 const Company = require("../models").Company;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
 const InstituteStaff = require("../models").InstituteStaff;
@@ -58,8 +59,20 @@ exports.getUserDetails = function (req, res) {
             user_id: req.user.id,
           },include: [
             {
-              model: User,
-              attributes:["email", "phone"],        
+              model: City,
+              attributes:["name"],        
+            },  
+            {
+              model: State,
+              attributes:["name"],        
+            },  
+            {
+              model: District,
+              attributes:["name"],        
+            },  
+            {
+              model: Country,
+              attributes:["name"],        
             },         
           ],
         }
@@ -572,6 +585,40 @@ exports.login = function (req, res) {
     .catch((error) => res.status(400).json(errorResponse(error, 400)));
 };
 
+//update profile
+exports.updateProfile = function (req, res) {
+  UserPersonalDetails.findOne({
+    where: { id: req.user.id },
+  })
+  .then((userPersonalDetails) => {
+    let physically_disabled = req.body.physically_disabled == "yes" ? true : false;
+
+    userPersonalDetails.gender = req.body.gender;
+    userPersonalDetails.blood_group = req.body.blood_group;
+    userPersonalDetails.nationality = req.body.nationality;
+    userPersonalDetails.physically_disabled = physically_disabled;
+    userPersonalDetails.save();
+
+    UserContact.findOne({
+      where: { id: req.user.id },
+    }).then((userContact) =>{
+      userContact.address = req.body.address;
+      userContact.country_id = req.body.country_id;
+      userContact.taluka_id = req.body.city_id;
+      userContact.village = req.body.village;
+      userContact.pincode = req.body.pincode;
+      userContact.city = req.body.city;
+      userContact.save()
+    })
+    res
+      .status(200)
+      .json(errorResponse("Profile updated successfully!"));
+  }).catch((error) => {
+    res
+    .status(400)
+    .json(errorResponse("Please check your details!", 400));
+  })
+};
 
 //updatePassword
 exports.updatePassword = function (req, res) {
@@ -610,6 +657,19 @@ exports.forgotPassword = function (req, res) {
   }).catch((error)=>{
     res.status(400).json(errorResponse("User Password not changed successsfully!", 400));
   });
+};
+
+exports.verifyUsers = function (req, res) {
+  User.findOne({
+    where: { id: req.body.user_id },
+  })
+  .then((user) => { 
+    user.is_verified = true;
+    user.save();
+    res.status(200).json(success("User Verifed successfully!"));
+  }).catch((error) =>{
+    res.status(400).json(errorResponse("Could not verify users!", 400));
+  })
 };
 
 //refresh the token
