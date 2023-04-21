@@ -6,7 +6,7 @@ const UserPersonalDetails = require('../models').UserPersonalDetails;
 const UserDesignation = require('../models').UserDesignation;
 const EntityUser = require('../models').EntityUser;
 const bcrypt = require('bcryptjs');
-const { success, errorResponse, validation } = require("../responseApi");
+const { success, errorResponse, validation, userCredentials } = require("../responseApi");
 
 exports.create = function (req, res) {
   console.log(req.body);
@@ -58,7 +58,7 @@ var hash = bcrypt.hashSync(userCredentialsdata.password.toString(), salt);
           //save superAdmin Role
            UserRole.create({
               user_id: user.id,
-              role_id: 12,
+              role_id: 9,
               preferred_role: true,
               is_active:true
           })             
