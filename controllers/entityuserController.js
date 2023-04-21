@@ -4,19 +4,20 @@ const UserPersonalDetails = require('../models').UserPersonalDetails;
 const Institute = require('../models').Institute;
 const Departments = require('../models').Department;
 const Company = require('../models').Company;
+const UserRole = require('../models').UserRole;
 
 const { success, errorResponse, validation } = require("../responseApi");
 
 
 exports.getInstituteAdmins=async function(req,res){
-    const data=await EntityUser.findAll({
-        attributes:['user_id','cio_id'],
+    const data=await UserRole.findAll({
+        attributes:['user_id'],
         where:{
-            entity_type_id:1
+            role_id:8
         }
-    })
+    });
     if(data){
-        //console.log("data=",data)
+        
         var jsondata=[]
         for(const d of data){
              let userdetails= await UserPersonalDetails.findOne({
@@ -25,22 +26,28 @@ exports.getInstituteAdmins=async function(req,res){
                     user_id:d.user_id
                 }
             });
-            console.log("userdetails=",userdetails)
             
-            //console.log("userdetails.firstname=",userdetails.firstname)
+            let EUser=await EntityUser.findOne({
+                attributes:['cio_id'],
+                where:{
+                    user_id:d.user_id
+                }
+            })
+            
             let Institutename=await Institute.findOne({
                     attributes:['name'],
                     where:{
-                        id:d.cio_id
+                        id:EUser.cio_id
                 }
                 });
-           jsondata.push({"firstname":userdetails.firstname,"lastname":userdetails.lastname,"Institute_Name":Institutename.name})
-           //console.log("jsondata=",jsondata)
+           jsondata.push({"firstname":userdetails.firstname,"lastname":userdetails.lastname,"Department_Name":Institutename.name})
+           
         }
         return  res.status(200).json(success("Institute Admins fetched successfully!", jsondata))
     }else{
         return res.status(400).json(errorResponse(error, 400));
     }
+   
 }
 
 

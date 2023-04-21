@@ -1,5 +1,5 @@
-const express = require("express");
-const Department = require("../models").Department;
+const express = require('express');
+const Department = require('../models').Department;
 const User = require('../models').User;
 const UserRole = require('../models').UserRole;
 const UserPersonalDetails = require('../models').UserPersonalDetails;
@@ -58,7 +58,7 @@ var hash = bcrypt.hashSync(userCredentialsdata.password.toString(), salt);
           //save superAdmin Role
            UserRole.create({
               user_id: user.id,
-              role_id: 9,
+              role_id: 12,
               preferred_role: true,
               is_active:true
           })             
@@ -107,8 +107,49 @@ var hash = bcrypt.hashSync(userCredentialsdata.password.toString(), salt);
               }).catch((error)=> {
                   res.status(400).json(errorResponse("Failed to Add Admin Role", 400));
               })     
-      })    
- 
-  
+      })      
 };
+
+
+exports.getDepartmentAdmins=async function(req,res){
+  const data=await UserRole.findAll({
+      attributes:['user_id'],
+      where:{
+          role_id:4
+      }
+  });
+  if(data){
+      
+      var jsondata=[]
+      for(const d of data){
+           let userdetails= await UserPersonalDetails.findOne({
+              attributes:['firstname','lastname'],
+              where:{
+                  user_id:d.user_id
+              }
+          });
+          
+          let EUser=await EntityUser.findOne({
+              attributes:['cio_id'],
+              where:{
+                  user_id:d.user_id
+              }
+          })
+          
+          let Departmentname=await Department.findOne({
+                  attributes:['name'],
+                  where:{
+                      id:EUser.cio_id
+              }
+              });
+         jsondata.push({"firstname":userdetails.firstname,"lastname":userdetails.lastname,"Department_Name":Departmentname.name})
+         
+      }
+      return  res.status(200).json(success("Institute Admins fetched successfully!", jsondata))
+  }else{
+      return res.status(400).json(errorResponse(error, 400));
+  }
+ 
+}
+
 

@@ -1,31 +1,20 @@
-const express = require("express");
-const Sequelize = require("sequelize");
+const express = require('express');
+const Sequelize = require('sequelize');
 
-const InstituteType = require("../models").InstituteType;
-const City = require("../models").City;
-const State = require("../models").State;
-const District = require("../models").District;
-const Country = require("../models").Country;
-const Institute = require("../models").Institute;
-const InstituteFaculty = require("../models").InstituteFaculty;
-const Faculty = require("../models").Faculty;
-const UserPersonalDetails = require("../models").UserPersonalDetails;
-const User = require("../models").User;
+const InstituteType = require('../models').InstituteType;
+const City = require('../models').City;
+const State = require('../models').State;
+const District = require('../models').District;
+const Country = require('../models').Country;
+const Institute = require('../models').Institute;
+const InstituteFaculty = require('../models').InstituteFaculty;
+const Faculty = require('../models').Faculty;
+const UserPersonalDetails = require('../models').UserPersonalDetails;
+const User = require('../models').User;
+const UserRole = require('../models').UserRole;
 
 const { success, errorResponse, validation } = require("../responseApi");
 
-const sequelize = new Sequelize("test", "postgres", "Veda@2196", {
-  host: "localhost",
-  dialect: "postgres",
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000,
-  },
-  // http://docs.sequelizejs.com/manual/tutorial/querying.html#operators
-  operatorsAliases: false,
-});
 
 exports.create = function (req, res) {
   Institute.create({
@@ -168,3 +157,44 @@ exports.getusers = async function (req, res) {
       res.status(400).json(errorResponse(error, 400));
     });
 };
+
+exports.getUniversityAdmins=async function(req,res){
+  const data=await UserRole.findAll({
+      attributes:['user_id'],
+      where:{
+          role_id:8
+      }
+  });
+  if(data){
+      
+      var jsondata=[]
+      for(const d of data){
+           let userdetails= await UserPersonalDetails.findOne({
+              attributes:['firstname','lastname'],
+              where:{
+                  user_id:d.user_id
+              }
+          });
+          
+          let EUser=await EntityUser.findOne({
+              attributes:['cio_id'],
+              where:{
+                  user_id:d.user_id
+              }
+          })
+          
+          let Institutename=await Institute.findOne({
+                  attributes:['name'],
+                  where:{
+                      id:EUser.cio_id
+              }
+              });
+         jsondata.push({"firstname":userdetails.firstname,"lastname":userdetails.lastname,"Department_Name":Institutename.name})
+         
+      }
+      return  res.status(200).json(success("University Admins fetched successfully!", jsondata))
+  }else{
+      return res.status(400).json(errorResponse(error, 400));
+  }
+ 
+}

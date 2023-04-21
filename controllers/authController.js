@@ -8,6 +8,9 @@ const UserContact = require("../models").UserContact;
 const Staff = require("../models").Staff;
 const Role = require("../models").Role;
 const City = require("../models").City;
+const State = require("../models").State;
+const Country = require("../models").Country;
+const District = require("../models").District;
 const Company = require("../models").Company;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
 const InstituteStaff = require("../models").InstituteStaff;
@@ -29,6 +32,7 @@ const {
 } = require("../responseApi");
 
 exports.getUserDetails = function (req, res) {
+  
   UserPersonalDetails.findOne(
     {
       where: {
@@ -42,6 +46,7 @@ exports.getUserDetails = function (req, res) {
     }
   )
   .then((userPersonalDetails) => {
+    console.log("here!!!!", userPersonalDetails)
     UserRole.findOne({
       attributes:["id"],
       where: {
@@ -53,11 +58,13 @@ exports.getUserDetails = function (req, res) {
         },
       ],
     }).then((userRole)=>{
+      console.log("********************************************************!!!!", userRole)
       UserContact.findOne(
         {
           where: {
             user_id: req.user.id,
-          },include: [
+          },
+          include: [
             {
               model: City,
               attributes:["name"],        
@@ -77,6 +84,7 @@ exports.getUserDetails = function (req, res) {
           ],
         }
       ).then((userContact)=>{
+        console.log("***********************************************************************************************!!!!", userContact)
         const response = {
           "User": userPersonalDetails,
           "user_role": userRole,
