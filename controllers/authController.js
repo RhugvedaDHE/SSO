@@ -47,14 +47,14 @@ exports.getUserDetails = function (req, res) {
   )
   .then((userPersonalDetails) => {
     console.log("here!!!!", userPersonalDetails)
-    UserRole.findOne({
-      attributes:["id"],
+    UserRole.findAll({
+      attributes:[],
       where: {
         user_id: userPersonalDetails.user_id,       
       },include: [
         {
           model: Role,
-          attributes:["name"],        
+          attributes:["id", "name"],        
         },
       ],
     }).then((userRole)=>{
@@ -566,7 +566,7 @@ exports.login = function (req, res) {
               JSON.parse(JSON.stringify(tokendata)),
               process.env.JWT_SECRET,
               {
-                expiresIn: 120,
+                expiresIn: 1200,
               }
             );
             // jwt.verify(token, process.env.JWT_SECRET, function (err, data) {
