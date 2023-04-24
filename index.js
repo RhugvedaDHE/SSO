@@ -51,6 +51,7 @@ var casteCategoryRouter = require('./routes/casteCategory');
 var bloodGroupRouter = require('./routes/bloodGroup');
 var dummyRouter = require('./routes/dummy');
 var genderRouter = require('./routes/gender');
+var entityUserRouter = require('./routes/entityUser');
 
 application.use('/api/v1/country', countryRouter);
 application.use('/api/v1/role', roleRouter);
@@ -81,6 +82,7 @@ application.use('/api/v1/castecategory', casteCategoryRouter);
 application.use('/api/v1/bloodgroup', bloodGroupRouter);
 application.use('/api/v1/dummy', dummyRouter);
 application.use('/api/v1/gender', genderRouter);
+application.use('/api/v1/entityuser', entityUserRouter);
 
 //=== 5 - START SERVER
 application.listen(PORT, () => console.log('hello:'+PORT+'/'));
@@ -103,7 +105,7 @@ application.use(function(req, res, next) {
 // error handler
 application.use(function(err, req, res, next) {
 // set locals, only providing error in development
-    console.log("inside Error Handler, ", err.message)
+    console.log("inside Error Handler, ", err)
     res.sendStatus(400); 
 });
 
