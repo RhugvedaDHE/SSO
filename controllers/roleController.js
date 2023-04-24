@@ -56,7 +56,7 @@ exports.getAllAdmins= async function (req, res) {
 };
 
 exports.getUserRole = function (req, res) {
-  UserRole.findOne({
+  UserRole.findAll({
     attributes:["id"],
     where: {
       user_id: req.user.id,       
