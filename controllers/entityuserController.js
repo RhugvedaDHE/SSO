@@ -141,7 +141,8 @@ exports.getAdmindetails=async function(req,res){
                     user_id:d.user_id
                 }
             })
-            
+            if(EUser){
+           
             if(EUser.entity_type_id==1){
                 result=await Institute.findOne({
                     attributes:['id','name'],
@@ -175,7 +176,8 @@ exports.getAdmindetails=async function(req,res){
                 if(!result){
                     res.status(400).json(errorResponse(error, 400));
                 }
-            }  
+            } 
+        } 
            jsondata.push({"firstname":userdetails.firstname,"lastname":userdetails.lastname,"Organisation_Name":result.name,"Role":rolename.name})
            
         }
