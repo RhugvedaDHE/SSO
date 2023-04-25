@@ -10,9 +10,6 @@ const Role = require('../models').Role;
 const { success, errorResponse, validation } = require("../responseApi");
 const { Op } = require("sequelize");
 
-const { success, errorResponse, validation } = require("../responseApi");
-
-
 exports.getInstituteAdmins=async function(req,res){
     const data=await UserRole.findAll({
         attributes:['user_id'],
