@@ -5,7 +5,7 @@ const Institute = require('../models').Institute;
 const Departments = require('../models').Department;
 const Company = require('../models').Company;
 const UserRole = require('../models').UserRole;
-
+const Op = Sequelize.Op;
 const { success, errorResponse, validation } = require("../responseApi");
 
 
