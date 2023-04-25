@@ -5,8 +5,11 @@ const Institute = require('../models').Institute;
 const Departments = require('../models').Department;
 const Company = require('../models').Company;
 const UserRole = require('../models').UserRole;
-const Sequelize = require("sequelize");
-const Op = Sequelize.Op;
+const Role = require('../models').Role;
+
+const { success, errorResponse, validation } = require("../responseApi");
+const { Op } = require("sequelize");
+
 const { success, errorResponse, validation } = require("../responseApi");
 
 
