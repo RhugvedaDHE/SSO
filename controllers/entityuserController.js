@@ -14,7 +14,7 @@ exports.getInstituteAdmins=async function(req,res){
     const data=await UserRole.findAll({
         attributes:['user_id'],
         where:{
-            role_id:8
+            role_id:3
         }
     });
     if(data){
