@@ -100,3 +100,87 @@ exports.getDepartmentname=async function(req,res){
     });
    
 }
+
+//Get All Admins
+exports.getAdmindetails=async function(req,res){
+   
+    const data= await UserRole.findAll({
+        attributes:['user_id','role_id'],
+        where:{
+            role_id: {
+                [Op.in]: ['3','4','5','8','12']
+                  }
+        }
+    })
+    if(data){
+        console.log("----------data----------=",data)
+        var jsondata=[]
+        var result;
+        for(const d of data){
+             let userdetails= await UserPersonalDetails.findOne({
+                attributes:['firstname','lastname'],
+                where:{
+                    user_id:d.user_id
+                }
+            });
+
+            let rolename= await Role.findOne({
+                attributes:['name'],
+                where:{
+                    id:d.role_id
+                }
+            });
+
+
+
+            
+            let EUser=await EntityUser.findOne({
+                attributes:['cio_id','entity_type_id'],
+                where:{
+                    user_id:d.user_id
+                }
+            })
+            
+            if(EUser.entity_type_id==1){
+                result=await Institute.findOne({
+                    attributes:['id','name'],
+                    where:{
+                        id:EUser.cio_id
+                    }
+                })
+                console.log("--------------Institute result-----------=",result)
+                if(!result){
+                    res.status(400).json(errorResponse(error, 400));
+                }
+            }else if(EUser.entity_type_id==2){
+                result= await Company.findOne({
+                    attributes:['id','name'],
+                    where:{
+                        id:EUser.cio_id
+                    }
+                })
+                console.log("--------------Company result-----------=",result)
+                if(!result){
+                    res.status(400).json(errorResponse(error, 400));
+                }
+            }else{
+                result= await Departments.findOne({
+                    attributes:['id','name'],
+                    where:{
+                        id:EUser.cio_id
+                    }
+                })
+                console.log("--------------Department result-----------=",result)
+                if(!result){
+                    res.status(400).json(errorResponse(error, 400));
+                }
+            }  
+           jsondata.push({"firstname":userdetails.firstname,"lastname":userdetails.lastname,"Organisation_Name":result.name,"Role":rolename.name})
+           
+        }
+        return  res.status(200).json(success(" Admins fetched successfully!", jsondata))
+    }else{
+        return res.status(400).json(errorResponse(error, 400));
+    }
+      
+}

@@ -11,5 +11,6 @@ const EntityUser = require('../controllers/entityuserController');
 
 router.get('/InstituteAdmins/',  EntityUser.getInstituteAdmins);
 router.get('/GetDepartmentname/',authenticate,  EntityUser.getDepartmentname);
+router.get('/GetAdmindetails/', EntityUser.getAdmindetails);
 
 module.exports = router;
