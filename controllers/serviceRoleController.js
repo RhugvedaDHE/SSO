@@ -28,7 +28,7 @@ exports.get = async function (req, res){
         serviceroles.forEach(serviceRole => {
             Service.findOne({
                 where: {
-                    id: serviceRole.id,
+                    id: serviceRole.service_id,
                     is_active: true,
                 }
             }).then(service=> {
