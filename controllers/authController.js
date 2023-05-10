@@ -680,6 +680,26 @@ exports.verifyUsers = function (req, res) {
   })
 };
 
+//switch the user role
+exports.switchUserRole = function (req, res) {
+  tokendata = {
+    username: req.user.username,
+    userId: req.user.id,
+    userRole: req.body.role_id,
+  };
+  var token = jwt.sign(
+    JSON.parse(JSON.stringify(tokendata)),
+    process.env.JWT_SECRET,
+    {
+      expiresIn: 1200,
+    }
+  );
+
+  res
+    .status(200)
+    .json(success("User role switched successfully!", token));
+}
+
 //refresh the token
 exports.refreshToken = function (req, res) {
   User.findOne({

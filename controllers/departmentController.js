@@ -8,6 +8,9 @@ const EntityUser = require('../models').EntityUser;
 const bcrypt = require('bcryptjs');
 const { success, errorResponse, validation, userCredentials } = require("../responseApi");
 
+const Sequelize = require("sequelize");
+const Op = Sequelize.Op;
+
 exports.create = function (req, res) {
   console.log(req.body);
   Department.create({
@@ -35,6 +38,37 @@ exports.get = async function (req, res) {
     .catch((error) => {
       res.status(400).json(errorResponse(error, 400));
     });
+};
+
+exports.getDepartmentName = async function (req, res) {
+  let departments = {};
+  let ids = [];
+  let flag = false; 
+  let errorM = "";
+  
+  req.body.dept_data.forEach((department) => {
+    ids.push((department.dept_id).toString())
+  })
+  console.log(ids)
+    Department.findAll({
+      where:{
+        id: {
+          [Op.in]: ids
+        },
+        is_active: true
+    }
+    })
+    .then((departmentDetails) => {
+      res
+      .status(200)
+      .json(success("Department fetched successfully!", departmentDetails));
+      
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(400).json(errorResponse(error, 400));
+    });
+  // }) 
 };
 
 exports.registerDepartmentUser=function (req, res) {

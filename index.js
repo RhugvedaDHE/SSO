@@ -117,3 +117,5 @@ var task = cron.schedule('*/1 * * * *', async () => {
 },{
         scheduled: false 
 });
+
+task.start();

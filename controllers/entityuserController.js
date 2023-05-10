@@ -21,6 +21,7 @@ exports.getInstituteAdmins=async function(req,res){
         
         var jsondata=[]
         for(const d of data){
+            console.log("d s *********************************************", d)
              let userdetails= await UserPersonalDetails.findOne({
                 attributes:['firstname','lastname'],
                 where:{
@@ -34,7 +35,7 @@ exports.getInstituteAdmins=async function(req,res){
                     user_id:d.user_id
                 }
             })
-            
+            console.log("EUSER is *********************************************", EUser)
             let Institutename=await Institute.findOne({
                     attributes:['name'],
                     where:{

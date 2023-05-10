@@ -11,6 +11,7 @@ router.post('/create', [
 ], validate, Department.create);
 
 router.get('/get/',  Department.get);
+router.get('/get/name',  Department.getDepartmentName);
 router.post('/registerDepartmentUser/',  Department.registerDepartmentUser);
 router.get('/getDepartmentAdmins/',  Department.getDepartmentAdmins);
 
