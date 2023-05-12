@@ -1,13 +1,181 @@
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
-const bcrypt = require("bcryptjs");
-const db = require("../models");
-//const uploadFile = require("../middleware/upload");
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
-const Company = require("../models").Company;
-//const Op = db.Sequelize.Op;
+const bcrypt = require('bcryptjs');
+const db = require('../models');
+//const uploadFile = require("../middleware/upload");
+const Company = require('../models').Company;
+
+var multer = require('multer');
+//const uploadFile = require("../middlewares/upload");
+const path = require('path');
 
 const { success, errorResponse, validation } = require("../responseApi");
+
+// upload Company docs
+exports.uploadLogo = async (req,res) => {
+  console.log("in controller company - upload logo");
+
+  var storage = multer.diskStorage({
+
+		destination:function(request, file, callback)
+		{
+			callback(null, './uploads/company/logo');
+		},
+		filename : function(request, file, callback)
+		{
+			var temp_file_arr = file.originalname.split(".");
+
+			var temp_file_name = temp_file_arr[0];
+
+			var temp_file_extension = temp_file_arr[1];
+
+			callback(null,  'logo_'+req.body.company_id+ '_' + Date.now() + '.' + temp_file_extension);
+		}
+
+	});
+  
+  const maxSize = 30720;//30kb
+	var upload = multer({
+                        storage:storage,
+                        fileFilter: function (req, file, callback) {
+                          var ext = path.extname(file.originalname);
+                          /*if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
+                              return callback(new Error('Only images are allowed'))
+                          }
+                          callback(null, true);*/
+
+                          if (
+                            file.mimetype === 'image/png' ||
+                            file.mimetype === 'image/jpg' ||
+                            file.mimetype === 'image/jpeg'
+                          ) { // check file type to be png, jpeg, or jpg
+                            callback(null, true);
+                          } else {
+                            callback(null, false); // else fails
+                          }
+                        },
+                        limits:{fileSize:maxSize}
+                      }).single('companyLogo');
+
+	  upload(req, res, function(error){
+
+		if(error)
+		{
+			res.send('Error Uploading File');
+		}
+		else
+		{
+        //request.flash('success', request.file.filename);
+        const companyData = {
+          logo: req.file.filename,
+        };
+      
+        Company.update(companyData, {
+          where: { id: req.body.company_id }
+        })
+          .then(num => {
+            if (num == 1) {
+              res.send({
+                message: "Company Logo updated successfully."
+              });
+            } else {
+              res.send({
+                message: `Cannot update Company with id=${req.body.company_id}. Maybe Company was not found or req.body is empty!`
+              });
+            }
+          });
+
+			//response.redirect("/fileupload");
+
+			//res.send('File is uploaded successfully '+req.file.filename);
+		}
+
+	})
+
+};
+
+// upload Company docs
+exports.uploadCertificate = async (req,res) => {
+  console.log("in controller company - upload certificate");
+
+  var storage = multer.diskStorage({
+
+		destination:function(request, file, callback)
+		{
+			callback(null, './uploads/company/certificate');
+		},
+		filename : function(request, file, callback)
+		{
+			var temp_file_arr = file.originalname.split(".");
+
+			var temp_file_name = temp_file_arr[0];
+
+			var temp_file_extension = temp_file_arr[1];
+
+			callback(null, 'cert_'+req.body.company_id+ '_' + Date.now() + '.' + temp_file_extension);
+		}
+
+	});
+  
+  const maxSize = 307200;//30kb
+	var upload = multer({
+                        storage:storage,
+                        fileFilter: function (req, file, callback) {
+                          var ext = path.extname(file.originalname);
+                          /*if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
+                              return callback(new Error('Only images are allowed'))
+                          }
+                          callback(null, true);*/
+
+                          if (
+                            file.mimetype === 'application/pdf'
+                          ) { // check file type to be png, jpeg, or jpg
+                            callback(null, true);
+                          } else {
+                            callback(null, false); // else fails
+                          }
+                        },
+                        limits:{fileSize:maxSize}
+                      }).single('certificate');
+
+	  upload(req, res, function(error){
+
+		if(error)
+		{
+			res.send('Error Uploading File: '+error);
+		}
+		else
+		{
+        //request.flash('success', request.file.filename);
+        const companyData = {
+          reg_certificate: req.file.filename,
+        };
+      
+        Company.update(companyData, {
+          where: { id: req.body.company_id }
+        })
+          .then(num => {
+            if (num == 1) {
+              res.send({
+                message: "Company certificate updated successfully."
+              });
+            } else {
+              res.send({
+                message: `Cannot update Company with id=${req.body.company_id}. Maybe Company was not found or req.body is empty!`
+              });
+            }
+          });
+
+			//response.redirect("/fileupload");
+
+			//res.send('File is uploaded successfully '+req.file.filename);
+		}
+
+	})
+
+};
+
 
 exports.create = async (req, res) => {
   /*console.log("in controller company");
@@ -67,61 +235,60 @@ exports.create = async (req, res) => {
             });
         });
     });*/
+  
 };
 
-exports.findAll = async function (req, res) {
-  await Company.findAll({
-    where: {
-      active: true,
-    },
-  })
-    .then((companies) => {
-      res
-        .status(200)
-        .json(success("Companies fetched successfully!", companies));
-    })
-    .catch((error) => {
-      res.status(400).json(errorResponse(error, 400));
-    });
-};
 
-exports.findOne = async function (req, res) {
+exports.findAll = async function (req, res){
   await Company.findAll({
-    where: {
-      id: req.body.id,
-    },
-  })
-    .then((companies) => {
-      res.status(200).json(success("Company Details!", companies));
-    })
-    .catch((error) => {
+      where: {
+          active: true,
+      }
+  }).then(companies => {
+      res.status(200).json(success("Companies fetched successfully!", companies))
+  }).catch(error => {
       res.status(400).json(errorResponse(error, 400));
-    });
-};
+  })
+}
+
+
+exports.findOne = async function (req, res){
+  await Company.findAll({
+      where: {
+          user_id: req.body.id,
+      }
+  }).then(companies => {
+      res.status(200).json(success("Company Details!", companies))
+  }).catch(error => {
+      res.status(400).json(errorResponse(error, 400));
+  })
+}
+
 
 // Find a single Company with an id
+
 
 // Update a Company by the id in the request
 exports.update = (req, res) => {
   const id = req.params.id;
 
   Company.update(req.body, {
-    where: { id: id },
+    where: { id: id }
   })
-    .then((num) => {
+    .then(num => {
       if (num == 1) {
         res.send({
-          message: "Company was updated successfully.",
+          message: "Company was updated successfully."
         });
       } else {
         res.send({
-          message: `Cannot update Company with id=${id}. Maybe Company was not found or req.body is empty!`,
+          message: `Cannot update Company with id=${id}. Maybe Company was not found or req.body is empty!`
         });
       }
     })
-    .catch((err) => {
+    .catch(err => {
       res.status(500).send({
-        message: "Error updating Company with id=" + id,
+        message: "Error updating Company with id=" + id
       });
     });
 };
@@ -131,22 +298,22 @@ exports.delete = (req, res) => {
   const id = req.params.id;
 
   Company.destroy({
-    where: { id: id },
+    where: { id: id }
   })
-    .then((num) => {
+    .then(num => {
       if (num == 1) {
         res.send({
-          message: "Comapany was deleted successfully!",
+          message: "Comapany was deleted successfully!"
         });
       } else {
         res.send({
-          message: `Cannot delete Comapany with id=${id}. Maybe Comapany was not found!`,
+          message: `Cannot delete Comapany with id=${id}. Maybe Comapany was not found!`
         });
       }
     })
-    .catch((err) => {
+    .catch(err => {
       res.status(500).send({
-        message: "Could not delete Comapany with id=" + id,
+        message: "Could not delete Comapany with id=" + id
       });
     });
 };
@@ -155,15 +322,15 @@ exports.delete = (req, res) => {
 exports.deleteAll = (req, res) => {
   Company.destroy({
     where: {},
-    truncate: false,
+    truncate: false
   })
-    .then((nums) => {
+    .then(nums => {
       res.send({ message: `${nums} Company were deleted successfully!` });
     })
-    .catch((err) => {
+    .catch(err => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while removing all companies.",
+          err.message || "Some error occurred while removing all companies."
       });
     });
 };
@@ -171,13 +338,13 @@ exports.deleteAll = (req, res) => {
 // Find all active Company
 exports.findAllActive = (req, res) => {
   Company.findAll({ where: { active: true } })
-    .then((data) => {
+    .then(data => {
       res.send(data);
     })
-    .catch((err) => {
+    .catch(err => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving tutorials.",
+          err.message || "Some error occurred while retrieving tutorials."
       });
     });
 };
@@ -185,79 +352,17 @@ exports.findAllActive = (req, res) => {
 exports.userCompanies = (req, res) => {
   const ownerTypeId = req.body.ownerTypeId;
   const userId = req.body.userId;
-  Company.findAll({
-    where: { OwnerTypeId: ownerTypeId, user_id: userId, active: true },
-  })
-    .then((data) => {
+  Company.findAll({ where: { OwnerTypeId: ownerTypeId, user_id: userId, active: true } })
+    .then(data => {
       res.send(data);
     })
-    .catch((err) => {
+    .catch(err => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving tutorials.",
+          err.message || "Some error occurred while retrieving tutorials."
       });
     });
 };
 
-// upload Company docs
-/*
-exports.upload = async (req,res) => {
-    console.log("in controller company");
 
-    const companyId = req.params.id;
-    // Validate request
-    
-    try{
-      
-      if(req.file == undefined){
-        return res.status(400).send({message:"Please upload a certificate!"});
-      }
-      else{
-        await uploadFile(req, res);
-      }
 
-      if(req.companyLogo == undefined){
-        return res.status(400).send({message:"Please upload a company logo!"});
-      }
-      else{
-        await uploadFile(req, res);
-      }
-    }
-    catch(err){
-      console.log(req.file);
-      res.status(500).send({
-        message:`Could not upload the file: ${req.file}.${err}`,
-      })
-    }
-
-    if (!req.body.name) {
-      res.status(400).send({
-        message: "Name can not be empty!"
-      });
-      return;
-    }
-
-    const companyData = {
-      logo: req.body.logo,
-    };
-
-    Company.update(companyData, {
-      where: { id: companyId }
-    })
-      .then(num => {
-        if (num == 1) {
-          res.send({
-            message: "Company was updated successfully."
-          });
-        } else {
-          res.send({
-            message: `Cannot update Company with id=${companyId}. Maybe Company was not found or req.body is empty!`
-          });
-        }
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: "Error updating Company with id=" + companyId
-        });
-      });
-};*/

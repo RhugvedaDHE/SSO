@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     programme_id: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
-      defaultValue: 1
+      defaultValue: true
     }
   }, {
     sequelize,

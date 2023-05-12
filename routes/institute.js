@@ -24,11 +24,10 @@ router.post('/create', [
     check('contact_person_email').not().isEmpty().withMessage('Contact person email is required'),
 ], validate, Institute.create);
 
-router.get('/get/', Institute.get);
+router.get('/get/', authenticate, Institute.get);
 
 router.post('/get/type',  Institute.gettype);
 
 router.post('/get/users',  Institute.getusers);
 
-router.get('/get/universityAdmin',  Institute.getUniversityAdmins);
 module.exports = router;

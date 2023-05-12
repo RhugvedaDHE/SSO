@@ -40,7 +40,7 @@ exports.get = async function (req, res) {
     });
 };
 
-exports.getDepartmentName = async function (req, res) {
+exports.getDepartmentNames = async function (req, res) {
   let ids = [];
   
   req.body.dept_data.forEach((department) => {
@@ -182,4 +182,49 @@ exports.getDepartmentAdmins=async function(req,res){
  
 }
 
+exports.getDepartmentUsers=async function(req,res){
+  let deptIds = [];
+  
+  req.body.dept_data.forEach((department) => {
+    deptIds.push((department.dept_id).toString())
+  })
+
+  Department.findAll({
+    attributes: ['id', 'name'],
+    where: {
+      id: {
+          [Sequelize.Op.in]: deptIds
+      },
+      is_active: true
+    },
+  })
+  .then((departmentDetails) => {
+    console.log(departmentDetails);
+    EntityUser.findAll({
+      where: {
+        cio_id: {
+          [Sequelize.Op.in]: deptIds
+        },
+        is_active: true
+      },
+    }).then((entityUsers =>{
+      res
+    .status(200)
+    .json(success("Department fetched successfully!", entityUsers));
+  }))    
+    
+  })
+  .catch((error) => {
+    console.log(error);
+    res.status(400).json(errorResponse(error, 400));
+  });
+        //  jsondata.push({"firstname":userdetails.firstname,"lastname":userdetails.lastname,"Department_Name":Departmentname.name})
+         
+//       }
+//       return  res.status(200).json(success("Institute Admins fetched successfully!", jsondata))
+//   }else{
+//       return res.status(400).json(errorResponse(error, 400));
+//   }
+ 
+}
 

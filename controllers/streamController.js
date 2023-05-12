@@ -4,53 +4,53 @@ require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const db = require('../models');
 //const uploadFile = require("../middleware/upload");
-const Gender = require('../models').Gender;
+const Stream = require('../models').Stream;
 const { success, errorResponse, validation } = require("../responseApi");
 
 //const db = require("../models");
 
-//const Gender = db.gender;
+//const Stream = db.stream;
 const Op = require('sequelize').Op;
 
-// Create and Save a new Gender
+// Create and Save a new Stream
 exports.create = async (req, res) => {
-    console.log("in controller gender");
+    console.log("in controller stream");
 
     if (!req.body.name) {
-      var error = "Gender name cannot be empty!";
+      var error = "Stream name cannot be empty!";
       res.status(400).json(errorResponse(error, 400));
 
       return;
     }
   
-    // Create a Gender
-    const gender = {
+    // Create a Stream
+    const stream = {
       name: req.body.name,
       active: req.body.active ? req.body.active : true,
       updateAt:null
     };
 
-    // Save Gender in the database
-    Gender.create(gender)
+    // Save Stream in the database
+    Stream.create(stream)
       .then(data => {
-        res.status(200).json(success("Gender created successfully!", data));
+        res.status(200).json(success("Stream created successfully!", data));
       })
       .catch(error => {
         res.status(400).json(errorResponse(error, 400));
     });
 };
 
-// Retrieve all Gender from the database.
+// Retrieve all Stream from the database.
 exports.findAll = (req, res) => {
   console.log(req.query.name);
 
   const name = req.query.name;
   var condition = name ? { name: { [Op.iLike]: `%${name}%` } } : null;
 
-  Gender.findAll({ where: condition })
+  Stream.findAll({ where: condition })
     .then(data => {
       //res.send(data);
-      res.status(200).json(success("Gender fetched successfully!", data));
+      res.status(200).json(success("Stream fetched successfully!", data));
     })
     .catch(error => {
         res.status(400).json(errorResponse(error, 400));
@@ -58,16 +58,16 @@ exports.findAll = (req, res) => {
 };
 
 
-// Find a single Gender with an id
+// Find a single Stream with an id
 exports.findOne = (req, res) => {
   const id = req.params.id;
 
-  Gender.findByPk(id)
+  Stream.findByPk(id)
     .then(data => {
       if (data) {
         res.send(data);
       } else {
-        var error = `Cannot find Gender with id=${id}.`;
+        var error = `Cannot find Stream with id=${id}.`;
         res.status(400).json(errorResponse(error, 400));
       }
     })
@@ -76,18 +76,18 @@ exports.findOne = (req, res) => {
     });
 };
 
-// Update a Gender by the id in the request
+// Update a Stream by the id in the request
 exports.update = (req, res) => {
   const id = req.params.id;
 
-  Gender.update(req.body, {
+  Stream.update(req.body, {
     where: { id: id }
   })
     .then(num => {
       if (num == 1) {
-        res.status(200).json(success("Gender was updated successfully.!"));
+        res.status(200).json(success("Stream was updated successfully.!"));
       } else {
-        const error = "Cannot update Gender. Maybe Gender was not found or req.body is empty!";
+        const error = "Cannot update Stream. Maybe Stream was not found or req.body is empty!";
         res.status(400).json(errorResponse(error, 400));
       }
     })
@@ -96,48 +96,48 @@ exports.update = (req, res) => {
     });
 };
 
-// Delete a Gender with the specified id in the request
+// Delete a Stream with the specified id in the request
 exports.delete = (req, res) => {
   const id = req.params.id;
 
-  Gender.destroy({
+  Stream.destroy({
     where: { id: id }
   })
     .then(num => {
       if (num == 1) {
-        res.status(200).json(success("Gender was deleted successfully.!"));
+        res.status(200).json(success("Stream was deleted successfully.!"));
       } else {
-        const error = `Cannot delete Gender with id=${id}. Maybe Gender was not found!`;
+        const error = `Cannot delete Stream with id=${id}. Maybe Stream was not found!`;
         res.status(400).json(errorResponse(error, 400));
       }
     })
     .catch(err => {
-      //const error = `Cannot delete Gender with id=${id}. Maybe Gender was not found!`+error;
+      //const error = `Cannot delete Stream with id=${id}. Maybe Stream was not found!`+error;
       res.status(400).json(errorResponse(err, 400));
      
     });
 };
 
-// Delete all Gender from the database.
+// Delete all Stream from the database.
 exports.deleteAll = (req, res) => {
-    Gender.destroy({
+    Stream.destroy({
     where: {},
     truncate: false
   })
     .then(nums => {
-      res.status(200).json(success(`${nums}Gender was deleted successfully.!`));
+      res.status(200).json(success(`${nums}Stream was deleted successfully.!`));
     })
     .catch(error => {
       res.status(400).json(errorResponse(error, 400));
     });
 };
 
-// Find all active Gender
+// Find all active Stream
 exports.findAllActive = (req, res) => {
-    Gender.findAll({ where: { is_active: true } })
+    Stream.findAll({ where: { is_active: true } })
     .then(data => {
       //res.send(data);
-      res.status(200).json(success("Gender Listed successfully!", data))
+      res.status(200).json(success("Stream Listed successfully!", data))
     })
     .catch(error => {
       res.status(400).json(errorResponse(error, 400));

@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class ProgrammeSubject extends Model {
+  class Experience extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -11,18 +11,17 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      //Experience.belongsTo(models.Job);
     }
   }
-  ProgrammeSubject.init({
-    programme_id: DataTypes.INTEGER,
-    subject_id: DataTypes.INTEGER,
-    is_active: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true
-    }
+  Experience.init({
+    case: DataTypes.STRING,
+    from: DataTypes.INTEGER,
+    to: DataTypes.INTEGER,
+    is_active: DataTypes.BOOLEAN
   }, {
     sequelize,
-    modelName: 'ProgrammeSubject',
+    modelName: 'Experience',
   });
-  return ProgrammeSubject;
+  return Experience;
 };

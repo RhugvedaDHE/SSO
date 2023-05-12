@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     is_active: {
       type: DataTypes.BOOLEAN,
-      defaultValue: 1
+      defaultValue: true
     }
   }, {
     sequelize,

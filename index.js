@@ -20,6 +20,9 @@ application.use(bodyParser.json()); // parse requests of content-type - applicat
 application.use(passport.initialize());
 require("./middlewares/jwt")(passport);
 
+//Used for static file path eg uploaded images etc:Paresh
+application.use('/static', express.static('uploads'));
+
 //setting flash 
 // application.use(flash());
 var countryRouter = require('./routes/country');
@@ -45,13 +48,33 @@ var semesterRouter = require('./routes/semester');
 var progSubRouter = require('./routes/programmeSubject');
 var otpRouter = require('./routes/otp');
 var designationRouter = require('./routes/designation');
-var companyRouter = require('./routes/company');
+
 var userpersonaldetailsRouter = require('./routes/userpersonaldetails');
+var dummyRouter = require('./routes/dummy');
+var entityUserRouter = require('./routes/entityUser');
+
+//APIs by Paresh A.
+var companyRouter = require('./routes/company');
+var guardianTypeRouter = require('./routes/guardianType');
 var casteCategoryRouter = require('./routes/casteCategory');
 var bloodGroupRouter = require('./routes/bloodGroup');
-var dummyRouter = require('./routes/dummy');
+var programmeSemesterRouter = require('./routes/programmeSemester');
 var genderRouter = require('./routes/gender');
-var entityUserRouter = require('./routes/entityUser');
+var studentGuardian = require('./routes/studentGuardian');
+var streamRouter = require('./routes/stream');
+var instituteProgrammeCourseSubject = require('./routes/instituteProgrammeCourseSubject');
+var studentMarks = require('./routes/studentMarks');
+var studentResult = require('./routes/studentResult');
+var student = require('./routes/student');
+var studentRemarks = require('./routes/studentRemarks');
+var userdocs = require('./routes/userDocs');
+var userQualification = require('./routes/userQualification');
+var qualificationTypes = require('./routes/qualificationTypes');
+
+var degreeRouter = require('./routes/degree');
+var percentageRouter = require('./routes/percentage');
+var experienceRouter = require('./routes/experience');
+var modeRouter = require('./routes/mode');
 
 application.use('/api/v1/country', countryRouter);
 application.use('/api/v1/role', roleRouter);
@@ -76,13 +99,32 @@ application.use('/api/v1/semester', semesterRouter);
 application.use('/api/v1/programmesubject', progSubRouter);
 application.use('/api/v1/otp', otpRouter);
 application.use('/api/v1/designation', designationRouter);
-application.use('/api/v1/company', companyRouter);
+
 application.use('/api/v1/userpersonaldetails', userpersonaldetailsRouter);
+application.use('/api/v1/dummy', dummyRouter);
+application.use('/api/v1/entityuser', entityUserRouter);
+
+//APIs by Paresh A.
+application.use('/api/v1/company', companyRouter);
 application.use('/api/v1/castecategory', casteCategoryRouter);
 application.use('/api/v1/bloodgroup', bloodGroupRouter);
-application.use('/api/v1/dummy', dummyRouter);
+application.use('/api/v1/programmesemester', programmeSemesterRouter);
 application.use('/api/v1/gender', genderRouter);
-application.use('/api/v1/entityuser', entityUserRouter);
+application.use('/api/v1/studentguardian', studentGuardian);
+application.use('/api/v1/stream', streamRouter);
+application.use('/api/v1/instituteprogrammecoursesubject', instituteProgrammeCourseSubject);
+application.use('/api/v1/studentmarks', studentMarks);
+application.use('/api/v1/studentresult', studentResult);
+application.use('/api/v1/student', student);
+application.use('/api/v1/studentremarks', studentRemarks);
+application.use('/api/v1/userdocs', userdocs);
+application.use('/api/v1/userqualification', userQualification);
+application.use('/api/v1/qualificationtypes', qualificationTypes);
+application.use('/api/v1/degree', degreeRouter);
+application.use('/api/v1/percentage', percentageRouter);
+application.use('/api/v1/experience', experienceRouter);
+application.use('/api/v1/mode', modeRouter);
+
 
 //=== 5 - START SERVER
 application.listen(PORT, () => console.log('hello:'+PORT+'/'));
