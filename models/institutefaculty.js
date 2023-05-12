@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       InstituteFaculty.belongsTo(models.Institute, {
         foreignKey: 'institute_id'
       }),
-      InstituteFaculty.belongsTo(models.Faculty, {
+      InstituteFaculty.belongsTo(models.Staff, {
         foreignKey: 'faculty_id'
       }),
       InstituteFaculty.belongsTo(models.Role, {
