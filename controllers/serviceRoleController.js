@@ -20,7 +20,7 @@ exports.get = async function (req, res) {
     let serviceroles = await ServiceRole.findAll({
         attributes: ["service_id"],
         where: {
-            role_id: req.user.role_id,
+            role_id: req.user.userRole,
             is_active: true,
         },
     });
