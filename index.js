@@ -53,6 +53,7 @@ var userpersonaldetailsRouter = require('./routes/userpersonaldetails');
 var dummyRouter = require('./routes/dummy');
 var entityUserRouter = require('./routes/entityUser');
 var evalTypesRouter = require('./routes/evalType');
+var religionRouter = require('./routes/religion');
 
 //APIs by Paresh A.
 var companyRouter = require('./routes/company');
@@ -105,6 +106,7 @@ application.use('/api/v1/userpersonaldetails', userpersonaldetailsRouter);
 application.use('/api/v1/dummy', dummyRouter);
 application.use('/api/v1/entityuser', entityUserRouter);
 application.use('/api/v1/evalType', evalTypesRouter);
+application.use('/api/v1/religion', religionRouter);
 
 //APIs by Paresh A.
 application.use('/api/v1/company', companyRouter);
