@@ -4,7 +4,7 @@ const Role = require('../models').Role;
 const Service = require('../models').Service;
 const { success, errorResponse, validation } = require("../responseApi");
 
-exports.create = function (req, res){
+exports.create = function (req, res) {
     ServiceRole.create({
         service_id: req.body.service_id,
         role_id: req.body.role_id
@@ -15,29 +15,29 @@ exports.create = function (req, res){
     })
 }
 
-exports.get = async function (req, res){
-    console.log("**************************************************************SRCOnt", req.user)
-    const services = {};
-    await ServiceRole.findAll({
+exports.get = async function (req, res) {
+    let services = [];
+    let serviceroles = await ServiceRole.findAll({
+        attributes: ["service_id"],
         where: {
             role_id: req.user.role_id,
             is_active: true,
         },
-    }).then(serviceroles => {
-        console.log("servicerfvfmdkvnkdfnkdfnkvnkdf", serviceroles)
-        serviceroles.forEach(serviceRole => {
-            Service.findOne({
-                where: {
-                    id: serviceRole.service_id,
-                    is_active: true,
-                }
-            }).then(service=> {
-                services.push(service);  
-            })
-        });  
-        res.status(200).json(success("Services for the logged in user fetched successfully!", services))
-        
-    }).catch(error => {
-        res.status(400).json(errorResponse(error, 400));
-    })
+    });
+    for (const serviceRole of serviceroles) {
+        let service1 = await Service.findOne({
+            where: {
+                id: serviceRole.service_id,
+                is_active: true,
+            }
+        });
+        services.push({
+            "id": service1.id,
+            "name": service1.name,
+            "url": service1.url,
+        });
+        console.log("services are: ", services);
+    }
+    res.status(200).json(success("Services for the logged in user fetched successfully!", services))
+
 }
