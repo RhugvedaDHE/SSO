@@ -17,10 +17,11 @@ exports.create = function (req, res) {
 
 exports.get = async function (req, res) {
     let services = [];
+    console.log(req.user);
     let serviceroles = await ServiceRole.findAll({
         attributes: ["service_id"],
         where: {
-            role_id: req.user.userRole,
+            role_id: req.user.role_id,
             is_active: true,
         },
     });

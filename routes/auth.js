@@ -101,6 +101,7 @@ check(
 router.get('/get-user-details', authenticate, Auth.getUserDetails);
 
 router.post('/switch-user', authenticate, Auth.switchUserRole);
+router.get('/get-user-status', authenticate, Auth.getUserStatus);
 
 router.post('/register-superadmin',[
   check('role_id').not().isEmpty().withMessage('Your role is required').isNumeric().withMessage("Please select a valid Role"),
@@ -117,6 +118,8 @@ router.post('/register/companyGuide', Auth.register);
 
 router.post('/verify', Auth.verifyUsers);
 
-
+//profile
+router.post('/update-profile', Auth.updateProfile);
+router.post('/update-academics', Auth.updateAcademics);
 
 module.exports = router;

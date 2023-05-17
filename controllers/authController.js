@@ -13,6 +13,7 @@ const Country = require("../models").Country;
 const District = require("../models").District;
 const Company = require("../models").Company;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
+const StudentMarks = require("../models").StudentMarks;
 const InstituteStaff = require("../models").InstituteStaff;
 const StudentEnrollment = require("../models").StudentEnrollment;
 const UserDesignation = require("../models").UserDesignation;
@@ -32,75 +33,80 @@ const {
 } = require("../responseApi");
 
 exports.getUserDetails = function (req, res) {
-  
   UserPersonalDetails.findOne(
     {
       where: {
         user_id: req.user.id,
-      },include: [
+      }, include: [
         {
           model: User,
-          attributes:["email", "phone"],        
-        },         
+          attributes: ["email", "phone"],
+        },
       ],
     }
   )
-  .then((userPersonalDetails) => {
-    console.log("here!!!!", userPersonalDetails)
-    UserRole.findAll({
-      attributes:[],
-      where: {
-        user_id: userPersonalDetails.user_id,       
-      },include: [
-        {
-          model: Role,
-          attributes:["id", "name"],        
-        },
-      ],
-    }).then((userRole)=>{
-      console.log("********************************************************!!!!", userRole)
-      UserContact.findOne(
-        {
-          where: {
-            user_id: req.user.id,
+    .then((userPersonalDetails) => {
+      UserRole.findAll({
+        attributes: [],
+        where: {
+          user_id: userPersonalDetails.user_id,
+        }, include: [
+          {
+            model: Role,
+            attributes: ["id", "name"],
           },
-          include: [
-            {
-              model: City,
-              attributes:["name"],        
-            },  
-            {
-              model: State,
-              attributes:["name"],        
-            },  
-            {
-              model: District,
-              attributes:["name"],        
-            },  
-            {
-              model: Country,
-              attributes:["name"],        
-            },         
-          ],
-        }
-      ).then((userContact)=>{
-        console.log("***********************************************************************************************!!!!", userContact)
-        const response = {
-          "User": userPersonalDetails,
-          "user_role": userRole,
-          "user_Contact": userContact,
-        };      
-        res
-        .status(200)
-        .json(success("User Details fetched successfully", response));
-      })      
-    }).catch((error)=>{
+        ],
+      }).then((userRole) => {
+        UserContact.findOne(
+          {
+            where: {
+              user_id: req.user.id,
+            },
+            include: [
+              {
+                model: City,
+                attributes: ["name"],
+              },
+              {
+                model: State,
+                attributes: ["name"],
+              },
+              {
+                model: District,
+                attributes: ["name"],
+              },
+              {
+                model: Country,
+                attributes: ["name"],
+              },
+            ],
+          }
+        ).then(async ( userContact) => {
+          console.log(req.user.role_id)
+          let selectedRole = await Role.findOne({
+            attributes:["id", "name"],
+            where: {
+              id: req.user.role_id, 
+            }
+          });
+
+          const response = {
+            "User": userPersonalDetails,
+            "selected_role": selectedRole,
+            "user_role": userRole,
+            "user_Contact": userContact,
+          };
+          res
+            .status(200)
+            .json(success("User Details fetched successfully", response));
+        })
+      }).catch((error) => {
+        res.status(400).json(errorResponse(error, 400));
+      })
+
+    }).catch((error) => {
       res.status(400).json(errorResponse(error, 400));
     })
-    
-  }).catch((error)=>{
-    res.status(400).json(errorResponse(error, 400));
-  })
 }
 
 exports.register = function (req, res) {
@@ -141,170 +147,170 @@ exports.register = function (req, res) {
                 .then((userpersonaldetails) => {
                   UserContact.create({
                     user_id: user.id,
-                  }).then((userContact)=>{                  
-                  //check if student
-                  if (req.body.role_id == 7) {
-                    console.log("inside studenntttttttttttttttttttttttttttttt");
-                    InstituteProgramme.findOne({
-                      attributes:["id"],
-                      where: {
-                        institute_id: req.body.institute_id,
-                        programme_id: req.body.programme_id
-                      },
-                    }).then((instprog) => {
-                      console.log("instprog", instprog)
-                      console.log("instprog", instprog.id)
-                      StudentEnrollment.create({
-                        user_id: user.id,
-                        institute_programme_id: instprog.id,
-                        current_class: req.body.class,
-                      })
-                        .then((studentEnrollment) => {
-                          res
-                            .status(200)
-                            .json(success("Student-User created successfully"));
+                  }).then((userContact) => {
+                    //check if student
+                    if (req.body.role_id == 7) {
+                      console.log("inside studenntttttttttttttttttttttttttttttt");
+                      InstituteProgramme.findOne({
+                        attributes: ["id"],
+                        where: {
+                          institute_id: req.body.institute_id,
+                          programme_id: req.body.programme_id
+                        },
+                      }).then((instprog) => {
+                        console.log("instprog", instprog)
+                        console.log("instprog", instprog.id)
+                        StudentEnrollment.create({
+                          user_id: user.id,
+                          institute_programme_id: instprog.id,
+                          current_class: req.body.class,
                         })
-                        .catch((error) => {
-                          res.status(400).json(errorResponse("enrollment", 400));
-                        });
-                    }).catch((error)=>{
-                      res.status(400).json(errorResponse("InstProg", 400));
-                    })
-                    
-                  }
-                  //check if staff or non-teaching
-                  else if (req.body.role_id == 6 || req.body.role_id == 2) {
-                    Staff.create({
-                      user_id: user.id,
-                    }).then((staff) => {
-                      if (
-                        req.body.institute_type_id == null &&
-                        req.body.institute_id == null
-                      ) {
-                        res
-                          .status(400)
-                          .json(
-                            errorResponse(
-                              "Select valid Institute and programme!",
-                              400
-                            )
-                          );
-                      }
-                      InstituteStaff.create({
-                        institute_id: req.body.institute_id,
-                        staff_id: staff.id,
-                        role_id: req.body.role_id,
-                        institute_type_id: req.body.institute_type_id,
-                      })
-                        .then((instituteStaff) => {
-                          UserDesignation.create({
-                            user_id: user.id,
-                            employementtype_id: req.body.employment_type_id,
-                            designation_id: req.body.designation_id,
+                          .then((studentEnrollment) => {
+                            res
+                              .status(200)
+                              .json(success("Student-User created successfully"));
                           })
-                            .then((userDes) => {
+                          .catch((error) => {
+                            res.status(400).json(errorResponse("enrollment", 400));
+                          });
+                      }).catch((error) => {
+                        res.status(400).json(errorResponse("InstProg", 400));
+                      })
+
+                    }
+                    //check if staff or non-teaching
+                    else if (req.body.role_id == 6 || req.body.role_id == 2) {
+                      Staff.create({
+                        user_id: user.id,
+                      }).then((staff) => {
+                        if (
+                          req.body.institute_type_id == null &&
+                          req.body.institute_id == null
+                        ) {
+                          res
+                            .status(400)
+                            .json(
+                              errorResponse(
+                                "Select valid Institute and programme!",
+                                400
+                              )
+                            );
+                        }
+                        InstituteStaff.create({
+                          institute_id: req.body.institute_id,
+                          staff_id: staff.id,
+                          role_id: req.body.role_id,
+                          institute_type_id: req.body.institute_type_id,
+                        })
+                          .then((instituteStaff) => {
+                            UserDesignation.create({
+                              user_id: user.id,
+                              employementtype_id: req.body.employment_type_id,
+                              designation_id: req.body.designation_id,
+                            })
+                              .then((userDes) => {
+                                res
+                                  .status(200)
+                                  .json(
+                                    success("Staff-User created successfully")
+                                  );
+                              })
+                              .catch((error) => {
+                                res.status(400).json(errorResponse("userdes here", 400));
+                              });
+                          })
+                          .catch((error) => {
+                            res.status(400).json(errorResponse("institutestaff", 400));
+                          });
+                      });
+                    } else if (req.body.role_id == 12) {
+                      //Company admin
+                      console.log("In company create", req.body);
+
+                      const companyData = {
+                        organization_type_id: req.body.organization_type_id,
+                        user_id: user.id,
+                        name: req.body.name,
+                        logo: req.body.logo,
+                        state_id: req.body.state_id,
+                        district_id: req.body.district_id,
+                        taluka_id: req.body.taluka_id,
+                        village_id: req.body.village_id,
+                        city_id: req.body.city_id,
+                        landmark: req.body.landmark,
+                        street: req.body.street,
+                        pincode: req.body.pincode,
+                        phone: req.body.phone,
+                        email: req.body.email,
+                        reg_no: req.body.reg_no,
+                        reg_certificate: "", //req.certificate.originalname,
+                        verified: req.body.verified ? req.body.verified : false,
+                        active: req.body.active ? req.body.active : true,
+                        createdAt: "",
+                        updateAt: null,
+                        deletedAt: null,
+                      };
+
+                      Company.create(companyData)
+                        .then((company) => {
+                          const companyHRData = {
+                            user_id: user.id,
+                            entity_type_id: 2,
+                            cio_id: company.id,
+                            active: req.body.active ? req.body.active : true,
+                          };
+
+                          //console.log(companyHRData);
+                          EntityUser.create(companyHRData)
+                            .then((HR) => {
+                              //send mobile OTP
+
+                              //send Email OTP
+
                               res
                                 .status(200)
                                 .json(
-                                  success("Staff-User created successfully")
+                                  success("Company Admin created successfully")
                                 );
                             })
                             .catch((error) => {
-                              res.status(400).json(errorResponse("userdes here", 400));
+                              res.status(400).json(errorResponse(error, 400));
                             });
                         })
                         .catch((error) => {
-                          res.status(400).json(errorResponse("institutestaff", 400));
+                          res.status(400).json(errorResponse(error, 400));
                         });
-                    });
-                  } else if (req.body.role_id == 12) {
-                    //Company admin
-                    console.log("In company create", req.body);
+                    } else if (req.body.role_id == 10 || req.body.role_id == 11) {
+                      //Company HR or Guide
+                      console.log("In company HR/Guide create");
 
-                    const companyData = {
-                      organization_type_id: req.body.organization_type_id,
-                      user_id: user.id,
-                      name: req.body.name,
-                      logo: req.body.logo,
-                      state_id: req.body.state_id,
-                      district_id: req.body.district_id,
-                      taluka_id: req.body.taluka_id,
-                      village_id: req.body.village_id,
-                      city_id: req.body.city_id,
-                      landmark: req.body.landmark,
-                      street: req.body.street,
-                      pincode: req.body.pincode,
-                      phone: req.body.phone,
-                      email: req.body.email,
-                      reg_no: req.body.reg_no,
-                      reg_certificate: "certificate", //req.certificate.originalname,
-                      verified: req.body.verified ? req.body.verified : false,
-                      active: req.body.active ? req.body.active : true,
-                      createdAt: "",
-                      updateAt: null,
-                      deletedAt: null,
-                    };
+                      const companyHRData = {
+                        user_id: user.id,
+                        entity_type_id: req.body.entity_type_id,
+                        cio_id: req.body.cio_id,
+                        active: req.body.active ? req.body.active : true,
+                      };
 
-                    Company.create(companyData)
-                      .then((company) => {
-                        const companyHRData = {
-                          user_id: user.id,
-                          entity_type_id: 2,
-                          cio_id: company.id,
-                          active: req.body.active ? req.body.active : true,
-                        };
+                      //console.log(companyHRData);
 
-                        //console.log(companyHRData);
-                        EntityUser.create(companyHRData)
-                          .then((HR) => {
-                            //send mobile OTP
+                      EntityUser.create(companyHRData)
+                        .then((HR) => {
+                          //send mobile OTP
 
-                            //send Email OTP
+                          //send Email OTP
 
-                            res
-                              .status(200)
-                              .json(
-                                success("Company Admin created successfully")
-                              );
-                          })
-                          .catch((error) => {
-                            res.status(400).json(errorResponse(error, 400));
-                          });
-                      })
-                      .catch((error) => {
-                        res.status(400).json(errorResponse(error, 400));
-                      });
-                  } else if (req.body.role_id == 10 || req.body.role_id == 11) {
-                    //Company HR or Guide
-                    console.log("In company HR/Guide create");
-
-                    const companyHRData = {
-                      user_id: user.id,
-                      entity_type_id: req.body.entity_type_id,
-                      cio_id: req.body.cio_id,
-                      active: req.body.active ? req.body.active : true,
-                    };
-
-                    //console.log(companyHRData);
-
-                    EntityUser.create(companyHRData)
-                      .then((HR) => {
-                        //send mobile OTP
-
-                        //send Email OTP
-
-                        res
-                          .status(200)
-                          .json(
-                            success("Company HR/Guide created successfully")
-                          );
-                      })
-                      .catch((error) => {
-                        res.status(400).json(errorResponse(error, 400));
-                      });
-                  }
+                          res
+                            .status(200)
+                            .json(
+                              success("Company HR/Guide created successfully")
+                            );
+                        })
+                        .catch((error) => {
+                          res.status(400).json(errorResponse(error, 400));
+                        });
+                    }
+                  })
                 })
-              })
                 .catch((error) => {
                   res.status(400).json(errorResponse("here", 400));
                 });
@@ -331,7 +337,7 @@ exports.registerAdmins = function (req, res) {
   var userCredentialsdata;
   userCredentialsdata = userCredentials(email, phone);
   //console.log("Username:",userCredentialsdata.username);
-  console.log("Password:",userCredentialsdata.password)
+  console.log("Password:", userCredentialsdata.password)
 
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(userCredentialsdata.password.toString(), salt);
@@ -516,7 +522,6 @@ exports.registerSuperadmin = function (req, res) {
 };
 
 exports.login = function (req, res) {
-  console.log("inside login");
   User.findOne({
     where: {
       [Op.or]: [
@@ -527,20 +532,19 @@ exports.login = function (req, res) {
     },
   })
     .then((user) => {
-      console.log(user);
       UserRole.findOne({
         where: {
           user_id: user.id,
+          preferred_role: true
         },
       })
         .then((role) => {
-          console.log("role is: ", role.role_id);
+          console.log(role)
           tokendata = {
             username: user.username,
             userId: user.id,
             userRole: role.role_id,
           };
-          console.log(tokendata);
           if (!user) {
             res
               .status(400)
@@ -548,12 +552,10 @@ exports.login = function (req, res) {
                 errorResponse("User Not found! Please register first", 400)
               );
           }
-          console.log("heet");
           const result = bcrypt.compareSync(req.body.password, user.password);
 
           if (result) {
-            console.log("hvhsdvfhvdfhvhdasf here!!!!!")
-            
+
             // var refreshToken = jwt.sign(
             //   JSON.parse(JSON.stringify(tokendata)),
             //   process.env.REFRESH_TOKEN_SECRET,
@@ -561,7 +563,7 @@ exports.login = function (req, res) {
             //     expiresIn: process.env.REFRESH_TOKEN_LIFE,
             //   }
             // );
-            
+
             var token = jwt.sign(
               JSON.parse(JSON.stringify(tokendata)),
               process.env.JWT_SECRET,
@@ -598,86 +600,120 @@ exports.updateProfile = function (req, res) {
   UserPersonalDetails.findOne({
     where: { id: req.user.id },
   })
-  .then((userPersonalDetails) => {
-    let physically_disabled = req.body.physically_disabled == "yes" ? true : false;
+    .then((userPersonalDetails) => {
+      let physically_disabled = req.body.physically_disabled == "yes" ? true : false;
 
-    userPersonalDetails.gender = req.body.gender;
-    userPersonalDetails.blood_group = req.body.blood_group;
-    userPersonalDetails.nationality = req.body.nationality;
-    userPersonalDetails.physically_disabled = physically_disabled;
-    userPersonalDetails.save();
+      userPersonalDetails.gender = req.body.gender;
+      userPersonalDetails.dob = req.body.dob;
+      userPersonalDetails.blood_group = req.body.blood_group;
+      userPersonalDetails.nationality = req.body.nationality;
+      userPersonalDetails.physically_disabled = physically_disabled;
+      userPersonalDetails.religion = req.body.religion;
+      userPersonalDetails.caste = req.body.caste;
+      userPersonalDetails.save();
 
-    UserContact.findOne({
-      where: { id: req.user.id },
-    }).then((userContact) =>{
-      userContact.address = req.body.address;
-      userContact.country_id = req.body.country_id;
-      userContact.taluka_id = req.body.city_id;
-      userContact.village = req.body.village;
-      userContact.pincode = req.body.pincode;
-      userContact.city = req.body.city;
-      userContact.save()
+      UserContact.findOne({
+        where: { id: req.user.id },
+      }).then((userContact) => {
+        userContact.address = req.body.address;
+        userContact.country = req.body.country;
+        userContact.state = req.body.state;
+        userContact.district = req.body.district;
+        userContact.taluka = req.body.city;
+        userContact.village = req.body.village;
+        userContact.pincode = req.body.pincode;
+        userContact.save()
+      })
+      res
+        .status(200)
+        .json(errorResponse("Profile updated successfully!"));
+    }).catch((error) => {
+      res
+        .status(400)
+        .json(errorResponse("Please check your details!", 400));
     })
-    res
-      .status(200)
-      .json(errorResponse("Profile updated successfully!"));
-  }).catch((error) => {
-    res
-    .status(400)
-    .json(errorResponse("Please check your details!", 400));
+};
+
+//update profile
+exports.updateAcademics = function (req, res) {
+  StudentEnrollment.findOne({
+    attributes: ["id"],
+    where: { id: req.user.id },
+  }).then((student) => {
+    StudentMarks.findOne({
+      where: { id: student.id },
+    })
+      .then((studentMarks) => {
+          studentMarks.student_enrollment_id = student.id,
+          studentMarks.program_semester_id = req.body.program_semester_id,
+          studentMarks.institute_programme_course_subject_id = req.body.institute_programme_course_subject_id,
+          studentMarks.eval_type_id = req.body.eval_type_id,
+          studentMarks.total_marks = req.body.total_marks,
+          studentMarks.marks_obtained = req.body.marks_obtained,
+          studentMarks.grade_obtained = req.body.grade_obtained,
+          studentMarks.save();
+        res
+          .status(200)
+          .json(errorResponse("Profile updated successfully!"));
+      }).catch((error) => {
+        res
+          .status(400)
+          .json(errorResponse("Please check your details!", 400));
+      })
   })
+
 };
 
 //updatePassword
 exports.updatePassword = function (req, res) {
-  
+
   User.findOne({
     where: { id: req.user.id },
   })
-  .then((user) => {
-    var salt = bcrypt.genSaltSync(10);
-    user.password = bcrypt.hashSync(req.body.password, salt);
-    user.save();
-
-    res.status(200).json(success("User Password updated successfully!"));
-  }).catch((error)=>{
-    res.status(400).json(errorResponse("User Password not changed successsfully!", 400));
-  });
-};
-
-//forgotPassword
-exports.forgotPassword = function (req, res) {
-  
-  User.findOne({
-    where: { email: req.body.email },
-  })
-  .then((user) => {
-    if(user){
+    .then((user) => {
       var salt = bcrypt.genSaltSync(10);
       user.password = bcrypt.hashSync(req.body.password, salt);
       user.save();
 
       res.status(200).json(success("User Password updated successfully!"));
-    }
-    else{
-      res.status(400).json(errorResponse("User Not Found!", 400));
-    }
-  }).catch((error)=>{
-    res.status(400).json(errorResponse("User Password not changed successsfully!", 400));
-  });
+    }).catch((error) => {
+      res.status(400).json(errorResponse("User Password not changed successsfully!", 400));
+    });
+};
+
+//forgotPassword
+exports.forgotPassword = function (req, res) {
+
+  User.findOne({
+    where: { email: req.body.email },
+  })
+    .then((user) => {
+      if (user) {
+        var salt = bcrypt.genSaltSync(10);
+        user.password = bcrypt.hashSync(req.body.password, salt);
+        user.save();
+
+        res.status(200).json(success("User Password updated successfully!"));
+      }
+      else {
+        res.status(400).json(errorResponse("User Not Found!", 400));
+      }
+    }).catch((error) => {
+      res.status(400).json(errorResponse("User Password not changed successsfully!", 400));
+    });
 };
 
 exports.verifyUsers = function (req, res) {
   User.findOne({
     where: { id: req.body.user_id },
   })
-  .then((user) => { 
-    user.is_verified = true;
-    user.save();
-    res.status(200).json(success("User Verifed successfully!"));
-  }).catch((error) =>{
-    res.status(400).json(errorResponse("Could not verify users!", 400));
-  })
+    .then((user) => {
+      user.is_verified = true;
+      user.save();
+      res.status(200).json(success("User Verifed successfully!"));
+    }).catch((error) => {
+      res.status(400).json(errorResponse("Could not verify users!", 400));
+    })
 };
 
 //switch the user role
@@ -703,28 +739,28 @@ exports.switchUserRole = function (req, res) {
 //refresh the token
 exports.refreshToken = function (req, res) {
   User.findOne({
-    where:{
+    where: {
       id: req.body.user_id
     }
-  }).then((user)=> {
+  }).then((user) => {
     // refresh the damn token
     UserRole.findOne({
       where: {
         user_id: user.id,
       },
     })
-    .then((role) => {
-    
-      const postData = req.body;
-      // if refresh token exists
-      if((postData.refresh_token) && (postData.refresh_token in tokenList)) {
-        console.log("inside here")
-        const tokendata = {
-          username: user.username,
-          userId: user.id,
-          userRole: role.role_id,
-        };
-          const token = jwt.sign(tokendata, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_LIFE})
+      .then((role) => {
+
+        const postData = req.body;
+        // if refresh token exists
+        if ((postData.refresh_token) && (postData.refresh_token in tokenList)) {
+          console.log("inside here")
+          const tokendata = {
+            username: user.username,
+            userId: user.id,
+            userRole: role.role_id,
+          };
+          const token = jwt.sign(tokendata, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_LIFE })
           // const response = {
           //     "token": token,
           // }
@@ -733,13 +769,27 @@ exports.refreshToken = function (req, res) {
           tokenList[postData.refresh_token].token = token
           console.log("inside reached here")
           res.status(200).json(success("User Role changed successfully!", token));
-      }
-    else{
-      console.log("inside else")
-      res.status(404).json(success("User Not found!"));
+        }
+        else {
+          console.log("inside else")
+          res.status(404).json(success("User Not found!"));
+        }
+      }).catch((error) => {
+        res.status(400).json(errorResponse(error, 400));
+      })
+  })
+}
+
+//is_verified status
+exports.getUserStatus = function (req, res) {
+  User.findOne({
+    attributes:["is_verified"],
+    where: {
+      id: req.user.id
     }
-    }).catch((error) =>{
-      res.status(400).json(errorResponse(error, 400));
-    })
-  })  
+  }).then((user) => {    
+    res.status(200).json(success("User Status fetched successfully!", user));
+  }).catch((error) => {
+    res.status(400).json(errorResponse(error, 400));
+  })
 }

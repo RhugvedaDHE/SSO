@@ -255,7 +255,7 @@ exports.findAll = async function (req, res){
 exports.findOne = async function (req, res){
   await Company.findAll({
       where: {
-          user_id: req.body.id,
+          user_id: req.user.id,
       }
   }).then(companies => {
       res.status(200).json(success("Company Details!", companies))

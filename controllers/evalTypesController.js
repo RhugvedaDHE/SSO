@@ -17,9 +17,9 @@ exports.create = function (req, res) {
 
 exports.get = async function (req, res) {
   await EvalTypes.findAll({
-    where: {
-      is_active: true,
-    },
+    // where: {
+    //   is_active: true,
+    // },
   })
     .then((evalTypes) => {
       res.status(200).json(success("Evaluation Types fetched successfully!", cities));

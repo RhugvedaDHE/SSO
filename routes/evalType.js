@@ -10,6 +10,6 @@ router.post('/create', [
     check('name').not().isEmpty().withMessage('Eval Type name is required'),
 ], validate, EvalTypes.create);
 
-router.post('/get/',  EvalTypes.get);
+router.get('/get/',  EvalTypes.get);
 
 module.exports = router;
