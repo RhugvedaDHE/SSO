@@ -1,7 +1,7 @@
 const db = require("../models");
-
-const Skill = db.skill;
+const Skill = require('../models').Skill;
 const Op = db.Sequelize.Op;
+const { success, errorResponse, validation } = require("../responseApi");
 
 // Create and Save a new Skill
 exports.create = async (req, res) => {
@@ -11,7 +11,7 @@ exports.create = async (req, res) => {
       res.status(400).send({
         message: "Skill name can not be empty!"
       });
-      return;
+      res.status(200).json(success("Skill created successfully!"));
     }
   
     // Create a Skill
@@ -24,7 +24,7 @@ exports.create = async (req, res) => {
     // Save Skill in the database
     Skill.create(skill)
       .then(data => {
-        res.send(data);
+        res.status(200).json(success("Skills created successfully!"));
       })
       .catch(err => {
         res.status(500).send({
@@ -43,7 +43,7 @@ exports.findAll = (req, res) => {
 
   Skill.findAll({ where: condition })
     .then(data => {
-      res.send(data);
+      res.status(200).json(success("Skills fetched successfully!", data));
     })
     .catch(err => {
       res.status(500).send({
