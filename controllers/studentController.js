@@ -397,7 +397,7 @@ exports.getStudentDetails = async function(req,res){
        // }
         return  res.status(200).json(success("Students fetched successfully!", jsondata))
     }else{
-        return res.status(400).json(errorResponse(error, 400));
+        return res.status(400).json(errorResponse("Error fetching the details", 400));
     }
    
 }
