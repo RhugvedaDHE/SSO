@@ -11,7 +11,7 @@ router.post('/create', [
     check('name').not().isEmpty().withMessage('Role name is required'),
 ], validate, Role.create);
 
-router.get('/get/',  Role.get);
+router.post('/get/',  Role.get);
 router.get('/all/get',  Role.getAll);
 router.get('/get/user-role', authenticate, Role.getUserRole);
 router.get('/get/admin-role', Role.getAllAdmins);

@@ -81,12 +81,12 @@ exports.getUserDetails = function (req, res) {
               },
             ],
           }
-        ).then(async ( userContact) => {
+        ).then(async (userContact) => {
           console.log(req.user.role_id)
           let selectedRole = await Role.findOne({
-            attributes:["id", "name"],
+            attributes: ["id", "name"],
             where: {
-              id: req.user.role_id, 
+              id: req.user.role_id,
             }
           });
 
@@ -596,42 +596,30 @@ exports.login = function (req, res) {
 };
 
 //update profile
-exports.updateProfile = function (req, res) {
-  UserPersonalDetails.findOne({
-    where: { id: req.user.id },
-  })
-    .then((userPersonalDetails) => {
-      let physically_disabled = req.body.physically_disabled == "yes" ? true : false;
-
-      userPersonalDetails.gender = req.body.gender;
-      userPersonalDetails.dob = req.body.dob;
-      userPersonalDetails.blood_group = req.body.blood_group;
-      userPersonalDetails.nationality = req.body.nationality;
-      userPersonalDetails.physically_disabled = physically_disabled;
-      userPersonalDetails.religion = req.body.religion;
-      userPersonalDetails.caste = req.body.caste;
-      userPersonalDetails.save();
-
-      UserContact.findOne({
-        where: { id: req.user.id },
-      }).then((userContact) => {
-        userContact.address = req.body.address;
-        userContact.country = req.body.country;
-        userContact.state = req.body.state;
-        userContact.district = req.body.district;
-        userContact.taluka = req.body.city;
-        userContact.village = req.body.village;
-        userContact.pincode = req.body.pincode;
-        userContact.save()
-      })
-      res
-        .status(200)
-        .json(errorResponse("Profile updated successfully!"));
-    }).catch((error) => {
-      res
-        .status(400)
-        .json(errorResponse("Please check your details!", 400));
+exports.updateProfile = async function (req, res) {
+  await
+    UserPersonalDetails.update(req.body, {
+      where: { user_id: req.user.id }
     })
+      .then((updated) => {
+        UserContact.update(req.body, {
+          where: { user_id: req.user.id }
+        }).then(response => {
+          if (response == 1) {
+            res.send({
+              message: "User profile was updated successfully."
+            });
+          } else {
+            res.send({
+              message: "Could not update User profile!"
+            });
+          }
+        })
+      }).catch((error) => {
+        res
+          .status(400)
+          .json(errorResponse("Please check your details!", 400));
+      })
 };
 
 //update profile
@@ -640,29 +628,26 @@ exports.updateAcademics = function (req, res) {
     attributes: ["id"],
     where: { id: req.user.id },
   }).then((student) => {
-    StudentMarks.findOne({
+    StudentMarks.update(req.body, {
       where: { id: student.id },
     })
-      .then((studentMarks) => {
-          studentMarks.student_enrollment_id = student.id,
-          studentMarks.program_semester_id = req.body.program_semester_id,
-          studentMarks.institute_programme_course_subject_id = req.body.institute_programme_course_subject_id,
-          studentMarks.eval_type_id = req.body.eval_type_id,
-          studentMarks.total_marks = req.body.total_marks,
-          studentMarks.marks_obtained = req.body.marks_obtained,
-          studentMarks.grade_obtained = req.body.grade_obtained,
-          studentMarks.save();
-        res
-          .status(200)
-          .json(errorResponse("Profile updated successfully!"));
-      }).catch((error) => {
-        res
-          .status(400)
-          .json(errorResponse("Please check your details!", 400));
+      .then((response) => {
+        if (response == 1) {
+          res.send({
+            message: "User Academics was updated successfully."
+          });
+        } else {
+          res.send({
+            message: "Could not update User profile!"
+          });
+        }
       })
-  })
-
-};
+    }).catch((error) => {
+      res
+        .status(400)
+        .json(errorResponse("Please check your details!", 400));
+    })
+  };
 
 //updatePassword
 exports.updatePassword = function (req, res) {
@@ -783,11 +768,11 @@ exports.refreshToken = function (req, res) {
 //is_verified status
 exports.getUserStatus = function (req, res) {
   User.findOne({
-    attributes:["is_verified"],
+    attributes: ["is_verified"],
     where: {
       id: req.user.id
     }
-  }).then((user) => {    
+  }).then((user) => {
     res.status(200).json(success("User Status fetched successfully!", user));
   }).catch((error) => {
     res.status(400).json(errorResponse(error, 400));

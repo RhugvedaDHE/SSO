@@ -8,7 +8,7 @@ const Programme = require('../controllers/programmeController');
 
 router.post('/create', [
     check('name').not().isEmpty().withMessage('Programme name is required'),
-    check('duration').not().isEmpty().withMessage('Duration name is required'),
+    check('max_sem').not().isEmpty().withMessage('Max sememsters is required'),
 ], validate, Programme.create);
 
 router.post('/update', [
@@ -19,5 +19,6 @@ router.post('/update', [
 router.get('/get/',  Programme.get);
 
 router.post('/get/institute',  Programme.getInstituteProgramme);
+router.get('/get/programme-semesters',  Programme.getProgSems);
 
 module.exports = router;

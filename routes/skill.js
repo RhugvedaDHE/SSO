@@ -4,6 +4,7 @@ require('dotenv').config();
 const {check} = require('express-validator');
 const validate = require('../middlewares/validate');
 const skill = require('../controllers/skillController');
+const authenticate = require('../middlewares/authenticate');
 //var multer = require('multer');
 
 
@@ -13,6 +14,8 @@ console.log("In skill routes");
 router.post("/",[
     check('name').not().isEmpty().withMessage('Skill name is required'),
 ], validate, skill.create);
+
+router.post("/add", authenticate, skill.addStudentSkills);
 
 // Retrieve all skill
 router.get("/all", skill.findAll);

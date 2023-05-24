@@ -35,6 +35,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: 1
     },
+    is_complete: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: 0
+    },
     is_deleted: {
       type:DataTypes.BOOLEAN,
       defaultValue: 0

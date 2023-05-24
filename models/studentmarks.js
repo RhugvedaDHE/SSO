@@ -32,11 +32,26 @@ module.exports = (sequelize, DataTypes) => {
     student_enrollment_id: {
         type: DataTypes.INTEGER
       },
-      program_semester_id: {
+      program_id: {
         type: DataTypes.INTEGER
       },
-      institute_programme_course_subject_id: {
-        type: DataTypes.INTEGER
+      board_university: {
+        type: DataTypes.STRING
+      },
+      institute_name: {
+        type: DataTypes.STRING
+      },
+      programme_semester: {
+        type: DataTypes.STRING
+      },
+      course: {
+        type: DataTypes.STRING
+      },
+      subject: {
+        type: DataTypes.STRING
+      },
+      year_of_passing: {
+        type: DataTypes.STRING
       },
       eval_type_id: {
         type: DataTypes.INTEGER

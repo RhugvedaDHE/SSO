@@ -119,7 +119,7 @@ router.post('/register/companyGuide', Auth.register);
 router.post('/verify', Auth.verifyUsers);
 
 //profile
-router.post('/update-profile', Auth.updateProfile);
-router.post('/update-academics', Auth.updateAcademics);
+router.post('/update-profile', authenticate, Auth.updateProfile);
+router.post('/update-academics', authenticate, Auth.updateAcademics);
 
 module.exports = router;

@@ -46,6 +46,10 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         default: false
       },
+      is_complete: {
+        type: Sequelize.BOOLEAN,
+        default: false
+      },
       is_deleted: {
         type: Sequelize.BOOLEAN,
         default: false

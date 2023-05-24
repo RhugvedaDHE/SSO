@@ -27,6 +27,9 @@ module.exports = (sequelize, DataTypes) => {
       guardian_type_id: {
         type: DataTypes.INTEGER
       },
+      relation_with_user: {
+        type: DataTypes.STRING
+      },
       student_enrollment_id: {
         type: DataTypes.INTEGER
       },

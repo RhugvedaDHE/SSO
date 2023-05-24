@@ -1,12 +1,12 @@
 const db = require("../models");
 const Skill = require('../models').Skill;
+const StudentSkills = require('../models').StudentSkills;
+const User = require('../models').User;
 const Op = db.Sequelize.Op;
 const { success, errorResponse, validation } = require("../responseApi");
 
 // Create and Save a new Skill
 exports.create = async (req, res) => {
-    console.log("in controller skill");
-
     if (!req.body.name) {
       res.status(400).send({
         message: "Skill name can not be empty!"
@@ -153,4 +153,36 @@ exports.findAllActive = (req, res) => {
           err.message || "Some error occurred while retrieving Degrees."
       });
     });
+};
+
+//save student's skills
+exports.addStudentSkills = async (req, res) => {
+let deleted = [];
+let user =  await User.findOne({
+  where:{
+    "id": req.user.id
+  }
+})
+if(user){
+  deleted = StudentSkills.destroy({
+    where: {
+      user_id: req.user.id
+    }
+  }).catch((error) =>{
+    res.status(400).json(errorResponse(error, 400));
+  })
+}
+if(deleted)
+{
+  for(const skill of req.body.skills){      
+      let created = StudentSkills.create({
+      user_id: req.user.id,
+      skill_id: skill,
+    })
+  }     
+} 
+  console.log(user);
+  user.is_complete = true;
+  user.save();
+  res.status(200).json(success("Student skills added successfully!"));  
 };

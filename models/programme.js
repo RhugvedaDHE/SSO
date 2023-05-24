@@ -26,6 +26,9 @@ module.exports = (sequelize, DataTypes) => {
   }
   Programme.init({
     name: DataTypes.STRING,
+    max_sem: DataTypes.STRING,
+    programme_desc: DataTypes.STRING,
+    type: DataTypes.STRING,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: 1

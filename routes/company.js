@@ -74,7 +74,7 @@ router.post("/uploadcertificate", company.uploadCertificate);
 router.post("/details", authenticate, company.findOne);
 
 // Update a Company with id
-router.post("/:id", authenticate, company.update);
+router.post("/update", authenticate, company.update);
 
 // Delete a Company with id
 router.delete("/:id", company.delete);
