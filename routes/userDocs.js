@@ -9,12 +9,11 @@ const userDocs = require('../controllers/userdocsController');
 
 console.log("In userDocs routes");
 
-// Create a new StudentMarks
-router.post("/",[
-    check('user_id').not().isEmpty().withMessage('User ID is requireddd'),
-], validate, userDocs.create);
 
-// Retrieve all student's Guardian
+
+router.post("/uploaddoc", userDocs.uploadDoc);
+
+// Retrieve all user docs
 router.get("/all/:id", userDocs.findAll);
 
 //router.get("/files", userDocs.getListFiles);
@@ -25,15 +24,15 @@ router.post("/showfile", userDocs.showImage);
 // Retrieve all published userDocs
 //router.get("/active", userDocs.findAllActive);
 
-// Retrieve a single StudentMarks with id
+// Retrieve a single  with id
 router.post("/:id", userDocs.findOne);
 
-// Update a StudentMarks with id
-router.put("/:id", userDocs.update);
+// Update a  with id
+//router.put("/:id", userDocs.update);
 
-// Delete a StudentMarks with id
+// Delete a  with id
 router.delete("/:id", userDocs.delete);
 
-// Create a new StudentMarks
+// Create a new 
 router.delete("/", userDocs.deleteAll);
 module.exports = router;

@@ -6,13 +6,16 @@ const db = require('../models');
 //const uploadFile = require("../middleware/upload");
 const userDocs = require('../models').UserDocs;
 const docType = require('../models').DocumentType;
+const Company = require('../models').Company;
+
+var multer = require('multer');
 const { success, errorResponse, validation } = require("../responseApi");
 
 
 const env = process.env.NODE_ENV || 'development';
 
 let PORT = process.env.PORT;
-const uploadUrl = 'http://192.168.1.184:3000/static';
+//const uploadUrl = 'http://192.168.1.184:3000/static';
 
 // Creating express object
 //const app = express();
@@ -23,17 +26,17 @@ const fs = require('fs');
 
 const Op = require('sequelize').Op;
 
-// Create and Save a new UserDocs
-exports.create = async (req, res) => {
-  console.log("in controller userDocs - upload document");
-  const userId = req.body.user_id;
-  const docTypeId = req.body.doc_type_id;
+
+exports.uploadDoc = async (req,res) => {
+  console.log("in controller user doc - upload user");
 
   var storage = multer.diskStorage({
 
 		destination:function(request, file, callback)
 		{
-			callback(null, './uploads/user/'+userId);
+			//req.body.user_id
+     // fs.mkdir('./uploads/user/'+req.body.user_id);
+      callback(null, './uploads/user');
 		},
 		filename : function(request, file, callback)
 		{
@@ -43,12 +46,12 @@ exports.create = async (req, res) => {
 
 			var temp_file_extension = temp_file_arr[1];
 
-			callback(null, 'cert_'+req.body.company_id+ '_' + Date.now() + '.' + temp_file_extension);
+			callback(null,  'user_' + Date.now() + '.' + temp_file_extension);
 		}
 
 	});
   
-  const maxSize = 307200;//30kb
+  const maxSize = 30720;//30kb
 	var upload = multer({
                         storage:storage,
                         fileFilter: function (req, file, callback) {
@@ -58,85 +61,60 @@ exports.create = async (req, res) => {
                           }
                           callback(null, true);*/
 
-                          if (file.mimetype === 'application/pdf') { // check file type to be png, jpeg, or jpg
+                          if (
+                            file.mimetype === 'application/pdf' ||
+                            file.mimetype === 'image/png' ||
+                            file.mimetype === 'image/jpg' ||
+                            file.mimetype === 'image/jpeg'
+                          ) { // check file type to be png, jpeg, or jpg
                             callback(null, true);
                           } else {
                             callback(null, false); // else fails
                           }
                         },
                         limits:{fileSize:maxSize}
-                      }).single('certificate');
+                      }).single('document');
 
 	  upload(req, res, function(error){
 
 		if(error)
 		{
-			res.send('Error Uploading File: '+error);
+			res.send('Error Uploading File '+error);
 		}
 		else
-		{
-        //request.flash('success', request.file.filename);
-        const companyData = {
-          reg_certificate: req.file.filename,
-        };
+		{       
+          const userDocsData = {
+            UserId: req.body.user_id,
+            DocumentTypeId: req.body.doc_type_id,
+            filename: req.file.filename,
+            active: true,
+            createdAt: new Date(),
+            updatedAt: null,
+          };
       
-        Company.update(companyData, {
-          where: { id: req.body.company_id }
-        })
-          .then(num => {
-            if (num == 1) {
-              res.send({
-                message: "User document updated successfully."
-              });
-            } else {
-              res.send({
-                message: `Cannot update user with id=${req.body.company_id}. Maybe user was not found or req.body is empty!`
-              });
-            }
+          // Save UserDocs in the database
+          userDocs.create(userDocsData)
+            .then(data => {
+              res.status(200).json(success("Student Document added successfully!", data));
+            })
+            .catch(err => {
+              res.status(400).json(errorResponse(err, 400));
           });
 
-			//response.redirect("/fileupload");
-
-			//res.send('File is uploaded successfully '+req.file.filename);
+		
 		}
 
 	})
 
-    if (!req.body.student_enrollment_id) {
-      res.status(400).json(errorResponse("Student enrollment ID cannot be empty!", 400));
-      return;
-    }
-  
-    // Create a UserDocs
-   
-    const userDocsData = {
-      student_enrollment_id: req.body.student_enrollment_id,
-      program_semester_id: req.body.program_semester_id,
-      institute_programme_course_subject_id: req.body.institute_programme_course_subject_id,
-      eval_type_id: req.body.eval_type_id,
-      total_marks: req.body.total_marks,
-      marks_obtained: req.body.marks_obtained,
-      grade_obtained: req.body.grade_obtained,
-      active: req.body.active ? req.body.active : true,
-      updateAt:null
-    };
-
-    // Save UserDocs in the database
-    userDocs.create(userDocsData)
-      .then(data => {
-        res.status(200).json(success("Student Documents created successfully!", data));
-      })
-      .catch(err => {
-        res.status(400).json(errorResponse(err, 400));
-    });
 };
+
 
 // Retrieve all UserDocs from the database.
 exports.findAll = async (req, res) => {
   console.log(req.params.id);
 
   const userId = req.params.id;
-  var condition = userId ? { user_id: { [Op.eq]: userId } } : null;
+  var condition = userId ? { UserId: { [Op.eq]: userId } } : null;
 
   const data =  await userDocs.findAll({ where: condition });
 
@@ -148,18 +126,21 @@ exports.findAll = async (req, res) => {
             //take document type details and add to array below
             let docTypeData = await docType.findOne({
                 where:{
-                      id:rm.doc_type_id
+                      id:rm.DocumentTypeId
                   }
                 });
 
-            const filePath = uploadUrl+"/user/"+userId+"/"+rm.filename;
+                 
+
+            //const filePath = uploadUrl+"/user/"+userId+"/"+rm.filename;
+            const filePath = req.protocol + '://' + req.get('host') +"/static/user/"+rm.filename;
             
             docsData.push({
-                "id":rm.id, 
-                "doc_type_id":rm.doc_type_id, 
-                "doc_type_name":docTypeData.name, 
-                "filename":rm.filename, 
-                "filepath":filePath, 
+                "id":rm.id,
+                "doc_type_id":rm.DocumentTypeId,
+                "doc_type_name":docTypeData.name,
+                "filename":rm.filename,
+                "filepath":filePath,
                
             });
         }
@@ -231,7 +212,19 @@ exports.findOne = (req, res) => {
   userDocs.findByPk(id)
     .then(data => {
       if (data) {
-        res.status(200).json(success("Student Documents fetched successfully!", data));
+        var docsData = [];
+        const filePath = req.protocol + '://' + req.get('host') +"/static/user/"+data.filename;
+            
+        docsData.push({
+            "id":data.id,
+            "doc_type_id":data.doc_type_id,
+            "doc_type_name":data.name,
+            "filename":data.filename, 
+            "filepath":filePath, 
+           
+        });
+
+        res.status(200).json(success("Student Documents fetched successfully!", docsData[0]));
       } else {
         res.status(400).json(errorResponse(`Cannot find Student Documents with id=${id}.`, 400));
       }
@@ -241,35 +234,7 @@ exports.findOne = (req, res) => {
     });
 };
 
-// Update a UserDocs by the id in the request
-exports.update = (req, res) => {
-  const id = req.params.id;
 
-  const userDocsData = {
-    student_enrollment_id: req.body.student_enrollment_id,
-    program_semester_id: req.body.program_semester_id,
-    institute_programme_course_subject_id: req.body.institute_programme_course_subject_id,
-    eval_type_id: req.body.eval_type_id,
-    total_marks: req.body.total_marks,
-    marks_obtained: req.body.marks_obtained,
-    grade_obtained: req.body.grade_obtained,
-    active: req.body.active
-  };
-
-  userDocs.update(userDocsData, {
-    where: { id: id }
-  })
-    .then(num => {
-      if (num == 1) {
-        res.status(200).json(success("Student Documents was updated successfully!"));
-      } else {
-        res.status(400).json(errorResponse(` Cannot update Student Documents with id=${id}. Maybe Student Documents was not found or req.body is empty!`, 400));
-      }
-    })
-    .catch(err => {
-      res.status(400).json(errorResponse(err+" Error updating Student Documents with id=" + id, 400));
-    });
-};
 
 // Delete a UserDocs with the specified id in the request
 exports.delete = (req, res) => {

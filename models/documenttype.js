@@ -14,11 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   DocumentType.init({
-    name: DataTypes.STRING,
-    is_active: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true
-    }
+    ParentId: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'DocumentType',

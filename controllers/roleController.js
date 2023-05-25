@@ -25,7 +25,7 @@ exports.get = async function (req, res) {
     is_active: true,
   };
   
-  if(req.body.type.includes("register")){
+  if(req.body.type.includes("register") && req.body.type.length == 1){
     where = {
       display: true,
       is_active: true,

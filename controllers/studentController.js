@@ -28,6 +28,7 @@ const studentRemarks = require("../models").StudentRemarks;
 const UserQualification = require("../models").UserQualification;
 const qualificationTypes = require("../models").QualificationTypes;
 const evalTypes = require("../models").EvalTypes;
+const subject = require("../models/").Subject;
 
 //const OTP = require("../models").OTP;
 //const tokenList = {}
@@ -189,7 +190,7 @@ exports.getStudentDetails = async function(req,res){
 
     //One student will have only one active enrollment flag is_active:1 :Paresh
     const studentEntrollmentData = await StudentEnrollment.findOne({
-        attributes:['user_id', 'id','academic_year','institute_programme_id'],
+        attributes:['user_id', 'id', 'subject_id','academic_year','institute_programme_id'],
         where:{
             is_active: true,
             user_id: userId,
@@ -278,7 +279,7 @@ exports.getStudentDetails = async function(req,res){
                 "institute_programme_course_subject_id":m.institute_programme_course_subject_id, 
                 "eval_type_id":m.eval_type_id, 
                 "eval_type_name":evalTypeDetails.name, 
-                "total_marks":m.total_marks, 
+                "total_marks":m.total_marks,
                 "marks_obtained":m.marks_obtained, 
                 "grade_obtained":m.grade_obtained, 
                 "designation":m.designation, 
@@ -312,6 +313,7 @@ exports.getStudentDetails = async function(req,res){
               }
             //END student Result------------------------------------------
 
+            //qualification are past qualification details
             let userQualifications = await UserQualification.findAll({
               where:{
                     user_id:userId
@@ -337,6 +339,11 @@ exports.getStudentDetails = async function(req,res){
                 
             //student academic details---------------------------------------
             var academic;
+            let subjectDetails = await subject.findOne({
+              where:{
+                    id:studentEntrollmentData.subject_id
+                }
+            });
             academic= {
               "student_enrollemnt_id":studentEntrollmentData.id, 
               "academic_year":studentEntrollmentData.academic_year,
@@ -344,6 +351,7 @@ exports.getStudentDetails = async function(req,res){
               "institute_name":institute.name,
               "program_id":instituteProgramme.programme_id,
               "program_name":program.name,
+              "subject":subjectDetails.name,
               "board_univ":instituteProgramme.board_univ,
               "qualification":qualificationData
             };
@@ -397,7 +405,7 @@ exports.getStudentDetails = async function(req,res){
        // }
         return  res.status(200).json(success("Students fetched successfully!", jsondata))
     }else{
-        return res.status(400).json(errorResponse("Error fetching the details", 400));
+        return res.status(400).json(errorResponse("Student not found!", 400));
     }
    
 }
@@ -432,32 +440,3 @@ exports.verifyStudent = (req, res) => {
         });
       });
   };
-
-/*const getStudentGuardians = async (enrollmentID)=>{
-  let studentGuardianResult = await studentGuardian.findAll({
-    where:{
-          active:true,
-          student_enrollment_id:enrollmentID
-      }
-  });
-
-  var guardianData = [];
-  for(const d of studentGuardianResult){
-    guardianData.push({
-      "guardian_type_id":d.guardian_type_id, 
-      "firstname":d.first_name, 
-      "lastname":d.last_name, 
-      "phone":d.phone, 
-      "email":d.email, 
-      "aadhar_card_no":d.aadhar_card_no, 
-      "designation":d.designation, 
-      "occupation":d.occupation, 
-      "work_address":d.work_address, 
-      "annual_income":d.annual_income, 
-      "created_at":d.createdAt, 
-    });
-  }
-
-  return guardianData;
-}*/
-
