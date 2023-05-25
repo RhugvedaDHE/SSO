@@ -2,6 +2,7 @@ const express = require("express");
 const Role = require("../models").Role;
 const UserRole = require("../models").UserRole;
 const { success, errorResponse, validation } = require("../responseApi");
+const { Op } = require("sequelize");
 
 exports.create = function (req, res) {
   console.log(req.body);
@@ -18,11 +19,13 @@ exports.create = function (req, res) {
 
 exports.get = async function (req, res) {
   let where = {
-    type: req.body.type,
+    type: {
+      [Op.in]: req.body.type
+    },
     is_active: true,
   };
-
-  if(req.body.type == "register"){
+  
+  if(req.body.type.includes("register")){
     where = {
       display: true,
       is_active: true,
@@ -30,6 +33,7 @@ exports.get = async function (req, res) {
   }  
   await Role.findAll({
       where: where,
+      is_active: true,
     })
       .then((roles) => {
         res.status(200).json(success("Roles fetched successfully!", roles));
