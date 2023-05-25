@@ -17,19 +17,27 @@ exports.create = function (req, res) {
 };
 
 exports.get = async function (req, res) {
-  console.log(req.body.type);
-  await Role.findAll({
-    where: {
-      type: req.body.type,
+  let where = {
+    type: req.body.type,
+    is_active: true,
+  };
+
+  if(req.body.type == "register"){
+    where = {
+      display: true,
       is_active: true,
-    },
-  })
-    .then((roles) => {
-      res.status(200).json(success("Roles fetched successfully!", roles));
+    };
+  }  
+  await Role.findAll({
+      where: where,
     })
-    .catch((error) => {
-      res.status(400).json(errorResponse(error, 400));
-    });
+      .then((roles) => {
+        res.status(200).json(success("Roles fetched successfully!", roles));
+      })
+      .catch((error) => {
+        res.status(400).json(errorResponse(error, 400));
+      });
+  
 };
 
 exports.getRegister = async function (req, res) {

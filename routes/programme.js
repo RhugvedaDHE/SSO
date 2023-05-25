@@ -19,6 +19,6 @@ router.post('/update', [
 router.get('/get/',  Programme.get);
 
 router.post('/get/institute',  Programme.getInstituteProgramme);
-router.get('/get/programme-semesters',  Programme.getProgSems);
+router.post('/get/programme-semesters',  Programme.getProgSems);
 
 module.exports = router;
