@@ -13,6 +13,22 @@ module.exports = {
         type: Sequelize.STRING,
         unique:true
       },
+      stream_id: {
+        type: Sequelize.INTEGER,
+        unique:true
+      },
+      max_sem: {
+        type: Sequelize.INTEGER,
+        unique:true
+      },
+      programme_desc: {
+        type: Sequelize.STRING,
+        unique:true
+      },
+      type: {
+        type: Sequelize.STRING,
+        unique:true
+      },
       is_active: {
         type: Sequelize.BOOLEAN,
         default: true

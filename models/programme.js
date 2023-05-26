@@ -29,6 +29,7 @@ module.exports = (sequelize, DataTypes) => {
     max_sem: DataTypes.STRING,
     programme_desc: DataTypes.STRING,
     type: DataTypes.STRING,
+    stream_id: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: 1
