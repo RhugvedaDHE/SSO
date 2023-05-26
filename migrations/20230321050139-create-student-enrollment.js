@@ -32,7 +32,11 @@ module.exports = {
       section: {
         type: Sequelize.STRING,
         allowNull: true
-      },      
+      },
+      subject_id: {
+        type: Sequelize.INTEGER,
+        references: { model: 'Subjects', key: 'id' },
+      },
       is_active: {
         type: Sequelize.BOOLEAN,
         default:true

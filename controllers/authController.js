@@ -33,6 +33,7 @@ const {
 } = require("../responseApi");
 
 exports.getUserDetails = function (req, res) {
+  var studentDetails =[];
   UserPersonalDetails.findOne(
     {
       where: {
@@ -87,18 +88,38 @@ exports.getUserDetails = function (req, res) {
             attributes: ["id", "name"],
             where: {
               id: req.user.role_id,
-            }
+            },
+            
           });
 
-          const response = {
+          studentDetails.push({
             "User": userPersonalDetails,
             "selected_role": selectedRole,
             "user_role": userRole,
             "user_Contact": userContact,
-          };
+          });
+
+          if(req.user.role_id == 7){
+            let student = await StudentEnrollment.findOne({
+              where: {
+                user_id: req.user.id
+              }
+            });
+            console.log("hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", student)
+            let institute = await InstituteProgramme.findOne({
+              where:{
+                id: student.institute_programme_id
+              }
+            })
+
+            studentDetails.push({
+              "institute": institute
+            });
+          }
+          
           res
             .status(200)
-            .json(success("User Details fetched successfully", response));
+            .json(success("User Details fetched successfully", studentDetails));
         })
       }).catch((error) => {
         res.status(400).json(errorResponse(error, 400));

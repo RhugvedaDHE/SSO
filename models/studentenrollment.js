@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
     academic_year: DataTypes.STRING,
     current_semester: DataTypes.STRING,
     section: DataTypes.STRING,
+    subject_id: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: 1
