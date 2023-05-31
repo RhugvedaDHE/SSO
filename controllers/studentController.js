@@ -7,10 +7,10 @@ const UserRole = require("../models").UserRole;
 //const UserContact = require("../models").UserContact;
 //const Staff = require("../models").Staff;
 //const Role = require("../models").Role;
-//const City = require("../models").City;
-//const State = require("../models").State;
+const City = require("../models").City;
+const State = require("../models").State;
 //const Country = require("../models").Country;
-//const District = require("../models").District;
+const District = require("../models").District;
 //const Company = require("../models").Company;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
 //const InstituteStaff = require("../models").InstituteStaff;
@@ -29,6 +29,11 @@ const UserQualification = require("../models").UserQualification;
 const qualificationTypes = require("../models").QualificationTypes;
 const evalTypes = require("../models").EvalTypes;
 const subject = require("../models/").Subject;
+const gender = require("../models/").Gender;
+const bloodGroup = require("../models/").BloodGroup;
+const country = require("../models/").Country;
+const userContact = require("../models/").UserContact;
+
 
 //const OTP = require("../models").OTP;
 //const tokenList = {}
@@ -380,24 +385,104 @@ exports.getStudentDetails = async function(req,res){
                 }
             //END student Marks------------------------------------------
 
+            //get gender, blood group and nationality
+            let genderDetails = await gender.findOne({
+              where:{
+                    id:userdetails.gender
+                }
+            });
+
+            let bloodDetails = await bloodGroup.findOne({
+              where:{
+                    id:userdetails.blood_group
+                }
+            });
+
+            let countryDetails = await country.findOne({
+              where:{
+                    id:userdetails.nationality
+                }
+            });
+
+            //Get user contact details --------------------------------------
+            let usercontactResult = await userContact.findAll({
+              where:{
+                    is_active:true,
+                    user_id:userId
+                }
+            });
+          
+            var contactData = [];
+            for(const c of usercontactResult){
+              
+              //find contact country
+              let contactCountryDetails = await country.findOne({
+                where:{
+                      id:c.country_id
+                  }
+              });
+
+              let contactStateDetails = await State.findOne({
+                where:{
+                      id:c.state_id
+                  }
+              });
+
+              let contactDistrictDetails = await District.findOne({
+                where:{
+                      id:c.district_id
+                  }
+              });
+
+              //city as taluka login by rhug-veda
+              let cityAsTalukaDetails = await City.findOne({
+                where:{
+                      id:c.taluka_id
+                  }
+              });
+
+              City
+
+              contactData.push({
+                "type": c.type,
+                "address": c.address,
+                "country_id": c.country_id,
+                "country_title": contactCountryDetails.name,
+                "state_id": c.state_id,
+                "state_title": contactStateDetails.name,
+                "district_id": c.district_id,
+                "district_title": contactDistrictDetails.name,
+                "taluka_id": c.taluka_id,
+                "taluka_title": cityAsTalukaDetails.name,
+                "village": c.village,
+                "pincode": c.pincode,
+                "created_at":c.createdAt,
+              });
+            }
+            //END user contact ------------------------------------------
+
             jsondata.push({
               "user_id":studentEntrollmentData.user_id,
               "firstname":userdetails.firstname,
               "lastname":userdetails.lastname,
               "gender":userdetails.gender,
+              "gender_title":genderDetails.name,
               "email":userdetails.email,
               "phone":userdetails.phone,
               "dob":userdetails.dob,
               "aadhar":userdetails.aadhar,
               "blood_group":userdetails.blood_group,
+              "blood_group_title":bloodDetails.name,
               "nationality":userdetails.nationality,
+              "nationality_title":countryDetails.name,
               "physically_disabled":userdetails.physically_disabled,
               "createdAt":userdetails.createdAt,
               "academic":academic,
               "guardian":guardianData,
               "marks":marksData,
               "result":resultData,
-              "remarks":remarksData
+              "remarks":remarksData,
+              "contact_data":contactData,
             });
 
                  

@@ -20,6 +20,11 @@ module.exports = (sequelize, DataTypes) => {
   }
   Role.init({
     name: DataTypes.STRING,
+    type: DataTypes.STRING,
+    display: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: 1
+    },
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: 1

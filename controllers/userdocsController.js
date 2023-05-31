@@ -84,8 +84,8 @@ exports.uploadDoc = async (req,res) => {
 		else
 		{       
           const userDocsData = {
-            UserId: req.body.user_id,
-            DocumentTypeId: req.body.doc_type_id,
+            user_id: req.body.user_id,
+            doc_type_id: req.body.doc_type_id,
             filename: req.file.filename,
             active: true,
             createdAt: new Date(),
@@ -114,7 +114,7 @@ exports.findAll = async (req, res) => {
   console.log(req.params.id);
 
   const userId = req.params.id;
-  var condition = userId ? { UserId: { [Op.eq]: userId } } : null;
+  var condition = userId ? { user_id: { [Op.eq]: userId } } : null;
 
   const data =  await userDocs.findAll({ where: condition });
 
@@ -126,7 +126,7 @@ exports.findAll = async (req, res) => {
             //take document type details and add to array below
             let docTypeData = await docType.findOne({
                 where:{
-                      id:rm.DocumentTypeId
+                      id:rm.doc_type_id
                   }
                 });
 
@@ -137,7 +137,7 @@ exports.findAll = async (req, res) => {
             
             docsData.push({
                 "id":rm.id,
-                "doc_type_id":rm.DocumentTypeId,
+                "doc_type_id":rm.doc_type_id,
                 "doc_type_name":docTypeData.name,
                 "filename":rm.filename,
                 "filepath":filePath,

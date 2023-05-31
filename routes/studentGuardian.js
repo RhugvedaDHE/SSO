@@ -4,6 +4,7 @@ require('dotenv').config();
 const {check} = require('express-validator');
 const validate = require('../middlewares/validate');
 const studentGuardian = require('../controllers/studentguardianController');
+const authenticate = require('../middlewares/authenticate');
 //var multer = require('multer');
 
 
@@ -11,8 +12,8 @@ console.log("In studentGuardian routes");
 
 // Create a new StudentGuardian
 router.post("/",[
-    check('student_enrollment_id').not().isEmpty().withMessage('Student enrollment ID is required'),
-], validate, studentGuardian.create);
+    
+], authenticate, studentGuardian.create);
 
 // Retrieve all student's Guardian
 router.get("/all/:id", studentGuardian.findAll);

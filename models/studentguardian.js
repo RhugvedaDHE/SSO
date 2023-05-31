@@ -11,15 +11,15 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      /*StudentGuardian.belongsTo(models.user, {
-        foreignKey: "user_id",
-        as: "userCompany",
+      StudentGuardian.belongsTo(models.GuardianType, {
+        foreignKey: "guardian_type_id",
+        as: "guardianTypeId",
       });
 
-      StudentGuardian.belongsTo(models.organizationType, {
-        foreignKey: "organization_type_id",
-        as: "companyOrganizationType",
-      });*/
+      StudentGuardian.belongsTo(models.StudentEnrollment, {
+        foreignKey: "student_enrollment_id",
+        as: "studentEnrollmentId",
+      });
     }
   }
 
@@ -60,17 +60,14 @@ module.exports = (sequelize, DataTypes) => {
       annual_income: {
         type: DataTypes.DECIMAL
       },
-      active: {
-        type: DataTypes.BOOLEAN
+      is_active: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: 1
       },
       createdAt: {
         type: DataTypes.DATE
       },
       updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
-      deletedAt: {
         type: DataTypes.DATE,
         allowNull: true,
       }

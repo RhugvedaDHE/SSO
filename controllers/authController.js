@@ -32,8 +32,10 @@ const {
   EmailNotification,
 } = require("../responseApi");
 
+//change the function. make generic. if the type is institute, fetch institute details. if user belongs to dept, fetch dept details. if the user belongs to service,
+//fetch his 
 exports.getUserDetails = function (req, res) {
-  var studentDetails =[];
+  // var studentDetails =[];
   UserPersonalDetails.findOne(
     {
       where: {
@@ -50,7 +52,7 @@ exports.getUserDetails = function (req, res) {
       UserRole.findAll({
         attributes: [],
         where: {
-          user_id: userPersonalDetails.user_id,
+          user_id: req.user.id,
         }, include: [
           {
             model: Role,
@@ -83,43 +85,50 @@ exports.getUserDetails = function (req, res) {
             ],
           }
         ).then(async (userContact) => {
-          console.log(req.user.role_id)
+          
           let selectedRole = await Role.findOne({
-            attributes: ["id", "name"],
+            attributes: ["id", "name", "type"],
             where: {
               id: req.user.role_id,
             },
             
           });
 
-          studentDetails.push({
+          const response = { 
             "User": userPersonalDetails,
             "selected_role": selectedRole,
             "user_role": userRole,
             "user_Contact": userContact,
-          });
+          };
+          response.type = {};
 
-          if(req.user.role_id == 7){
+          if(selectedRole.type == "institute" && selectedRole.name == "Student"){
             let student = await StudentEnrollment.findOne({
               where: {
                 user_id: req.user.id
               }
             });
-            console.log("hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", student)
             let institute = await InstituteProgramme.findOne({
+              attributes: ["institute_id"],
               where:{
                 id: student.institute_programme_id
               }
             })
-
-            studentDetails.push({
-              "institute": institute
-            });
+            response.type = institute;
           }
-          
+          else if(selectedRole.type == "dept" || selectedRole.type == "company" || selectedRole.type == "institute" || selectedRole.type == "service"){
+            let department = await EntityUser.findOne({
+              attributes: ["cio_id"],
+              where: {
+                user_id: req.user.id
+              }
+            });            
+            response.type = department;
+          }
+
           res
             .status(200)
-            .json(success("User Details fetched successfully", studentDetails));
+            .json(success("User Details fetched successfully", response));
         })
       }).catch((error) => {
         res.status(400).json(errorResponse(error, 400));
