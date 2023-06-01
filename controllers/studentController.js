@@ -238,7 +238,7 @@ exports.getStudentDetails = async function(req,res){
             //Get student's guardians--------------------------------------
             let studentGuardianResult = await studentGuardian.findAll({
               where:{
-                    active:true,
+                    is_active:true,
                     student_enrollment_id:studentEntrollmentData.id
                 }
             });
