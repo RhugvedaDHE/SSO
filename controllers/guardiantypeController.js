@@ -40,12 +40,8 @@ exports.create = async (req, res) => {
 
 // Retrieve all GuardianType from the database.
 exports.findAll = (req, res) => {
-  console.log(req.query.name);
-
-  const name = req.query.name;
-  var condition = name ? { name: { [Op.iLike]: `%${name}%` } } : null;
-
-  GuardianType.findAll({ where: condition })
+  console.log("hiiiii")
+  GuardianType.findAll()
     .then(data => {
       res.status(200).json(success("Guardians fetched successfully!", data));
     })

@@ -111,6 +111,7 @@ application.use('/api/v1/religion', religionRouter);
 
 //APIs by Paresh A.
 application.use('/api/v1/company', companyRouter);
+application.use('/api/v1/guardiantype', guardianTypeRouter);
 application.use('/api/v1/castecategory', casteCategoryRouter);
 application.use('/api/v1/bloodgroup', bloodGroupRouter);
 application.use('/api/v1/programmesemester', programmeSemesterRouter);

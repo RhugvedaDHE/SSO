@@ -23,119 +23,91 @@ exports.create = async (req, res) => {
   }).then((studentEnrollment) => {
    
     console.log("SE", studentEnrollment)
-    const fatherDetails = {
-      guardian_type_id: req.body.f_type,
+    const parentDetails = {
+      guardian_type_id: req.body.type,
       student_enrollment_id: studentEnrollment.id,
-      first_name: req.body.fathersFirstName,
-      last_name: req.body.fathersLastName,
-      phone: req.body.f_contNo,
-      email: req.body.f_email,
-      occupation: req.body.fathersOccupation,
-      designation: req.body.fathersDesignation,
-      word_address: req.body.f_workaddrs,
-      annual_income: req.body.f_annualinc,
-      is_deceased: req.body.isFatherDeceased,
-      is_employed: req.body.isFatherEmployed,
+      first_name: req.body.firstName,
+      last_name: req.body.lastName,
+      phone: req.body.phone,
+      email: req.body.email,
+      occupation: req.body.occupation,
+      designation: req.body.designation,
+      word_address: req.body.wordAddress,
+      annual_income: req.body.annualIncome,
+      is_deceased: req.body.isDeceased,
+      is_employed: req.body.isEmployed,
     };
 
-    const motherDetails = {
-      guardian_type_id: req.body.m_type,
-      student_enrollment_id: studentEnrollment.id,
-      first_name: req.body.mothersFirstName,
-      last_name: req.body.mothersLastName,
-      phone: req.body.m_contNo,
-      email: req.body.m_email,
-      occupation: req.body.mothersOccupation,
-      designation: req.body.mothersDesignation,
-      word_address: req.body.m_workaddrs,
-      annual_income: req.body.m_annualinc,
-      is_deceased: req.body.isMotherDeceased,
-      is_employed: req.body.isMotherEmployed,
-    };
+    // const motherDetails = {
+    //   guardian_type_id: req.body.m_type,
+    //   student_enrollment_id: studentEnrollment.id,
+    //   first_name: req.body.mothersFirstName,
+    //   last_name: req.body.mothersLastName,
+    //   phone: req.body.m_contNo,
+    //   email: req.body.m_email,
+    //   occupation: req.body.mothersOccupation,
+    //   designation: req.body.mothersDesignation,
+    //   word_address: req.body.m_workaddrs,
+    //   annual_income: req.body.m_annualinc,
+    //   is_deceased: req.body.isMotherDeceased,
+    //   is_employed: req.body.isMotherEmployed,
+    // };
 
-    const guardianDetails = {
-      guardian_type_id: req.body.g_type,
-      student_enrollment_id: studentEnrollment.id,
-      first_name: req.body.guardiansFirstName,
-      last_name: req.body.guardiansLastName,
-      phone: req.body.g_contNo,
-      email: req.body.g_email,
-      occupation: req.body.guardiansOccupation,
-      designation: req.body.guardiansDesignation,
-      word_address: req.body.g_workaddrs,
-      annual_income: req.body.g_annualinc,
-      is_deceased: false,
-      is_employed: req.body.isGuardianEmployed,
-    };
-    let parentDetails = [];
-    parentDetails.push(father);
-    parentDetails.push(mother);
+    // const guardianDetails = {
+    //   guardian_type_id: req.body.g_type,
+    //   student_enrollment_id: studentEnrollment.id,
+    //   first_name: req.body.guardiansFirstName,
+    //   last_name: req.body.guardiansLastName,
+    //   phone: req.body.g_contNo,
+    //   email: req.body.g_email,
+    //   occupation: req.body.guardiansOccupation,
+    //   designation: req.body.guardiansDesignation,
+    //   word_address: req.body.g_workaddrs,
+    //   annual_income: req.body.g_annualinc,
+    //   is_deceased: false,
+    //   is_employed: req.body.isGuardianEmployed,
+    // };
+    // let parentDetails = [];
+    // parentDetails.push(father);
+    // parentDetails.push(mother);
 
     let success = false;
     // Save mother details in the database   
       StudentGuardian.findOne({      
         where: {
           student_enrollment_id: studentEnrollment.id,
-          guardian_type_id: req.body.m_type 
+          guardian_type_id: req.body.type 
         },
       }
-    ).then((mother) =>{
-      if(mother){
-        StudentGuardian.update(motherDetails,{
+    ).then((parent) =>{
+      if(parent){
+        StudentGuardian.update(parentDetails,{
           where: {
-            guardian_type_id: req.body.m_type,
+            guardian_type_id: req.body.type,
             student_enrollment_id: studentEnrollment.id
           }
         })
         .then((data) => {
-          res.status(200).json(success("Mother details updated successfully!", data));
+          res.status(200).json(success("Parent details updated successfully!", data));
         })
       }
       else{
-        StudentGuardian.create(motherDetails)
+        StudentGuardian.create(parentDetails)
         .then((data) => {
-          res.status(200).json(success("Mother details created successfully!", data));
+          res.status(200).json(success("Parent details created successfully!", data));
         })
       }    
     })
-
-    // Save father details in the database   
-    StudentGuardian.findOne({      
-      where: {
-        student_enrollment_id: studentEnrollment.id,
-        guardian_type_id: req.body.f_type 
-      },
-    }
-    ).then((father) =>{
-      if(father){
-        StudentGuardian.update(fatherDetails,{
-          where: {
-            guardian_type_id: req.body.f_type,
-            student_enrollment_id: studentEnrollment.id
-          }
-        })
-        .then((data) => {
-          res.status(200).json(success("Father details updated successfully!", data));
-        })
-      }
-      else{
-        StudentGuardian.create(fatherDetails)
-        .then((data) => {
-          res.status(200).json(success("Father details created successfully!", data));
-        })
-      }    
-    })
-
-    
-    if (req.body.isFatherDeceased && req.body.isMotherDeceased) {
-      StudentGuardian.create(guardian)
-      .then((data) => {
-        res.status(200).json(success("Guardian created successfully!", data));
-      })
-      .catch((err) => {
-        res.status(400).json(errorResponse(err, 400));
-      });
-    }
+       
+    // if (req.body.isFatherDeceased && req.body.isMotherDeceased) {
+    //   StudentGuardian.create(guardian)
+    //   .then((data) => {
+    //     res.status(200).json(success("Guardian created successfully!", data));
+    //   })
+    //   .catch((err) => {
+    //     res.status(400).json(errorResponse(err, 400));
+    //   });
+    // }
       // StudentGuardian.upsert(parentDetails[i])
       // .then((data) => {
      
@@ -158,7 +130,7 @@ exports.create = async (req, res) => {
     // else if(success){
     //   res.status(200).json(success("Guardian created successfully!", ""));
     // }
-    return 1;
+    // return 1;
   }).catch((err) => {
     res.status(400).json(errorResponse(err, 400));
   });
