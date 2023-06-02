@@ -114,6 +114,9 @@ exports.getUserDetails = function (req, res) {
                 id: student.institute_programme_id
               }
             })
+            if(student){
+              response.student_enrollment_id = student.id;
+            }
             response.type = institute;
           }
           else if(selectedRole.type == "dept" || selectedRole.type == "company" || selectedRole.type == "institute" || selectedRole.type == "service"){
