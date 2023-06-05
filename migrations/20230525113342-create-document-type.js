@@ -9,13 +9,13 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      ParentId: {
+      parentId: {
         type: Sequelize.INTEGER
       },
       name: {
         type: Sequelize.STRING
       },
-      active: {
+      is_active: {
         type: Sequelize.BOOLEAN
       },
       createdAt: {

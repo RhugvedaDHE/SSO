@@ -6,6 +6,7 @@ const db = require('../models');
 //const uploadFile = require("../middleware/upload");
 const DocumentType = require('../models').DocumentType;
 const { success, errorResponse, validation } = require("../responseApi");
+const { DATE } = require('sequelize');
 
 //const db = require("../models");
 
@@ -14,7 +15,7 @@ const Op = require('sequelize').Op;
 
 // Create and Save a new DocumentType
 exports.create = async (req, res) => {
-    console.log("in controller gender");
+    console.log("in controller doctype");
 
     if (!req.body.name) {
       var error = "DocumentType name cannot be empty!";
@@ -24,14 +25,16 @@ exports.create = async (req, res) => {
     }
   
     // Create a DocumentType
-    const gender = {
+    const doctype = {
       name: req.body.name,
-      active: req.body.active ? req.body.active : true,
-      updateAt:null
+      ParentId: req.body.parentId,
+      is_active: true,
+      createdAt:new Date(),
+      updatedAt:null,
     };
 
     // Save DocumentType in the database
-    DocumentType.create(gender)
+    DocumentType.create(doctype)
       .then(data => {
         res.status(200).json(success("DocumentType created successfully!", data));
       })
