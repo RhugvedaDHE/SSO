@@ -9,7 +9,7 @@ const doctype = require('../controllers/doctypeController');
 
 console.log("In doctype routes");
 
-// Create a new Gender
+// Create a new doctype
 router.post("/",[
     check('name').not().isEmpty().withMessage('Doc name is required'),
 ], validate, doctype.create);
@@ -17,18 +17,21 @@ router.post("/",[
 // Retrieve all doctype
 router.get("/all/:id", doctype.findAll);
 
+//get all parent doc types
+router.get("/all/parent/doctypes", doctype.getParentDocTypes);
+
 // Retrieve all published doctype
 router.get("/active", doctype.findAllActive);
 
-// Retrieve a single Gender with id
+// Retrieve a single doctype with id
 router.post("/:id", doctype.findOne);
 
-// Update a Gender with id
+// Update a doctype with id
 router.put("/:id", doctype.update);
 
-// Delete a Gender with id
+// Delete a doctype with id
 router.delete("/:id", doctype.delete);
 
-// Create a new Gender
+// Create a new doctype
 router.delete("/", doctype.deleteAll);
 module.exports = router;

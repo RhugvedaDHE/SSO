@@ -43,6 +43,19 @@ exports.create = async (req, res) => {
     });
 };
 
+// Find all active parent doc types
+exports.getParentDocTypes = async (req, res) => {
+  console.log("heyyyyy")
+  await DocumentType.findAll({ where: { ParentId: 0 } })
+  .then(data => {
+    //res.send(data);
+    res.status(200).json(success("Parent doc types Listed successfully!", data))
+  })
+  .catch(error => {
+    res.status(400).json(errorResponse(error, 400));
+  });
+}
+
 // Retrieve all DocumentType from the database.
 exports.findAll = (req, res) => {
   console.log(req.params.id);
