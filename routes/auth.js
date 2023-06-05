@@ -100,7 +100,10 @@ check(
 
 router.get('/get-user-details', authenticate, Auth.getUserDetails);
 
-router.post('/switch-user', authenticate, Auth.switchUserRole);
+router.post('/switch-user', 
+[check('role_id').not().isEmpty().withMessage('Your role is required')],
+validate, authenticate, Auth.switchUserRole);
+
 router.get('/get-user-status', authenticate, Auth.getUserStatus);
 
 router.post('/register-superadmin',[
@@ -109,10 +112,50 @@ router.post('/register-superadmin',[
   check('lastname').not().isEmpty().withMessage('Your Last name is required').isAlpha().withMessage('Last name must have only alphabets'),
 ],validate,Auth.registerSuperadmin);
 
-router.post('/register-admin',Auth.registerAdmins);
+router.post('/register-admin',[
+check('phone').not().isEmpty().withMessage('Your phone is required').isNumeric().withMessage("Please enter a valid Phone"),
+check('email').not().isEmpty().withMessage('Your email is required'),
+check('role_id').not().isEmpty().withMessage('Your role is required').isNumeric().withMessage("Please select a valid Role"),
+check('designation_id').not().isEmpty().withMessage('Your designation is required').isNumeric().withMessage("Please select a valid Designation"),
+check('employementtype_id').not().isEmpty().withMessage('Your employment type is required').isNumeric().withMessage("Please select a valid employment type"),
+check('entity_type_id').not().isEmpty().withMessage('Your entity type is required').isNumeric().withMessage("Please select a valid entity type"),
+check('cio_id').not().isEmpty().withMessage('Your organisation/institute details are required').isNumeric().withMessage("Please select a valid organisation/institute"),
+check('firstname').not().isEmpty().withMessage('Your role is required'),
+check('lastname').not().isEmpty().withMessage('Your role is required')],
+validate, Auth.registerAdmins);
 
 
-router.post('/register/company', Auth.register); // same as company admin
+router.post('/register/company', [
+  check('email').not().isEmpty().withMessage('Your Email is required'),
+  check('username').not().isEmpty().withMessage('Your Username is required'),
+  check('role_id').not().isEmpty().withMessage('Your role is required').isNumeric().withMessage("Please select a valid Role"),
+  check('phone').not().isEmpty().withMessage('Your phone is required').isNumeric().withMessage("Please enter a valid Phone"),
+  check('firstname').not().isEmpty().withMessage('Your role is required'),
+  check('lastname').not().isEmpty().withMessage('Your role is required'),
+  check('password').isStrongPassword({
+    minLength: 8,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1,
+    minSymbols: 1,
+    returnScore: false,
+    pointsPerUnique: 1,
+    pointsPerRepeat: 0.5,
+    pointsForContainingLower: 10,
+    pointsForContainingUpper: 10,
+    pointsForContainingNumber: 10,
+    pointsForContainingSymbol: 10,
+}).exists({checkFalsy: true}).
+withMessage('Password should Contain Atleast 1 uppercase, Atleast 1 lowercase, Atleast 1 special character and should be 8 chars long.'),
+check('password').exists(),
+check(
+'passwordConfirmation',
+'passwordConfirmation field must have the same value as the password field',
+)
+.exists()
+.custom((value, { req }) => value === req.body.password),
+],Auth.register); // same as company admin
+
 router.post('/register/companyHR', Auth.register);
 router.post('/register/companyGuide', Auth.register);
 

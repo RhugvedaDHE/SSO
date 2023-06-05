@@ -78,6 +78,7 @@ var percentageRouter = require('./routes/percentage');
 var experienceRouter = require('./routes/experience');
 var modeRouter = require('./routes/mode');
 var skillRouter = require('./routes/skill');
+var doctypeRouter = require('./routes/doctype');
 
 application.use('/api/v1/country', countryRouter);
 application.use('/api/v1/role', roleRouter);
@@ -131,6 +132,7 @@ application.use('/api/v1/percentage', percentageRouter);
 application.use('/api/v1/experience', experienceRouter);
 application.use('/api/v1/mode', modeRouter);
 application.use('/api/v1/skill', skillRouter);
+application.use('/api/v1/doctype', doctypeRouter);
 
 
 //=== 5 - START SERVER

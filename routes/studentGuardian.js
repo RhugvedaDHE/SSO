@@ -16,7 +16,7 @@ router.post("/",[
 ], authenticate, studentGuardian.create);
 
 // Retrieve all student's Guardian
-router.get("/all/:id", studentGuardian.findAll);
+router.get("/all/:id", authenticate, studentGuardian.findAll);
 
 // Retrieve all published studentGuardian
 router.get("/active", studentGuardian.findAllActive);

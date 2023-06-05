@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   DocumentType.init({
-    ParentId: DataTypes.INTEGER
+    name: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'DocumentType',

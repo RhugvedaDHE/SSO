@@ -37,41 +37,7 @@ exports.create = async (req, res) => {
       is_deceased: req.body.isDeceased,
       is_employed: req.body.isEmployed,
     };
-
-    // const motherDetails = {
-    //   guardian_type_id: req.body.m_type,
-    //   student_enrollment_id: studentEnrollment.id,
-    //   first_name: req.body.mothersFirstName,
-    //   last_name: req.body.mothersLastName,
-    //   phone: req.body.m_contNo,
-    //   email: req.body.m_email,
-    //   occupation: req.body.mothersOccupation,
-    //   designation: req.body.mothersDesignation,
-    //   word_address: req.body.m_workaddrs,
-    //   annual_income: req.body.m_annualinc,
-    //   is_deceased: req.body.isMotherDeceased,
-    //   is_employed: req.body.isMotherEmployed,
-    // };
-
-    // const guardianDetails = {
-    //   guardian_type_id: req.body.g_type,
-    //   student_enrollment_id: studentEnrollment.id,
-    //   first_name: req.body.guardiansFirstName,
-    //   last_name: req.body.guardiansLastName,
-    //   phone: req.body.g_contNo,
-    //   email: req.body.g_email,
-    //   occupation: req.body.guardiansOccupation,
-    //   designation: req.body.guardiansDesignation,
-    //   word_address: req.body.g_workaddrs,
-    //   annual_income: req.body.g_annualinc,
-    //   is_deceased: false,
-    //   is_employed: req.body.isGuardianEmployed,
-    // };
-    // let parentDetails = [];
-    // parentDetails.push(father);
-    // parentDetails.push(mother);
-
-    let success = false;
+    
     // Save mother details in the database   
       StudentGuardian.findOne({      
         where: {
@@ -97,70 +63,41 @@ exports.create = async (req, res) => {
           res.status(200).json(success("Parent details created successfully!", data));
         })
       }    
-    })
-       
-    // if (req.body.isFatherDeceased && req.body.isMotherDeceased) {
-    //   StudentGuardian.create(guardian)
-    //   .then((data) => {
-    //     res.status(200).json(success("Guardian created successfully!", data));
-    //   })
-    //   .catch((err) => {
-    //     res.status(400).json(errorResponse(err, 400));
-    //   });
-    // }
-      // StudentGuardian.upsert(parentDetails[i])
-      // .then((data) => {
-     
-      //   success = true;
-      // })
-      // .catch((err) => {
-      //   res.status(400).json(errorResponse(err, 400));
-      // });
-    
-
-    // if (req.body.isFatherDeceased && req.body.isMotherDeceased) {
-    //   StudentGuardian.upsert(guardian)
-    //     .then((data) => {
-    //       res.status(200).json(success("Guardian created successfully!", data));
-    //     })
-    //     .catch((err) => {
-    //       res.status(400).json(errorResponse(err, 400));
-    //     });
-    // }
-    // else if(success){
-    //   res.status(200).json(success("Guardian created successfully!", ""));
-    // }
-    // return 1;
+    })    
   }).catch((err) => {
     res.status(400).json(errorResponse(err, 400));
   });
 };
 
 // Retrieve all StudentGuardian from the database.
-exports.findAll = (req, res) => {
-  //console.log(req.params.id);
+exports.findAll = async (req, res) => {
+  await StudentEnrollment.findOne({
+    attributes: ["id"],
+    where: { user_id: req.user.id },
+  }).then((studentEnrollment) => {
 
-  const studentEnrollmentId = req.params.id;
-  var condition = studentEnrollmentId
-    ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } }
-    : null;
+    const studentEnrollmentId = studentEnrollment.id;
+    var condition = studentEnrollmentId
+      ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } }
+      : null;
 
-  StudentGuardian.findAll({ where: condition })
-    .then((data) => {
-      //res.status(200).json(success("Guardians fetched successfully!", data));
+    StudentGuardian.findAll({ where: condition })
+      .then((data) => {
+        //res.status(200).json(success("Guardians fetched successfully!", data));
 
-      //console.log(data);
+        //console.log(data);
 
-      if (data) {
-        res.status(200).json(success("Guardians fetched successfully!", data));
-      } else {
-        res
-          .status(400)
-          .json(errorResponse(`Cannot find Student's Guardians`, 400));
-      }
-    })
-    .catch((err) => {
-      res.status(400).json(errorResponse(err, 400));
+        if (data) {
+          res.status(200).json(success("Guardians fetched successfully!", data));
+        } else {
+          res
+            .status(400)
+            .json(errorResponse(`Cannot find Student's Guardians`, 400));
+        }
+      })
+      .catch((err) => {
+        res.status(400).json(errorResponse(err, 400));
+      });
     });
 };
 
