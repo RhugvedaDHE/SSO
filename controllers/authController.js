@@ -804,7 +804,7 @@ exports.refreshToken = function (req, res) {
 //is_verified status
 exports.getUserStatus = function (req, res) {
   User.findOne({
-    attributes: ["is_verified", "is_complete", "status", "is_signed"],
+    attributes: ["is_verified", "status", "is_signed"],
     where: {
       id: req.user.id
     }
