@@ -499,38 +499,27 @@ exports.getStudentDetails = async function(req,res){
 
 // Update a Company by the id in the request
 exports.verifyStudent = (req, res) => {
-    const id = req.params.id;   
+    const id = req.user.id; 
+    let is_verified = false;
     
-    if(req.body.is_verified){
-      const updatefields = {
-        is_verified: req.body.is_verified,
-        status: "verified"
-      };
-    }
-    else{
-      const updatefields = {
-        is_verified: req.body.is_verified,
-        status: "Incomplete"
-      };
-    }    
+    req.body.is_verified == "verified" ? is_verified = true : is_verified = false;
+
+    const updatefields = {
+      is_verified: is_verified,
+      status: req.body.is_verified
+    };
 
     User.update(updatefields, {
       where: { id: id }
     })
       .then(num => {
         if (num == 1) {
-          res.send({
-            message: "Student was updated successfully."
-          });
+          return  res.status(200).json(success("Students status updated successfully!"))
         } else {
-          res.send({
-            message: `Cannot update Student with id=${id}. Maybe Student was not found`
-          });
+          return res.status(400).json(errorResponse(`Cannot update Student with id=${id}. Maybe Student was not found`, 400));
         }
       })
       .catch(err => {
-        res.status(500).send({
-          message: "Error updating Company with id=" + id
-        });
+        return res.status(400).json(errorResponse(`Cannot update Student with id=${id}. Maybe Server error`, 400));
       });
   };

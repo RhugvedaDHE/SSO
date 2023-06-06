@@ -5,7 +5,7 @@ const {check} = require('express-validator');
 //const validate = require('../middlewares/validate');
 const student = require('../controllers/studentController');
 //var multer = require('multer');
-
+const authenticate = require('../middlewares/authenticate');
 
 console.log("In student routes");
 
@@ -17,7 +17,7 @@ router.get("/all/:id", student.getInstituteStudentList);
 
 // Retrieve a single Student with id
 router.get("/:id", student.getStudentDetails);
-router.put("/verify/:id", student.verifyStudent);
+router.put("/verify", authenticate, student.verifyStudent);
 
 // Retrieve all published student
 /*
