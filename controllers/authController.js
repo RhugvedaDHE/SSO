@@ -120,13 +120,13 @@ exports.getUserDetails = function (req, res) {
             response.type = institute;
           }
           else if(selectedRole.type == "dept" || selectedRole.type == "company" || selectedRole.type == "institute" || selectedRole.type == "service"){
-            let department = await EntityUser.findOne({
+            let cio = await EntityUser.findOne({
               attributes: ["cio_id"],
               where: {
                 user_id: req.user.id
               }
             });            
-            response.type = department;
+            response.type = cio;
           }
 
           res
@@ -161,6 +161,7 @@ exports.register = function (req, res) {
         password: hash,
         phone: req.body.phone,
         email: req.body.email,
+        status: "registered"
       })
         .then((user) => {
           //save user id and college id in students and staff table
@@ -380,6 +381,7 @@ exports.registerAdmins = function (req, res) {
     password: hash,
     phone: req.body.phone,
     email: req.body.email,
+    status: "registered"
   }).then((user) => {
     //save superAdmin Role
     UserRole.create({
@@ -484,6 +486,7 @@ exports.registerSuperadmin = function (req, res) {
     password: hash,
     phone: req.body.phone,
     email: req.body.email,
+    status: "registered"
   })
     .then((user) => {
       //save superAdmin Role
@@ -801,12 +804,29 @@ exports.refreshToken = function (req, res) {
 //is_verified status
 exports.getUserStatus = function (req, res) {
   User.findOne({
-    attributes: ["is_verified"],
+    attributes: ["is_verified", "is_complete", "status", "is_signed"],
     where: {
       id: req.user.id
     }
   }).then((user) => {
     res.status(200).json(success("User Status fetched successfully!", user));
+  }).catch((error) => {
+    res.status(400).json(errorResponse(error, 400));
+  })
+}
+
+//sign Undertaking status
+exports.signUndertaking = async function (req, res) {
+  console.log("body jfdvjdfjvbdjnbjnndfjbnjdf", req.body)
+  await User.findOne({
+    where: {
+      id: req.user.id
+    }
+  }).then((user) => {
+    console.log(req.body)
+    user.is_signed = req.body.undertaking;
+    user.save();
+    res.status(200).json(success("User Status updated successfully!", user));
   }).catch((error) => {
     res.status(400).json(errorResponse(error, 400));
   })

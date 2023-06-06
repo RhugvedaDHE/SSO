@@ -48,7 +48,7 @@ exports.findAll = (req, res) => {
     .catch(err => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving degrees."
+          err.message || "Some error occurred while retrieving skill."
       });
     });
 };
@@ -150,7 +150,7 @@ exports.findAllActive = (req, res) => {
     .catch(err => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving Degrees."
+          err.message || "Some error occurred while retrieving skills."
       });
     });
 };

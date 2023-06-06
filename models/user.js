@@ -21,28 +21,29 @@ module.exports = (sequelize, DataTypes) => {
     email: DataTypes.STRING,
     phone_verified: {
       type:DataTypes.BOOLEAN,
-      defaultValue: 0
+      defaultValue: false
     },
     email_verified: {
       type:DataTypes.BOOLEAN,
-      defaultValue: 0
+      defaultValue: false
     },    
     is_verified: {
       type:DataTypes.BOOLEAN,
-      defaultValue: 0
+      defaultValue: false
     },
     is_active: {
       type: DataTypes.BOOLEAN,
-      defaultValue: 1
+      defaultValue: true
     },
-    is_complete: {
+    is_signed: {
       type: DataTypes.BOOLEAN,
-      defaultValue: 0
+      defaultValue: false
     },
     is_deleted: {
       type:DataTypes.BOOLEAN,
-      defaultValue: 0
-    }
+      defaultValue: false
+    },
+    status: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'User',

@@ -6,6 +6,7 @@ const db = require('../models');
 //const uploadFile = require("../middleware/upload");
 const StudentMarks = require('../models').StudentMarks;
 const StudentEnrollment = require('../models').StudentEnrollment;
+const Programme = require('../models').Programme;
 const { success, errorResponse, validation } = require("../responseApi");
 const e = require('express');
 
@@ -64,13 +65,29 @@ exports.findAll = (req, res) => {
   const studentEnrollmentId = req.params.id;
   var condition = studentEnrollmentId ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } } : null;
 
-  StudentMarks.findAll({ where: condition })
+  StudentMarks.findAll({
+    where: condition,
+  })
     .then(data => {
-      //res.status(200).json(success("StudentMarks fetched successfully!", data));
-
-      //console.log(data);
+      console.log("7444444444444444444444444444444444444444444444444444444444444444444444")
+    
+      for(let i=0; i<data.length; i++){
+        console.log(data[i])
+        console.log("i ", i)
+        data[i].programme = {};
+        
+        let programe = Programme.findAll({
+          where: {
+            id: data[i].program_id
+          },
+        })
+        data[i]["programme"] = programe;
+      }
+      
+         
 
       if (data) {
+        console.log(data)
         res.status(200).json(success("Student Marks fetched successfully!", data));
       } else {
         res.status(400).json(errorResponse(`Cannot find Student's Marks`, 400));

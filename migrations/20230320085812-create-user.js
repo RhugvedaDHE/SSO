@@ -46,12 +46,19 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         default: false
       },
-      is_complete: {
-        type: Sequelize.BOOLEAN,
-        default: false
+      status: {
+        type: Sequelize.STRING,
       },
       is_deleted: {
         type: Sequelize.BOOLEAN,
+        default: false
+      },
+      is_signed: {
+        type: Sequelize.BOOLEAN,
+        default: false
+      },
+      status: {
+        type: Sequelize.STRING,
         default: false
       },
       createdAt: {

@@ -165,4 +165,8 @@ router.post('/verify', Auth.verifyUsers);
 router.post('/update-profile', authenticate, Auth.updateProfile);
 router.post('/update-academics', authenticate, Auth.updateAcademics);
 
+
+//undertaking
+router.post('/sign-undertaking', [check('undertaking').not().isEmpty().withMessage('Undertaking flag is required'),], authenticate, Auth.signUndertaking);
+
 module.exports = router;

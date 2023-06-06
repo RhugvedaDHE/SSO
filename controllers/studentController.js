@@ -501,9 +501,18 @@ exports.getStudentDetails = async function(req,res){
 exports.verifyStudent = (req, res) => {
     const id = req.params.id;   
     
-    const updatefields = {
-      is_verified: req.body.is_verified,
+    if(req.body.is_verified){
+      const updatefields = {
+        is_verified: req.body.is_verified,
+        status: "verified"
       };
+    }
+    else{
+      const updatefields = {
+        is_verified: req.body.is_verified,
+        status: "Incomplete"
+      };
+    }    
 
     User.update(updatefields, {
       where: { id: id }
