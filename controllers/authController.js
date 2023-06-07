@@ -161,7 +161,7 @@ exports.register = function (req, res) {
         password: hash,
         phone: req.body.phone,
         email: req.body.email,
-        status: "registered"
+        status: "REG"
       })
         .then((user) => {
           //save user id and college id in students and staff table
@@ -381,7 +381,7 @@ exports.registerAdmins = function (req, res) {
     password: hash,
     phone: req.body.phone,
     email: req.body.email,
-    status: "registered"
+    status: "REG"
   }).then((user) => {
     //save superAdmin Role
     UserRole.create({
@@ -486,7 +486,7 @@ exports.registerSuperadmin = function (req, res) {
     password: hash,
     phone: req.body.phone,
     email: req.body.email,
-    status: "registered"
+    status: "REG"
   })
     .then((user) => {
       //save superAdmin Role
@@ -825,6 +825,7 @@ exports.signUndertaking = async function (req, res) {
   }).then((user) => {
     console.log(req.body)
     user.is_signed = req.body.undertaking;
+    user.status = "SUB";
     user.save();
     res.status(200).json(success("User Status updated successfully!", user));
   }).catch((error) => {

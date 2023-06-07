@@ -27,8 +27,8 @@ exports.create = async (req, res) => {
       student_enrollment_id: req.body.student_enrollment_id,
       section: req.body.section,
       remarks: req.body.remarks,
-      owner_id: req.body.owner_id,
-      owner_type_id: req.body.owner_type_id,
+      user_id: req.body.owner_id,
+      role_type_id: req.body.owner_type_id,
       active: req.body.active ? req.body.active : true,
       updateAt:null
     };

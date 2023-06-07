@@ -33,10 +33,10 @@ module.exports = (sequelize, DataTypes) => {
       remarks: {
         type: DataTypes.STRING
       },
-      owner_id:{
+      user_id:{
         type: DataTypes.INTEGER
       },
-      owner_type_id:{
+      role_type_id:{
         type: DataTypes.INTEGER
       },
       createdAt: {

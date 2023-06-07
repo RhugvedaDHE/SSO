@@ -84,6 +84,7 @@ var hash = bcrypt.hashSync(userCredentialsdata.password.toString(), salt);
       password: hash,
       phone: req.body.phone,
       email: req.body.email,
+      status: "REG"
   }).then( (user) => { 
           //save superAdmin Role
            UserRole.create({

@@ -4,19 +4,11 @@ const bcrypt = require("bcryptjs");
 
 const User = require("../models").User;
 const UserRole = require("../models").UserRole;
-//const UserContact = require("../models").UserContact;
-//const Staff = require("../models").Staff;
-//const Role = require("../models").Role;
 const City = require("../models").City;
 const State = require("../models").State;
-//const Country = require("../models").Country;
 const District = require("../models").District;
-//const Company = require("../models").Company;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
-//const InstituteStaff = require("../models").InstituteStaff;
 const StudentEnrollment = require("../models").StudentEnrollment;
-//const UserDesignation = require("../models").UserDesignation;
-//const EntityUser = require("../models").EntityUser;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const Institutes = require("../models").Institute;
 const Programmes = require("../models").Programme;
@@ -33,10 +25,7 @@ const gender = require("../models/").Gender;
 const bloodGroup = require("../models/").BloodGroup;
 const country = require("../models/").Country;
 const userContact = require("../models/").UserContact;
-
-
-//const OTP = require("../models").OTP;
-//const tokenList = {}
+const data = require("../config/statuses.json");
 
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
@@ -497,16 +486,27 @@ exports.getStudentDetails = async function(req,res){
 
 
 
-// Update a Company by the id in the request
+// verfify/rejected or student profile mark incomplete
 exports.verifyStudent = (req, res) => {
     const id = req.user.id; 
     let is_verified = false;
+    let status = "";
     
+    if(JSON.stringify(data).includes(req.body.is_verified)){      
+  
+      for(key in data.statuses)
+      {
+        if(req.body.is_verified == key){
+          status = data.statuses[key];
+        }
+      }
+    }
+   
     req.body.is_verified == "verified" ? is_verified = true : is_verified = false;
 
     const updatefields = {
       is_verified: is_verified,
-      status: req.body.is_verified
+      status: status
     };
 
     User.update(updatefields, {
