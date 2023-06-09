@@ -63,7 +63,9 @@ exports.findAll = async (req, res) => {
   const studentEnrollmentId = req.params.id;
   var condition = studentEnrollmentId ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } } : null;
 
-  let data = await StudentMarks.findAll({
+  let data = await StudentMarks.findAll(
+  {
+    order: [['createdAt', 'DESC']],
     where: condition,
   });
 
