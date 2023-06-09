@@ -13,7 +13,8 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       skill_id: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        references: { model: 'Skills', key: 'id' },
       },
       is_active: {
         type: Sequelize.BOOLEAN,

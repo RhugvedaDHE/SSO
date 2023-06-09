@@ -59,43 +59,53 @@ exports.create = async (req, res) => {
 };
 
 // Retrieve all StudentMarks from the database.
-exports.findAll = (req, res) => {
-  //console.log(req.params.id);
-
+exports.findAll = async (req, res) => {
   const studentEnrollmentId = req.params.id;
   var condition = studentEnrollmentId ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } } : null;
 
-  StudentMarks.findAll({
+  let data = await StudentMarks.findAll({
     where: condition,
-  })
-    .then(data => {
-      console.log("7444444444444444444444444444444444444444444444444444444444444444444444")
-    
-      for(let i=0; i<data.length; i++){
-        console.log(data[i])
-        console.log("i ", i)
-        data[i].programme = {};
-        
-        let programe = Programme.findAll({
-          where: {
-            id: data[i].program_id
-          },
-        })
-        data[i]["programme"] = programe;
-      }
-      
-         
+  });
 
-      if (data) {
-        console.log(data)
-        res.status(200).json(success("Student Marks fetched successfully!", data));
+  if (data) {
+    
+    let finalData = [];
+     
+    for (const d of data) {    
+      let programmeDetails = await Programme.findAll({
+        where: {
+          id: d.program_id
+        },
+      });
+
+      finalData.push({
+        "id": d.id,
+          "student_enrollment_id": d.student_enrollment_id,
+          "program_id": d.program_id,
+          "board_university": d.board_university,
+          "institute_name": d.institute_name,
+          "programme_semester": d.programme_semester,
+          "course": d.course,
+          "subject": d.subject,
+          "year_of_passing": d.year_of_passing,
+          "eval_type_id": d.eval_type_id,
+          "total_marks": d.total_marks,
+          "marks_obtained": d.marks_obtained,
+          "grade_obtained": d.grade_obtained,
+          "active": d.active,
+          "createdAt": d.createdAt,
+          "updatedAt": d.updatedAt,
+          "deletedAt": d.deletedAt,
+          "programme_details":programmeDetails
+      });
+    }//end for
+
+      if (finalData) {
+        res.status(200).json(success("Student Marks fetched successfully!", finalData));
       } else {
         res.status(400).json(errorResponse(`Cannot find Student's Marks`, 400));
       }
-    })
-    .catch(err => {
-      res.status(400).json(errorResponse(err, 400));
-    });
+    }
 
 };
 

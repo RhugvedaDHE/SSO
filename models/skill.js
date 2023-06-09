@@ -11,11 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      /*Skill.belongsToMany(models.Job, {
-        foreignKey: "skill_id",
-        as: "skillid",
-        through:'jobSkill'
-      });*/
+      
     }
   }
   Skill.init({

@@ -64,6 +64,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         defaultValue: 1
       },
+      is_deceased: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: 0
+      },
+      is_employed: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: 0
+      },
       createdAt: {
         type: DataTypes.DATE
       },

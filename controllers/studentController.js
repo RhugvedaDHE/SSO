@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 
 const User = require("../models").User;
 const UserRole = require("../models").UserRole;
+const Country = require("../models").Country;
 const City = require("../models").City;
 const State = require("../models").State;
 const District = require("../models").District;
@@ -17,6 +18,8 @@ const studentGuardian = require("../models").StudentGuardian;
 const studentMarks = require("../models").StudentMarks;
 const studentResult = require("../models").StudentResult;
 const studentRemarks = require("../models").StudentRemarks;
+const StudentSkills = require("../models").StudentSkills;
+const Skill = require("../models").Skill;
 const UserQualification = require("../models").UserQualification;
 const qualificationTypes = require("../models").QualificationTypes;
 const evalTypes = require("../models").EvalTypes;
@@ -231,23 +234,24 @@ exports.getStudentDetails = async function(req,res){
                     student_enrollment_id:studentEntrollmentData.id
                 }
             });
-          
-            var guardianData = [];
-            for(const d of studentGuardianResult){
-              guardianData.push({
-                "guardian_type_id":d.guardian_type_id, 
-                "firstname":d.first_name, 
-                "lastname":d.last_name, 
-                "phone":d.phone, 
-                "email":d.email, 
-                "aadhar_card_no":d.aadhar_card_no, 
-                "designation":d.designation, 
-                "occupation":d.occupation, 
-                "work_address":d.work_address, 
-                "annual_income":d.annual_income, 
-                "created_at":d.createdAt, 
-              });
-            }
+            if(studentGuardianResult){
+              var guardianData = [];
+              for(const d of studentGuardianResult){
+                guardianData.push({
+                  "guardian_type_id":d.guardian_type_id, 
+                  "firstname":d.first_name, 
+                  "lastname":d.last_name, 
+                  "phone":d.phone, 
+                  "email":d.email, 
+                  "aadhar_card_no":d.aadhar_card_no, 
+                  "designation":d.designation, 
+                  "occupation":d.occupation, 
+                  "work_address":d.work_address, 
+                  "annual_income":d.annual_income, 
+                  "created_at":d.createdAt, 
+                });
+              }
+          }
             //END student guardians------------------------------------------
 
             //Get student's Marks--------------------------------------
@@ -257,31 +261,33 @@ exports.getStudentDetails = async function(req,res){
                   student_enrollment_id:studentEntrollmentData.id
               }
             });
-          
-            var marksData = [];
-            for(const m of studentMarksResult){
+            
+            if(studentMarksResult){
+              var marksData = [];
+              for(const m of studentMarksResult){
 
-              
-              let evalTypeDetails = await evalTypes.findOne({
-                where:{
-                      id:m.eval_type_id
-                  }
-              });
+                
+                let evalTypeDetails = await evalTypes.findOne({
+                  where:{
+                        id:m.eval_type_id
+                    }
+                });
 
-              marksData.push({
-                "program_semester_id":m.program_semester_id, 
-                "institute_programme_course_subject_id":m.institute_programme_course_subject_id, 
-                "eval_type_id":m.eval_type_id, 
-                "eval_type_name":evalTypeDetails.name, 
-                "total_marks":m.total_marks,
-                "marks_obtained":m.marks_obtained, 
-                "grade_obtained":m.grade_obtained, 
-                "designation":m.designation, 
-                "occupation":m.occupation, 
-                "work_address":m.work_address, 
-                "annual_income":m.annual_income, 
-                "created_at":m.createdAt, 
-              });
+                marksData.push({
+                  "program_semester_id":m.program_semester_id, 
+                  "institute_programme_course_subject_id":m.institute_programme_course_subject_id, 
+                  "eval_type_id":m.eval_type_id, 
+                  "eval_type_name":evalTypeDetails.name, 
+                  "total_marks":m.total_marks,
+                  "marks_obtained":m.marks_obtained, 
+                  "grade_obtained":m.grade_obtained, 
+                  "designation":m.designation, 
+                  "occupation":m.occupation, 
+                  "work_address":m.work_address, 
+                  "annual_income":m.annual_income, 
+                  "created_at":m.createdAt, 
+                });
+              }
             }
             //END student Marks------------------------------------------
 
@@ -292,7 +298,8 @@ exports.getStudentDetails = async function(req,res){
                     student_enrollment_id:studentEntrollmentData.id
                 }
               });
-            
+              
+            if(studentResultRows)  {
               var resultData = [];
               for(const r of studentResultRows){
                 resultData.push({
@@ -305,6 +312,7 @@ exports.getStudentDetails = async function(req,res){
                   "created_at":m.createdAt, 
                 });
               }
+            }
             //END student Result------------------------------------------
 
             //qualification are past qualification details
@@ -313,7 +321,7 @@ exports.getStudentDetails = async function(req,res){
                     user_id:userId
                 }
               });
-
+            if(userQualifications){
               var qualificationData = [];
               for(const q of userQualifications){
 
@@ -330,6 +338,7 @@ exports.getStudentDetails = async function(req,res){
                   "year":q.eval_type_id,
                 });
               }
+            }
                 
             //student academic details---------------------------------------
             var academic;
@@ -358,6 +367,7 @@ exports.getStudentDetails = async function(req,res){
                   }
                 });
               
+              if(studentRemarksResult){
                 var remarksData = [];
                 for(const rm of studentRemarksResult){
                     
@@ -372,6 +382,7 @@ exports.getStudentDetails = async function(req,res){
                         "owner_type_id":rm.owner_type_id
                     });
                 }
+              }
             //END student Marks------------------------------------------
 
             //get gender, blood group and nationality
@@ -402,36 +413,56 @@ exports.getStudentDetails = async function(req,res){
             });
           
             var contactData = [];
+            let contactCountryDetails = contactStateDetails = contactDistrictDetails = cityAsTalukaDetails = null;
             for(const c of usercontactResult){
               
               //find contact country
-              let contactCountryDetails = await country.findOne({
-                where:{
-                      id:c.country_id
-                  }
-              });
+              if(c.country_id){
+                contactCountryDetails = await Country.findOne({
+                  where:{
+                        id:c.country_id
+                    }
+                });
+              }
 
-              let contactStateDetails = await State.findOne({
-                where:{
-                      id:c.state_id
-                  }
-              });
+              if(c.state_id){
+                contactStateDetails = await State.findOne({
+                  where:{
+                        id:c.state_id
+                    }
+                });
+              }
 
-              let contactDistrictDetails = await District.findOne({
-                where:{
-                      id:c.district_id
-                  }
-              });
+              if(c.district_id){
+                contactDistrictDetails = await District.findOne({
+                  where:{
+                        id:c.district_id
+                    }
+                });
+              }
 
-              //city as taluka login by rhug-veda
-              let cityAsTalukaDetails = await City.findOne({
-                where:{
-                      id:c.taluka_id
-                  }
-              });
-
-              City
-
+              if(c.taluka_id){
+                //city as taluka login by rhug-veda
+                cityAsTalukaDetails = await City.findOne({
+                  where:{
+                        id:c.taluka_id
+                    }
+                });
+              }
+              
+              if(!contactCountryDetails){
+                contactCountryDetails.name = null;
+              }
+              if(!contactStateDetails){
+                contactStateDetails.name = null;
+              }
+              if(!contactDistrictDetails){
+                contactDistrictDetails.name = null;
+              }
+              if(!cityAsTalukaDetails){
+                cityAsTalukaDetails.name = null;
+              }
+           
               contactData.push({
                 "type": c.type,
                 "address": c.address,
@@ -449,6 +480,17 @@ exports.getStudentDetails = async function(req,res){
               });
             }
             //END user contact ------------------------------------------
+
+            //get skills
+            let skillsData = await StudentSkills.findAll({
+              where: {
+                user_id: userId
+              }, include:[
+                {
+                  model: Skill,
+                },
+              ]
+            })
 
             jsondata.push({
               "user_id":studentEntrollmentData.user_id,
@@ -472,6 +514,7 @@ exports.getStudentDetails = async function(req,res){
               "result":resultData,
               "remarks":remarksData,
               "contact_data":contactData,
+              "skills_data":skillsData,
             });
 
                  
