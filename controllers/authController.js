@@ -198,6 +198,7 @@ exports.register = function (req, res) {
                           user_id: user.id,
                           institute_programme_id: instprog.id,
                           current_class: req.body.class,
+                          subject_id: req.body.subject_id
                         })
                           .then((studentEnrollment) => {
                             res
@@ -269,8 +270,8 @@ exports.register = function (req, res) {
                         state_id: req.body.state_id,
                         district_id: req.body.district_id,
                         taluka_id: req.body.taluka_id,
-                        village_id: req.body.village_id,
-                        city_id: req.body.city_id,
+                        village: req.body.village_id,
+                        country_id: req.body.country_id,
                         landmark: req.body.landmark,
                         street: req.body.street,
                         pincode: req.body.pincode,

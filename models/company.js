@@ -41,6 +41,12 @@ module.exports = (sequelize, DataTypes) => {
       logo: {
         type: DataTypes.STRING
       },
+      description: {
+        type: DataTypes.STRING
+      },
+      website: {
+        type: DataTypes.STRING
+      },
       state_id: {
         type: DataTypes.INTEGER
       },
@@ -50,10 +56,10 @@ module.exports = (sequelize, DataTypes) => {
       taluka_id: {
         type: DataTypes.INTEGER
       },
-      village_id: {
-        type: DataTypes.INTEGER
+      village: {
+        type: DataTypes.STRING
       },
-      city_id: {
+      country_id: {
         type: DataTypes.INTEGER
       },
       landmark: {

@@ -198,7 +198,7 @@ exports.getStudentDetails = async function(req,res){
         var jsondata=[]
        // for(const d of data){
              let userdetails = await UserPersonalDetails.findOne({
-                attributes:['firstname','lastname','gender','email', 'phone', 'dob','aadhar','blood_group','nationality','physically_disabled', 'createdAt'],
+                attributes:['firstname','lastname','gender','email', 'phone', 'dob','aadhar','blood_group','nationality','physically_disabled', 'createdAt', 'is_checked'],
                 where:{
                     user_id:studentEntrollmentData.user_id
                 }
@@ -450,16 +450,16 @@ exports.getStudentDetails = async function(req,res){
                 });
               }
               
-              if(!contactCountryDetails){
+              if(contactCountryDetails == null){
                 contactCountryDetails.name = null;
               }
-              if(!contactStateDetails){
+              if(contactStateDetails == null){
                 contactStateDetails.name = null;
               }
-              if(!contactDistrictDetails){
+              if(contactDistrictDetails == null){
                 contactDistrictDetails.name = null;
               }
-              if(!cityAsTalukaDetails){
+              if(cityAsTalukaDetails == null){
                 cityAsTalukaDetails.name = null;
               }
            
@@ -507,6 +507,7 @@ exports.getStudentDetails = async function(req,res){
               "nationality":userdetails.nationality,
               "nationality_title":countryDetails.name,
               "physically_disabled":userdetails.physically_disabled,
+              "is_checked":userdetails.is_checked,
               "createdAt":userdetails.createdAt,
               "academic":academic,
               "guardian":guardianData,
