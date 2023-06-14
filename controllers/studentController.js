@@ -198,7 +198,7 @@ exports.getStudentDetails = async function(req,res){
         var jsondata=[]
        // for(const d of data){
              let userdetails = await UserPersonalDetails.findOne({
-                attributes:['firstname','lastname','gender','email', 'phone', 'dob','aadhar','blood_group','nationality','physically_disabled', 'createdAt', 'is_checked'],
+                attributes:['firstname','lastname','gender','email', 'phone', 'dob','aadhar','blood_group','nationality','physically_disabled', 'createdAt', 'is_signed'],
                 where:{
                     user_id:studentEntrollmentData.user_id
                 }
@@ -507,7 +507,7 @@ exports.getStudentDetails = async function(req,res){
               "nationality":userdetails.nationality,
               "nationality_title":countryDetails.name,
               "physically_disabled":userdetails.physically_disabled,
-              "is_checked":userdetails.is_checked,
+              "is_signed":userdetails.is_signed,
               "createdAt":userdetails.createdAt,
               "academic":academic,
               "guardian":guardianData,
