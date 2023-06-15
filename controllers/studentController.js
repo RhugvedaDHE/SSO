@@ -415,27 +415,36 @@ exports.getStudentDetails = async function (req, res) {
     }
     //END student Marks------------------------------------------
 
+    let contactCountryDetails =
+      (contactStateDetails =
+      contactDistrictDetails =
+      cityAsTalukaDetails =
+        {});
+    let genderDetails = {};
+    let bloodDetails = {};
+    let countryDetails = {};
+    let usercontactResult = {};
     //get gender, blood group and nationality
-    let genderDetails = await gender.findOne({
+    genderDetails = await gender.findOne({
       where: {
         id: userdetails.gender,
       },
     });
 
-    let bloodDetails = await bloodGroup.findOne({
+    bloodDetails = await bloodGroup.findOne({
       where: {
         id: userdetails.blood_group,
       },
     });
 
-    let countryDetails = await country.findOne({
+    countryDetails = await country.findOne({
       where: {
         id: userdetails.nationality,
       },
     });
 
     //Get user contact details --------------------------------------
-    let usercontactResult = await userContact.findAll({
+    usercontactResult = await userContact.findAll({
       where: {
         is_active: true,
         user_id: userId,
@@ -443,11 +452,7 @@ exports.getStudentDetails = async function (req, res) {
     });
 
     var contactData = [];
-    let contactCountryDetails =
-      (contactStateDetails =
-      contactDistrictDetails =
-      cityAsTalukaDetails =
-        null);
+
     for (const c of usercontactResult) {
       //find contact country
       if (c.country_id) {
@@ -481,19 +486,35 @@ exports.getStudentDetails = async function (req, res) {
             id: c.taluka_id,
           },
         });
+      }     
+      if (genderDetails === null) {
+        genderDetails = {
+          name: "",
+        };
       }
-
-      if (contactCountryDetails == null) {
-        contactCountryDetails.name = null;
+      if (bloodDetails === null) {
+        bloodDetails = {
+          name: "",
+        };
       }
-      if (contactStateDetails == null) {
-        contactStateDetails.name = null;
+      if (countryDetails === null) {
+        countryDetails = {
+          name: "",
+        };
       }
-      if (contactDistrictDetails == null) {
-        contactDistrictDetails.name = null;
+      if (contactCountryDetails === null) {
+        contactCountryDetails.push({
+          name: "",
+        });
       }
-      if (cityAsTalukaDetails == null) {
-        cityAsTalukaDetails.name = null;
+      if (contactStateDetails === null) {
+        contactStateDetails.name = "";
+      }
+      if (contactDistrictDetails === null) {
+        contactDistrictDetails.name = "";
+      }
+      if (cityAsTalukaDetails === null) {
+        cityAsTalukaDetails.name = "";
       }
 
       contactData.push({
