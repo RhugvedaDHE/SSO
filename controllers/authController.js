@@ -270,7 +270,7 @@ exports.register = function (req, res) {
                         state_id: req.body.state_id,
                         district_id: req.body.district_id,
                         taluka_id: req.body.taluka_id,
-                        village: req.body.village_id,
+                        village: req.body.village,
                         country_id: req.body.country_id,
                         landmark: req.body.landmark,
                         street: req.body.street,
