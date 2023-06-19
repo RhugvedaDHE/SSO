@@ -373,11 +373,16 @@ exports.getStudentDetails = async function (req, res) {
 
     //student academic details---------------------------------------
     var academic;
-    let subjectDetails = await subject.findOne({
-      where: {
-        id: studentEntrollmentData.subject_id,
-      },
-    });
+    let subjectDetails = {};
+    if (studentEntrollmentData.subject_id) {
+      subjectDetails = await subject.findOne({
+        where: {
+          id: studentEntrollmentData.subject_id,
+        },
+      });
+    }else{
+      subjectDetails.name = ""
+    }
     academic = {
       student_enrollemnt_id: studentEntrollmentData.id,
       academic_year: studentEntrollmentData.academic_year,
