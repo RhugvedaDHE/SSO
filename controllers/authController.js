@@ -281,6 +281,8 @@ exports.register = function (req, res) {
                         reg_certificate: "", //req.certificate.originalname,
                         verified: req.body.verified ? req.body.verified : false,
                         active: req.body.active ? req.body.active : true,
+                        description: "",
+                        website: "",
                         createdAt: "",
                         updateAt: null,
                         deletedAt: null,
