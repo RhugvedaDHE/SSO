@@ -20,6 +20,18 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "organization_type_id",
         as: "companyOrganizationType",
       });*/
+      Company.belongsTo(models.Country, {
+        foreignKey: 'country_id'
+      }),
+      Company.belongsTo(models.State, {
+        foreignKey: 'state_id'
+      }),
+      Company.belongsTo(models.District, {
+        foreignKey: 'district_id'
+      }),
+      Company.belongsTo(models.City, {
+        foreignKey: 'taluka_id'
+      })
     }
   }
 

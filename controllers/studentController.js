@@ -104,13 +104,39 @@ exports.getStudentList = async function (req, res) {
 //param :id which is institute ID
 exports.getInstituteStudentList = async function (req, res) {
   const instituteId = req.params.id;
-  //const programId = req.params.ProgramId;
-
-  const instituteProgrammeResult = await InstituteProgramme.findAll({
-    attributes: ["id", "institute_id", "programme_id"],
-    where: {
-      institute_id: instituteId,
-    },
+ 
+  const instituteProgrammeResult = await StudentEnrollment.findAll({
+    // attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('user_id')), 'title'],],
+    include: [
+      {
+        model: InstituteProgramme,        
+        where: {
+          institute_id: instituteId
+        },
+       
+        include: [
+          {
+            model: Programmes,
+             // attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('user_id')), 'title'],],
+            attributes: ["name", "stream_id"],
+            include: [
+              {
+                model: Stream,
+                attributes: ["name"],
+              }
+            ]
+          },
+          {
+            model: Institutes,
+            attributes: ["name"]
+          },  
+        ],
+      },
+      {
+        model: User,
+        attributes: ["id"],
+      },  
+    ]
   });
 
   if (instituteProgrammeResult) {
@@ -120,64 +146,50 @@ exports.getInstituteStudentList = async function (req, res) {
     for (const eachrow of instituteProgrammeResult) {
       cnt++;
 
-      let studentEnrollmentRow = await StudentEnrollment.findOne({
-        attributes: [
-          "user_id",
-          "id",
-          "academic_year",
-          "institute_programme_id",
-        ],
+      let personaldetails = await UserPersonalDetails.findOne({
+        
         where: {
-          institute_programme_id: eachrow.id,
+          user_id: eachrow.User.id,
         },
       });
 
-      if (studentEnrollmentRow) {
-        let userdetails = await UserPersonalDetails.findOne({
-          attributes: ["firstname", "lastname"],
-          where: {
-            user_id: studentEnrollmentRow.user_id,
-          },
-        });
+  //     if (studentEnrollmentRow) {
+  //       let userdetails = await UserPersonalDetails.findOne({
+  //         attributes: ["firstname", "lastname"],
+  //         where: {
+  //           user_id: studentEnrollmentRow.user_id,
+  //         },
+  //       });
 
-        // console.log(userdetails);
+  //       // console.log(userdetails);
 
-        let institute = await Institutes.findOne({
-          attributes: ["name"],
-          where: {
-            id: eachrow.institute_id,
-          },
-        });
+  //       let institute = await Institutes.findOne({
+  //         attributes: ["name"],
+  //         where: {
+  //           id: eachrow.institute_id,
+  //         },
+  //       });
 
-        let program = await Programmes.findOne({
-          attributes: ["name", "stream_id"],
-          where: {
-            id: eachrow.programme_id,
-          },
-        });
+  //       let program = await Programmes.findOne({
+  //         attributes: ["name", "stream_id"],
+  //         where: {
+  //           id: eachrow.programme_id,
+  //         },
+  //       });
 
-        let streamRow = await Stream.findOne({
-          attributes: ["id", "name"],
-          where: {
-            id: program.stream_id,
-          },
-        });
+  //       let streamRow = await Stream.findOne({
+  //         attributes: ["id", "name"],
+  //         where: {
+  //           id: program.stream_id,
+  //         },
+  //       });
 
         jsondata.push({
           srno: cnt,
-          user_id: studentEnrollmentRow.user_id,
-          student_enrollemnt_id: studentEnrollmentRow.id,
-          academic_year: studentEnrollmentRow.academic_year,
-          firstname: userdetails.firstname,
-          lastname: userdetails.lastname,
-          institute_id: eachrow.institute_id,
-          institute_name: institute.name,
-          stream_id: streamRow.id,
-          stream_name: streamRow.name,
-          program_id: eachrow.programme_id,
-          program_name: program.name,
+          instituteDetails: eachrow,
+          personalDetails: personaldetails,
         });
-      }
+  //     }
     }
     return res
       .status(200)

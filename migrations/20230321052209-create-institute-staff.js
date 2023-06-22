@@ -41,6 +41,11 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true
       },
+      department_id: {
+        type: Sequelize.INTEGER,
+        references: { model: 'Departments', key: 'id' },
+        allowNull: true
+      },
       is_active: {
         type: Sequelize.BOOLEAN,
         default:true

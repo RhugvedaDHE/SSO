@@ -17,6 +17,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "programme_id"
       })
 
+      Programme.belongsTo(models.Stream, {
+        foreignKey: 'stream_id'
+      })
+
       Programme.belongsToMany(models.Subject,{
         through: "ProgrammeSubject",
         as: "pId",

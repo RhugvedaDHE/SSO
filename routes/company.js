@@ -71,7 +71,7 @@ router.post("/uploadcertificate", company.uploadCertificate);
 //router.get("/user_companies", company.userCompanies);
 
 // Retrieve a single Company with id
-router.post("/details", authenticate, company.findOne);
+router.get("/details", authenticate, company.findOne);
 
 // Update a Company with id
 router.post("/update", authenticate, company.update);

@@ -5,6 +5,10 @@ const bcrypt = require('bcryptjs');
 const db = require('../models');
 //const uploadFile = require("../middleware/upload");
 const Company = require('../models').Company;
+const State = require('../models').State;
+const District = require('../models').District;
+const Country = require('../models').Country;
+const City = require('../models').City;
 
 var multer = require('multer');
 //const uploadFile = require("../middlewares/upload");
@@ -256,9 +260,26 @@ exports.findOne = async function (req, res){
   await Company.findAll({
       where: {
           user_id: req.user.id,
-      }
+      },include: [
+        {
+          model: City,
+          attributes: ["name"],
+        },
+        {
+          model: State,
+          attributes: ["name"],
+        },
+        {
+          model: District,
+          attributes: ["name"],
+        },
+        {
+          model: Country,
+          attributes: ["name"],
+        },
+      ],
   }).then(companies => {
-      res.status(200).json(success("Company Details!", companies))
+      res.status(200).json(success("Company Details fetched successfully!", companies))
   }).catch(error => {
       res.status(400).json(errorResponse(error, 400));
   })
@@ -270,7 +291,8 @@ exports.findOne = async function (req, res){
 
 // Update a Company by the id in the request
 exports.update = (req, res) => {
-  const id = req.params.id;
+  console.log("heyyyy")
+  const id = req.user.id;
 
   Company.update(req.body, {
     where: { id: id }

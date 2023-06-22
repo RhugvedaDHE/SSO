@@ -22,6 +22,9 @@ module.exports = (sequelize, DataTypes) => {
       }),
       InstituteStaff.belongsTo(models.InstituteType, {
         foreignKey: 'institute_type_id'
+      }),
+      InstituteStaff.belongsTo(models.Department, {
+        foreignKey: 'department_id'
       })
     }
   }
@@ -34,6 +37,7 @@ module.exports = (sequelize, DataTypes) => {
     year: DataTypes.STRING,
     from_date: DataTypes.DATE,
     to_date: DataTypes.DATE,
+    department_id: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: 1

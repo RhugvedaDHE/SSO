@@ -154,7 +154,7 @@ check(
 )
 .exists()
 .custom((value, { req }) => value === req.body.password),
-],Auth.register); // same as company admin
+], validate, Auth.register); // same as company admin
 
 router.post('/register/companyHR', Auth.register);
 router.post('/register/companyGuide', Auth.register);

@@ -267,6 +267,8 @@ exports.register = function (req, res) {
                         user_id: user.id,
                         name: req.body.name,
                         logo: req.body.logo,
+                        website: req.body.website,
+                        description: req.body.description,
                         state_id: req.body.state_id,
                         district_id: req.body.district_id,
                         taluka_id: req.body.taluka_id,
@@ -281,8 +283,7 @@ exports.register = function (req, res) {
                         reg_certificate: "", //req.certificate.originalname,
                         verified: req.body.verified ? req.body.verified : false,
                         active: req.body.active ? req.body.active : true,
-                        description: "",
-                        website: "",
+                        description: req.body.description,
                         createdAt: "",
                         updateAt: null,
                         deletedAt: null,
@@ -636,6 +637,7 @@ exports.login = function (req, res) {
 
 //update profile
 exports.updateProfile = async function (req, res) {
+  console.log("hey there")
   await
     UserPersonalDetails.update(req.body, {
       where: { user_id: req.user.id }
