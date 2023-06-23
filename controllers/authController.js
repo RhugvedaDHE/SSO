@@ -608,7 +608,7 @@ exports.login = function (req, res) {
               JSON.parse(JSON.stringify(tokendata)),
               process.env.JWT_SECRET,
               {
-                expiresIn: 1200,
+                expiresIn: 120000,
               }
             );
             // jwt.verify(token, process.env.JWT_SECRET, function (err, data) {
