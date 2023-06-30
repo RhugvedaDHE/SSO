@@ -26,9 +26,9 @@ router.post("/:id", studentRemarks.findOne);
 // Update a StudentRemarks with id
 router.put("/:id", studentRemarks.update);
 
-// Delete a StudentRemarks with id
-router.delete("/:id", studentRemarks.delete);
+// Delete a StudentRemarks 
+router.post("/delete/remarks", studentRemarks.delete);
 
 // Create a new StudentRemarks
-router.delete("/", studentRemarks.deleteAll);
+// router.delete("/", studentRemarks.deleteAll);
 module.exports = router;

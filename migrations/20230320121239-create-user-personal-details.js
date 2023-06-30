@@ -25,6 +25,14 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
+      castcategory_id: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      religion_id: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
       email: {
         type: Sequelize.STRING,
         unique: true,

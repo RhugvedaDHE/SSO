@@ -255,6 +255,7 @@ exports.register = function (req, res) {
                               });
                           })
                           .catch((error) => {
+                            console.log(error);
                             res.status(400).json(errorResponse("institutestaff", 400));
                           });
                       });
@@ -572,6 +573,7 @@ exports.login = function (req, res) {
     },
   })
     .then((user) => {
+      console.log(user)
       UserRole.findOne({
         where: {
           user_id: user.id,
@@ -629,10 +631,13 @@ exports.login = function (req, res) {
           }
         })
         .catch((error) => {
+          console.log("errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrr", error)
           res.status(400).json(errorResponse(error, 400));
         });
     })
-    .catch((error) => res.status(400).json(errorResponse(error, 400)));
+    .catch((error) => {
+    console.log("hhheeeaaarrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrr", error);
+    res.status(400).json(errorResponse(error, 400))});
 };
 
 //update profile

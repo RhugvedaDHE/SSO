@@ -1,9 +1,10 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
+const db = require("../models");
 
 const User = require("../models").User;
-const UserRole = require("../models").UserRole;
+const religion = require("../models").religion;
 const Country = require("../models").Country;
 const City = require("../models").City;
 const State = require("../models").State;
@@ -13,7 +14,7 @@ const StudentEnrollment = require("../models").StudentEnrollment;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const Institutes = require("../models").Institute;
 const Programmes = require("../models").Programme;
-const Stream = require("../models").Stream;
+const CasteCategory = require("../models").CasteCategory;
 const studentGuardian = require("../models").StudentGuardian;
 const studentMarks = require("../models").StudentMarks;
 const studentResult = require("../models").StudentResult;
@@ -104,87 +105,45 @@ exports.getStudentList = async function (req, res) {
 //param :id which is institute ID
 exports.getInstituteStudentList = async function (req, res) {
   const instituteId = req.params.id;
-  //const programId = req.params.ProgramId;
 
-  const instituteProgrammeResult = await InstituteProgramme.findAll({
-    attributes: ["id", "institute_id", "programme_id"],
-    where: {
-      institute_id: instituteId,
-    },
+  var query = ` SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed FROM public."StudentEnrollments" as s
+  INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s.institute_programme_id
+  INNER JOIN public."Institutes" as i ON i.id = ip.institute_id
+  INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id
+  INNER JOIN public."Users" as users ON up.user_id = users.id
+  WHERE i."id" = ${instituteId} AND users.is_signed=true AND users.status='SUB' AND users.is_verified=false
+  ORDER BY s."id" ASC`;
+
+  const jsondata = await db.sequelize.query(query, {
+    type: db.Sequelize.QueryTypes.SELECT,
   });
 
-  if (instituteProgrammeResult) {
-    var jsondata = [];
-    var cnt = 0;
+  return res
+    .status(200)
+    .json(success("Students fetched successfully!", jsondata));
+};
 
-    for (const eachrow of instituteProgrammeResult) {
-      cnt++;
+//Function to get list of all institute's students: paresh
+//We need to get list of all the students whoes profile is complete hence adding profile_status field
+//param :id which is institute ID
+exports.getVerifiedInstituteStudentList = async function (req, res) {
+  const instituteId = req.params.id;
 
-      let studentEnrollmentRow = await StudentEnrollment.findOne({
-        attributes: [
-          "user_id",
-          "id",
-          "academic_year",
-          "institute_programme_id",
-        ],
-        where: {
-          institute_programme_id: eachrow.id,
-        },
-      });
+  var query = ` SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed FROM public."StudentEnrollments" as s
+  INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s.institute_programme_id
+  INNER JOIN public."Institutes" as i ON i.id = ip.institute_id
+  INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id
+  INNER JOIN public."Users" as users ON up.user_id = users.id
+  WHERE i."id" = ${instituteId} AND users.is_signed=true AND users.status='VER' AND users.is_verified=true
+  ORDER BY s."id" ASC`;
 
-      if (studentEnrollmentRow) {
-        let userdetails = await UserPersonalDetails.findOne({
-          attributes: ["firstname", "lastname"],
-          where: {
-            user_id: studentEnrollmentRow.user_id,
-          },
-        });
+  const jsondata = await db.sequelize.query(query, {
+    type: db.Sequelize.QueryTypes.SELECT,
+  });
 
-        // console.log(userdetails);
-
-        let institute = await Institutes.findOne({
-          attributes: ["name"],
-          where: {
-            id: eachrow.institute_id,
-          },
-        });
-
-        let program = await Programmes.findOne({
-          attributes: ["name", "stream_id"],
-          where: {
-            id: eachrow.programme_id,
-          },
-        });
-
-        let streamRow = await Stream.findOne({
-          attributes: ["id", "name"],
-          where: {
-            id: program.stream_id,
-          },
-        });
-
-        jsondata.push({
-          srno: cnt,
-          user_id: studentEnrollmentRow.user_id,
-          student_enrollemnt_id: studentEnrollmentRow.id,
-          academic_year: studentEnrollmentRow.academic_year,
-          firstname: userdetails.firstname,
-          lastname: userdetails.lastname,
-          institute_id: eachrow.institute_id,
-          institute_name: institute.name,
-          stream_id: streamRow.id,
-          stream_name: streamRow.name,
-          program_id: eachrow.programme_id,
-          program_name: program.name,
-        });
-      }
-    }
-    return res
-      .status(200)
-      .json(success("Students fetched successfully!", jsondata));
-  } else {
-    return res.status(400).json(errorResponse(error, 400));
-  }
+  return res
+    .status(200)
+    .json(success("Students fetched successfully!", jsondata));
 };
 
 //Function to get student details: Paresh
@@ -230,14 +189,24 @@ exports.getStudentDetails = async function (req, res) {
         "blood_group",
         "nationality",
         "physically_disabled",
+        "castcategory_id",
+        "religion_id",
         "createdAt",
       ],
       where: {
         user_id: studentEntrollmentData.user_id,
-      },
+      },     
+      include: [
+        {
+          model: CasteCategory,
+        },
+        {
+          model: religion,
+        },
+      ],
     });
 
-    console.log(userdetails);
+    console.log("heyyyyyyyyyyyyyyyyyyyyyyyy", userdetails);
     let instituteProgramme = await InstituteProgramme.findOne({
       attributes: ["institute_id", "programme_id"],
       where: {
@@ -380,8 +349,8 @@ exports.getStudentDetails = async function (req, res) {
           id: studentEntrollmentData.subject_id,
         },
       });
-    }else{
-      subjectDetails.name = ""
+    } else {
+      subjectDetails.name = "";
     }
     academic = {
       student_enrollemnt_id: studentEntrollmentData.id,
@@ -491,7 +460,7 @@ exports.getStudentDetails = async function (req, res) {
             id: c.taluka_id,
           },
         });
-      }     
+      }
       if (genderDetails === null) {
         genderDetails = {
           name: "",
@@ -554,19 +523,25 @@ exports.getStudentDetails = async function (req, res) {
 
     jsondata.push({
       user_id: studentEntrollmentData.user_id,
+      enrollment_id: studentEntrollmentData.id,
       firstname: userdetails.firstname,
       lastname: userdetails.lastname,
       gender: userdetails.gender,
       gender_title: genderDetails.name,
+      castcategory: userdetails.castcategory_id,
+      castcategory_title: userdetails.CasteCategory.name,
+      religion: userdetails.religion_id,
+      religion_title: userdetails.religion.name,
       email: userdetails.email,
       phone: userdetails.phone,
-      dob: userdetails.dob,
+      dob: userdetails.dob.toLocaleDateString().replaceAll("/", "-"),
       aadhar: userdetails.aadhar,
       blood_group: userdetails.blood_group,
       blood_group_title: bloodDetails.name,
       nationality: userdetails.nationality,
       nationality_title: countryDetails.name,
-      physically_disabled: userdetails.physically_disabled,
+      physically_disabled: userdetails.physically_disabled ? 1 : 0,
+      physically_disabled_title: userdetails.physically_disabled,
       is_signed: is_signed.is_signed,
       createdAt: userdetails.createdAt,
       academic: academic,

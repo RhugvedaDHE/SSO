@@ -14,6 +14,12 @@ module.exports = (sequelize, DataTypes) => {
       UserPersonalDetails.belongsTo(models.User, {
         foreignKey: 'user_id'
       })
+      UserPersonalDetails.belongsTo(models.CasteCategory, {
+        foreignKey: 'castcategory_id'
+      })
+      UserPersonalDetails.belongsTo(models.religion, {
+        foreignKey: 'religion_id'
+      })
     }
   }
   UserPersonalDetails.init({
@@ -30,6 +36,7 @@ module.exports = (sequelize, DataTypes) => {
     photo: DataTypes.STRING,
     physically_disabled: DataTypes.BOOLEAN,
     castcategory_id: DataTypes.INTEGER,
+    religion_id: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: 1

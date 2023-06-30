@@ -141,7 +141,10 @@ exports.verify = async function (req, res) {
       var timeStart = results.time.getTime();
       var timeEnd = Date.now();
 
-      var validity = (timeEnd - timeStart) / 60 / 1000; //in minutes
+      var validity = ((timeEnd - timeStart) / 60 / 1000); //in minutes
+      console.log("validity is _________________________________________________", validity)
+      console.log("Start is _________________________________________________", timeStart)
+      console.log("end is _________________________________________________", timeEnd)
       if (validity <= 10) {
         if (bcrypt.compareSync(req.body.otp, results.otp)) {
           if (req.body.type == "phone") {
@@ -150,10 +153,10 @@ exports.verify = async function (req, res) {
                 phone: req.body.details,
               },
             }).then((user) => {
-              if (!user.phone_verified) {
-                user.phone_verified = true;
-                user.save({ fields: ["phone_verified"] });
-              }
+              // if (!user.phone_verified) {
+              //   user.phone_verified = true;
+              //   // user.save({ fields: ["phone_verified"] });
+              // }
               phone_verified = true;
             });
             phone_verified = true;
@@ -164,10 +167,10 @@ exports.verify = async function (req, res) {
               },
             }).then((user) => {
               console.log(user);
-              if (!user.email_verified) {
-                user.email_verified = true;
-                user.save({ fields: ["email_verified"] });
-              }
+              // if (!user.email_verified) {
+              //   user.email_verified = true;
+              //   // user.save({ fields: ["email_verified"] });
+              // }
               email_verified = true;
             });
             email_verified = true;

@@ -148,15 +148,22 @@ exports.getInstituteStaffList = async function (req, res) {
 //Function to get student details: Paresh
 //Param:id = user's ID
 exports.getStaffDetails = async function (req, res) {
+  var jsondata = [];
   const userId = req.user.id;
   console.log(userId);
-  let jsondata = {};
   let staff = await Staff.findOne({
     where: {
       user_id: req.user.id
     }
   });
 
+  let userPersonalDetails = await UserPersonalDetails.findOne({
+    where: {
+      user_id: req.user.id
+    }
+  })
+ 
+  console.log(userPersonalDetails)
     let instituteStaff = await InstituteStaff.findOne({
       where: {
         staff_id: staff.id,
@@ -186,6 +193,12 @@ exports.getStaffDetails = async function (req, res) {
         {
           model: Staff,
           // attributes: ["name"],
+          include: [
+            {
+              model: User,     
+            }
+             
+          ]   
         },
         {
           model: Role,
@@ -202,24 +215,24 @@ exports.getStaffDetails = async function (req, res) {
       ],
     });
 
-   
-    // jsondata.push({
-    //   user_id: userId,
-    //   instituteStaff: instituteStaff
-    //   // is_signed: is_signed.is_signed,
-    //   // createdAt: userdetails.createdAt,
-    //   // academic: academic,
-    //   // guardian: guardianData,
-    //   // marks: marksData,
-    //   // result: resultData,
-    //   // remarks: remarksData,
-    //   // contact_data: contactData,
-    // });
+    
+    jsondata.push({
+      user_id: userId,
+      instituteStaff: instituteStaff,
+      declaration: instituteStaff.Staff.User.is_signed, //.Staff.User.is_signed,
+      userPersonalDetails: userPersonalDetails,
+      // academic: academic,
+      // guardian: guardianData,
+      // marks: marksData,
+      // result: resultData,
+      // remarks: remarksData,
+      // contact_data: contactData,
+    });
 
     // }
     return res
       .status(200)
-      .json(success("Staff details fetched successfully!", instituteStaff));
+      .json(success("Staff details fetched successfully!", jsondata));
  
 };
 
