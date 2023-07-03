@@ -38,7 +38,9 @@ exports.get = async function (req, res) {
   await Programme.findAll({
     where: {
       is_active: true,
-    },
+    },order: [
+      ['order', 'ASC'],
+  ],
   })
     .then((programmes) => {
       res

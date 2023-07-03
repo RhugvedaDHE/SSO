@@ -191,7 +191,7 @@ exports.getStudentDetails = async function (req, res) {
         "physically_disabled",
         "castcategory_id",
         "religion_id",
-        "createdAt",
+        "createdAt",       
       ],
       where: {
         user_id: studentEntrollmentData.user_id,
@@ -534,7 +534,7 @@ exports.getStudentDetails = async function (req, res) {
       religion_title: userdetails.religion.name,
       email: userdetails.email,
       phone: userdetails.phone,
-      dob: userdetails.dob.toLocaleDateString().replaceAll("/", "-"),
+      dob: userdetails.dob.toLocaleDateString('en-ZA').replaceAll("/", "-"),
       aadhar: userdetails.aadhar,
       blood_group: userdetails.blood_group,
       blood_group_title: bloodDetails.name,

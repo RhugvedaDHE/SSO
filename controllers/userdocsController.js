@@ -238,10 +238,15 @@ exports.findOne = (req, res) => {
 
 // Delete a UserDocs with the specified id in the request
 exports.delete = (req, res) => {
-  const id = req.params.id;
-
+  console.log("heyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy", req.user)
+  const user_id = req.user.id;
+  const id = req.body.doc_id;
+console.log(user_id);
   userDocs.destroy({
-    where: { id: id }
+    where: { 
+      id: id,
+      user_id: user_id
+     }
   })
     .then(num => {
       if (num == 1) {

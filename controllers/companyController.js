@@ -5,6 +5,8 @@ const bcrypt = require('bcryptjs');
 const db = require('../models');
 //const uploadFile = require("../middleware/upload");
 const Company = require('../models').Company;
+const OrganizationType = require('../models').OrganizationType;
+const User = require('../models').User;
 const State = require('../models').State;
 const District = require('../models').District;
 const Country = require('../models').Country;
@@ -257,6 +259,7 @@ exports.findAll = async function (req, res){
 
 
 exports.findOne = async function (req, res){
+  console.log("heyyy thhheeerrrreeee!!!!!!")
   await Company.findAll({
       where: {
           user_id: req.user.id,
@@ -277,6 +280,13 @@ exports.findOne = async function (req, res){
           model: Country,
           attributes: ["name"],
         },
+        {
+          model: User,
+          attributes: ["username"]
+        },{
+          model: OrganizationType,
+          attributes: ["name"],
+        }
       ],
   }).then(companies => {
       res.status(200).json(success("Company Details fetched successfully!", companies))
