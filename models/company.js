@@ -15,9 +15,9 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "user_id",
       });
       
-      // Company.belongsTo(models.OrganisationType, {
-      //   foreignKey: "organization_type_id",
-      // });
+      Company.belongsTo(models.OrganisationType, {
+        foreignKey: "organization_type_id",
+      });
       Company.belongsTo(models.Country, {
         foreignKey: 'country_id'
       }),

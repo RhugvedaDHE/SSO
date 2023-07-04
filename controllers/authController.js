@@ -642,7 +642,7 @@ exports.login = function (req, res) {
 
 //update profile
 exports.updateProfile = async function (req, res) {
-  console.log("hey there")
+  console.log("hey there", req.body)
   await
     UserPersonalDetails.update(req.body, {
       where: { user_id: req.user.id }
@@ -662,6 +662,7 @@ exports.updateProfile = async function (req, res) {
           }
         })
       }).catch((error) => {
+        console.log(error)
         res
           .status(400)
           .json(errorResponse("Please check your details!", 400));

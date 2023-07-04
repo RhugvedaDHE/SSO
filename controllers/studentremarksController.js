@@ -35,28 +35,11 @@ exports.create = async (req, res) => {
     ],
     type: db.Sequelize.QueryTypes.UPSERT,
   });
-  // Create a StudentRemarks
-
-  // const studentRemarks = {
-  //   student_enrollment_id: student.id,
-  //   section: req.body.section,
-  //   remarks: req.body.remarks,
-  //   user_id: req.body.owner_id,
-  //   role_type_id: req.body.owner_type_id,
-  //   active: req.body.active ? req.body.active : true,
-  //   updateAt:null
-  // };
-
-  // Save StudentRemarks in the database
-  // StudentRemarks.create(studentRemarks)
-  //   .then(data => {
+  
   res
     .status(200)
     .json(success("Student Remarks created successfully!", jsondata));
-  //   })
-  //   .catch(err => {
-  //     res.status(400).json(errorResponse(err, 400));
-  // });
+  
 };
 
 // Retrieve all StudentRemarks from the database.

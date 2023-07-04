@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Country.init({
     name: DataTypes.STRING,
+    nationality: DataTypes.STRING,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: 1

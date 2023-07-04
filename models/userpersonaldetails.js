@@ -20,19 +20,28 @@ module.exports = (sequelize, DataTypes) => {
       UserPersonalDetails.belongsTo(models.religion, {
         foreignKey: 'religion_id'
       })
+      UserPersonalDetails.belongsTo(models.Gender, {
+        foreignKey: 'gender'
+      })
+      UserPersonalDetails.belongsTo(models.BloodGroup, {
+        foreignKey: 'blood_group'
+      })
+      // UserPersonalDetails.belongsTo(models.BloodGroup, {
+      //   foreignKey: 'nationality'
+      // })
     }
   }
   UserPersonalDetails.init({
     user_id: DataTypes.INTEGER,
     firstname: DataTypes.STRING,
     lastname: DataTypes.STRING,
-    gender: DataTypes.STRING,
+    gender: DataTypes.INTEGER,
     email: DataTypes.STRING,
     phone: DataTypes.STRING,
     dob: DataTypes.DATE,
     aadhar: DataTypes.STRING,
-    blood_group: DataTypes.STRING,
-    nationality: DataTypes.STRING,
+    blood_group: DataTypes.INTEGER,
+    nationality: DataTypes.INTEGER,
     photo: DataTypes.STRING,
     physically_disabled: DataTypes.BOOLEAN,
     castcategory_id: DataTypes.INTEGER,

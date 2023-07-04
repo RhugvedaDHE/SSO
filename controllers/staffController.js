@@ -19,17 +19,16 @@ const InstituteProgramme = require("../models").InstituteProgramme;
 const Institutes = require("../models").Institute;
 const Programmes = require("../models").Programme;
 const Stream = require("../models").Stream;
-const studentGuardian = require("../models").StudentGuardian;
-const studentMarks = require("../models").StudentMarks;
-const studentResult = require("../models").StudentResult;
-const studentRemarks = require("../models").StudentRemarks;
-const StudentSkills = require("../models").StudentSkills;
+const UserContact = require("../models").UserContact;
+const CasteCategory = require("../models").CasteCategory;
+const Religion = require("../models").religion;
+const BloodGroup = require("../models").BloodGroup;
 const Skill = require("../models").Skill;
 const UserQualification = require("../models").UserQualification;
 const qualificationTypes = require("../models").QualificationTypes;
 const evalTypes = require("../models").EvalTypes;
 const subject = require("../models/").Subject;
-const gender = require("../models/").Gender;
+const Gender = require("../models/").Gender;
 const bloodGroup = require("../models/").BloodGroup;
 const country = require("../models/").Country;
 const userContact = require("../models/").UserContact;
@@ -59,7 +58,7 @@ exports.getInstituteStaffList = async function (req, res) {
     },
   });
 
-  console.log(instituteProgrammeResult)
+  console.log(instituteProgrammeResult);
   if (instituteProgrammeResult) {
     var jsondata = [];
     var cnt = 0;
@@ -153,87 +152,127 @@ exports.getStaffDetails = async function (req, res) {
   console.log(userId);
   let staff = await Staff.findOne({
     where: {
-      user_id: req.user.id
-    }
+      user_id: req.user.id,
+    },
   });
 
   let userPersonalDetails = await UserPersonalDetails.findOne({
     where: {
-      user_id: req.user.id
-    }
-  })
- 
-  console.log(userPersonalDetails)
-    let instituteStaff = await InstituteStaff.findOne({
-      where: {
-        staff_id: staff.id,
+      user_id: req.user.id,
+    },include: [
+      {
+        model: CasteCategory,
+        attributes: ["id", "name"]
       },
-      include: [
-        {
-          model: Institutes,     
-          include: [
-            {
-              model: City,
-              attributes: ["id", "name"],
-            },
-            {
-              model: State,
-              attributes: ["id", "name"],
-            },
-            {
-              model: District,
-              attributes: ["id", "name"],
-            },
-            {
-              model: Country,
-              attributes: ["id", "name"],
-            },
-          ]          
-        },
-        {
-          model: Staff,
-          // attributes: ["name"],
-          include: [
-            {
-              model: User,     
-            }
-             
-          ]   
-        },
-        {
-          model: Role,
-          // attributes: ["name"],
-        },
-        {
-          model: InstituteType,
-          // attributes: ["name"],
-        },
-        {
-          model: Department,
-          // attributes: ["name"],
-        },
-      ],
-    });
+      {
+        model: Religion,
+        attributes: ["id", "name"]
+      },
+      {
+        model: Gender,
+        attributes: ["id", "name"]
+      },
+      {
+        model: BloodGroup,
+        attributes: ["id", "name"]
+      },
+    ],
+  });
 
-    
-    jsondata.push({
-      user_id: userId,
-      instituteStaff: instituteStaff,
-      declaration: instituteStaff.Staff.User.is_signed, //.Staff.User.is_signed,
-      userPersonalDetails: userPersonalDetails,
-      // academic: academic,
-      // guardian: guardianData,
-      // marks: marksData,
-      // result: resultData,
-      // remarks: remarksData,
-      // contact_data: contactData,
-    });
+  let userContact = await UserContact.findOne({
+    where: {
+      user_id: req.user.id,
+    },
+    include: [
+      {
+        model: City,
+        attributes: ["id", "name"],
+      },
+      {
+        model: State,
+        attributes: ["id", "name"],
+      },
+      {
+        model: District,
+        attributes: ["id", "name"],
+      },
+      {
+        model: Country,
+        attributes: ["id", "name"],
+      },
+    ],
+  });
 
-    // }
-    return res
-      .status(200)
-      .json(success("Staff details fetched successfully!", jsondata));
- 
+  console.log(userPersonalDetails);
+  let instituteStaff = await InstituteStaff.findOne({
+    where: {
+      staff_id: staff.id,
+    },
+    include: [
+      {
+        model: Institutes,
+        include: [
+          {
+            model: City,
+            attributes: ["id", "name"],
+          },
+          {
+            model: State,
+            attributes: ["id", "name"],
+          },
+          {
+            model: District,
+            attributes: ["id", "name"],
+          },
+          {
+            model: Country,
+            attributes: ["id", "name", "nationality"],
+          },
+        ],
+      },
+      {
+        model: Staff,
+        // attributes: ["name"],
+        include: [
+          {
+            model: User,
+          },
+        ],
+      },
+      {
+        model: Role,
+        // attributes: ["name"],
+      },
+      {
+        model: InstituteType,
+        // attributes: ["name"],
+      },
+      {
+        model: Department,
+        // attributes: ["name"],
+      },
+    ],
+  });
+
+  jsondata.push({
+    user_id: userId,
+    instituteStaff: instituteStaff,
+    declaration: instituteStaff.Staff.User.is_signed, //.Staff.User.is_signed,
+    userPersonalDetails: userPersonalDetails,
+    dob: userPersonalDetails.dob.toLocaleDateString('en-ZA').replaceAll("/", "-"),
+    userContact: userContact,
+    nationality_title: userContact,
+    // guardian: guardianData,
+    // marks: marksData,
+    // result: resultData,
+    // remarks: remarksData,
+    // contact_data: contactData,
+  });
+
+  // }
+  return res
+    .status(200)
+    .json(success("Staff details fetched successfully!", jsondata));
 };
 
 // verfify/rejected or student profile mark incomplete
@@ -290,42 +329,36 @@ exports.verifyStudent = (req, res) => {
     });
 };
 
-
 exports.updateInstituteStaff = async (req, res) => {
-  console.log("heyhfbvhbhfdvb", req.body)
+  console.log("heyhfbvhbhfdvb", req.body);
   let staff = await Staff.findOne({
     where: {
-      user_id: req.user.id
-    }
+      user_id: req.user.id,
+    },
   });
 
-  await
-  InstituteStaff.update(req.body, {
-      where: { staff_id: staff.id }
-    })
-    
-      .then((updated) => {
-        UserDesignation.update(req.body, {
-          where: { user_id: req.user.id }
-        }).then(response => {
-          if (response == 1) {
-            return res
-          .status(200)
-          .json(success("Staff employment-profile updated successfully!"));
-          } else {
-            return res
+  await InstituteStaff.update(req.body, {
+    where: { staff_id: staff.id },
+  })
+
+    .then((updated) => {
+      UserDesignation.update(req.body, {
+        where: { user_id: req.user.id },
+      }).then((response) => {
+        if (response == 1) {
+          return res
+            .status(200)
+            .json(success("Staff employment-profile updated successfully!"));
+        } else {
+          return res
             .status(400)
             .json(
-              errorResponse(
-                `Cannot update Staff. Maybe Server error`,
-                400
-              )
+              errorResponse(`Cannot update Staff. Maybe Server error`, 400)
             );
-          }
-        })
-      }).catch((error) => {
-        res
-          .status(400)
-          .json(errorResponse(error, 400));
-      })
+        }
+      });
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
 };

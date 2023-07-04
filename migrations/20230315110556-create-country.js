@@ -13,6 +13,10 @@ module.exports = {
         type: Sequelize.STRING,
         unique: true
       },
+      nationality: {
+        type: Sequelize.STRING,
+        unique: true
+      },
       is_active: {
         type: Sequelize.BOOLEAN,
         default: true

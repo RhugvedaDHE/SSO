@@ -6,6 +6,7 @@ exports.create = function (req, res){
     console.log(req.body);
     country.create({
         name:req.body.name,
+        nationality:req.body.nationality,
     }).then(countries => {
         res.status(200).json(success("Country created successfully!"))
     }).catch(error => {
