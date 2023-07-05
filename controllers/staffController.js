@@ -23,7 +23,7 @@ const UserContact = require("../models").UserContact;
 const CasteCategory = require("../models").CasteCategory;
 const Religion = require("../models").religion;
 const BloodGroup = require("../models").BloodGroup;
-const Skill = require("../models").Skill;
+const EmploymentType = require("../models").EmploymentType;
 const UserQualification = require("../models").UserQualification;
 const qualificationTypes = require("../models").QualificationTypes;
 const evalTypes = require("../models").EvalTypes;
@@ -151,9 +151,10 @@ exports.getStaffDetails = async function (req, res) {
   const userId = req.user.id;
   console.log(userId);
   let staff = await Staff.findOne({
+    attributes: ["id"],
     where: {
       user_id: req.user.id,
-    },
+    }, 
   });
 
   let userPersonalDetails = await UserPersonalDetails.findOne({
@@ -237,6 +238,10 @@ exports.getStaffDetails = async function (req, res) {
           {
             model: User,
           },
+          {
+            model: EmploymentType,
+            // attributes: ["id", "name"]
+          }
         ],
       },
       {
@@ -259,12 +264,14 @@ exports.getStaffDetails = async function (req, res) {
     instituteStaff: instituteStaff,
     declaration: instituteStaff.Staff.User.is_signed, //.Staff.User.is_signed,
     userPersonalDetails: userPersonalDetails,
-    dob: userPersonalDetails.dob.toLocaleDateString('en-ZA').replaceAll("/", "-"),
+    dob: userPersonalDetails.dob ? userPersonalDetails.dob.toLocaleDateString('en-ZA').replaceAll("/", "-") : null, 
+    from_date: instituteStaff.from_date ? instituteStaff.from_date.toLocaleDateString('en-ZA').replaceAll("/", "-") : null,
+    to_date: instituteStaff.to_date ? instituteStaff.to_date.toLocaleDateString('en-ZA').replaceAll("/", "-") : null,
+    physically_disabled: userPersonalDetails.physically_disabled ? 1 : 0,
+    physically_disabled_title: userPersonalDetails.physically_disabled,
     userContact: userContact,
     nationality_title: userContact,
-    // guardian: guardianData,
-    // marks: marksData,
-    // result: resultData,
+    // staff: staff
     // remarks: remarksData,
     // contact_data: contactData,
   });

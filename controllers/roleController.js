@@ -21,12 +21,13 @@ exports.get = async function (req, res) {
   let where = {
     type: {
       [Op.in]: req.body.type
-    },    
+    }, 
+    is_admin: req.body.admin,   
     is_active: true,
   };
-  if(req.body.admin){
-    where.push({is_admin: req.body.admin});
-  }
+  // if(req.body.admin){
+  //   where.push({is_admin: req.body.admin});
+  // }
   console.log(where);
   
   if(req.body.type.includes("register") && req.body.type.length == 1){

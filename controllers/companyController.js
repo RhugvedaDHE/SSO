@@ -318,20 +318,30 @@ exports.findOne = async function (req, res) {
 
 // Update a Company by the id in the request
 exports.update = (req, res) => {
-  console.log("heyyyy");
   const id = req.user.id;
+  console.log(req.body);
 
   Company.update(req.body, {
-    where: { id: id },
+    where: { user_id: id },
   })
     .then((num) => {
       if (num == 1) {
+        //update user personal details
+        let userPersonalData = {
+          firstname: req.body.firstname,
+          lastname: req.body.lastname,
+        };
+
+        UserPersonalDetails.update(userPersonalData, {
+          where: { id: id },
+        });
+
         res.send({
           message: "Company was updated successfully.",
         });
       } else {
         res.send({
-          message: `Cannot update Company with id=${id}. Maybe Company was not found or req.body is empty!`,
+          message: `Cannot update Company with userId=${id}. Maybe Company was not found or req.body is empty!`,
         });
       }
     })
