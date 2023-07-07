@@ -129,7 +129,7 @@ exports.getusers = async function (req, res) {
   LEFT OUTER JOIN "Departments" AS "Department" ON "InstituteStaff"."department_id" = "Department"."id"
   LEFT OUTER JOIN "Staffs" AS "Staff" ON "InstituteStaff"."staff_id" = "Staff"."id" 
   LEFT OUTER JOIN "Users" AS "Staff->User" ON "Staff"."user_id" = "Staff->User"."id" 
-  WHERE "InstituteStaff"."institute_id" = ${instituteId} AND "InstituteStaff"."is_active" = true; `;
+  WHERE "InstituteStaff"."institute_id" = ${instituteId} AND "InstituteStaff"."is_active" = true AND "Staff->User"."is_verified" = false; `;
 
   const institutesFaculties = await db.sequelize.query(query, {
     type: db.Sequelize.QueryTypes.SELECT,
