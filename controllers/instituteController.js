@@ -1,20 +1,20 @@
-const express = require('express');
-const Sequelize = require('sequelize');
-
-const InstituteType = require('../models').InstituteType;
-const City = require('../models').City;
-const State = require('../models').State;
-const District = require('../models').District;
-const Country = require('../models').Country;
-const Institute = require('../models').Institute;
-const InstituteFaculty = require('../models').InstituteFaculty;
-const Faculty = require('../models').Faculty;
-const UserPersonalDetails = require('../models').UserPersonalDetails;
-const User = require('../models').User;
-const UserRole = require('../models').UserRole;
+const express = require("express");
+const Sequelize = require("sequelize");
+const db = require("../models");
+const InstituteType = require("../models").InstituteType;
+const City = require("../models").City;
+const State = require("../models").State;
+const District = require("../models").District;
+const Country = require("../models").Country;
+const Institute = require("../models").Institute;
+const InstituteStaff = require("../models").InstituteStaff;
+const Staff = require("../models").Staff;
+const UserPersonalDetails = require("../models").UserPersonalDetails;
+const Role = require("../models").Role;
+const UserRole = require("../models").UserRole;
 
 const { success, errorResponse, validation } = require("../responseApi");
-
+const userpersonaldetails = require("../models/userpersonaldetails");
 
 exports.create = function (req, res) {
   Institute.create({
@@ -120,81 +120,99 @@ exports.gettype = async function (req, res) {
 };
 
 exports.getusers = async function (req, res) {
-  InstituteFaculty.findAll({
-    where: {
-      institute_id: req.body.institute_id,
-      is_active: true,
-    },
-    include: [
-      {
-        model: Faculty,
-        attributes: ["user_id", "is_active"],
-        include: {
-          model: User,
-          attributes: ["id", "is_active"],
-        },
+  const instituteId = req.body.institute_id;
+  var userArray = [];
+  var allUsers = [];
+  var query = `SELECT DISTINCT("InstituteStaff"."id"), "Staff"."id" AS id, "Department".name As "department_name",
+  "Staff".user_id AS user_id, "Staff"."is_active" AS "Staff.is_active", "Staff->User"."id" AS "Staff.User.id", 
+  "Staff->User"."is_active" AS "Staff.User.is_active" FROM "InstituteStaffs" AS "InstituteStaff" 
+  LEFT OUTER JOIN "Departments" AS "Department" ON "InstituteStaff"."department_id" = "Department"."id"
+  LEFT OUTER JOIN "Staffs" AS "Staff" ON "InstituteStaff"."staff_id" = "Staff"."id" 
+  LEFT OUTER JOIN "Users" AS "Staff->User" ON "Staff"."user_id" = "Staff->User"."id" 
+  WHERE "InstituteStaff"."institute_id" = ${instituteId} AND "InstituteStaff"."is_active" = true; `;
+
+  const institutesFaculties = await db.sequelize.query(query, {
+    type: db.Sequelize.QueryTypes.SELECT,
+  });  
+  for (const instituteFaculty of institutesFaculties) {
+
+    console.log("IF&8********************************************************************************************! ", instituteFaculty)
+    let userpersonaldetails = await UserPersonalDetails.findOne({
+      where: {
+        user_id: instituteFaculty.user_id,
+        is_active: true,
       },
-    ],
-  })
-    .then((institutesFaculties) => {
-      const users = {};
-      institutesFaculties.forEach((user) => {
-        UserPersonalDetails.findAll({
-          where: {
-            user_id: user.Faculty.user_id,
-            is_active: true,
-          },
-        }).then((users) => {
-          users.push(users);
-        });
-      });
-      res
-        .status(200)
-        .json(success("Institute-Users fetched successfully!", users));
-    })
-    .catch((error) => {
-      console.log(error);
-      res.status(400).json(errorResponse(error, 400));
     });
+    
+    let userRole = await UserRole.findOne({
+      where: {
+        user_id: instituteFaculty.user_id,
+      },
+      include:[
+        {
+          model: Role,
+          attributes: ["id", "name"]
+        }
+      ]
+    })
+    console.log("userRoel", userRole)
+    userArray.push({
+      staff: instituteFaculty,
+      userdetails: userpersonaldetails,
+      role: userRole
+    });
+
+   
+
+    // console.log("USESEERSYYFYDF^DFYSFYSFFSY", allUsers)
+  } //);
+  allUsers.push(userArray);
+ 
+  res
+    .status(200)
+    .json(success("Institute-Users fetched successfully!", allUsers));
 };
 
-exports.getUniversityAdmins=async function(req,res){
-  const data=await UserRole.findAll({
-      attributes:['user_id'],
-      where:{
-          role_id:8
-      }
+exports.getUniversityAdmins = async function (req, res) {
+  const data = await UserRole.findAll({
+    attributes: ["user_id"],
+    where: {
+      role_id: 8,
+    },
   });
-  if(data){
-      
-      var jsondata=[]
-      for(const d of data){
-           let userdetails= await UserPersonalDetails.findOne({
-              attributes:['firstname','lastname'],
-              where:{
-                  user_id:d.user_id
-              }
-          });
-          
-          let EUser=await EntityUser.findOne({
-              attributes:['cio_id'],
-              where:{
-                  user_id:d.user_id
-              }
-          })
-          
-          let Institutename=await Institute.findOne({
-                  attributes:['name'],
-                  where:{
-                      id:EUser.cio_id
-              }
-              });
-         jsondata.push({"firstname":userdetails.firstname,"lastname":userdetails.lastname,"Department_Name":Institutename.name})
-         
-      }
-      return  res.status(200).json(success("University Admins fetched successfully!", jsondata))
-  }else{
-      return res.status(400).json(errorResponse(error, 400));
+  if (data) {
+    var jsondata = [];
+    for (const d of data) {
+      let userdetails = await UserPersonalDetails.findOne({
+        attributes: ["firstname", "lastname"],
+        where: {
+          user_id: d.user_id,
+        },
+      });
+
+      let EUser = await EntityUser.findOne({
+        attributes: ["cio_id"],
+        where: {
+          user_id: d.user_id,
+        },
+      });
+
+      let Institutename = await Institute.findOne({
+        attributes: ["name"],
+        where: {
+          id: EUser.cio_id,
+        },
+      });
+      jsondata.push({
+        firstname: userdetails.firstname,
+        lastname: userdetails.lastname,
+        Department_Name: Institutename.name,
+      });
+    }
+    return res
+      .status(200)
+      .json(success("University Admins fetched successfully!", jsondata));
+  } else {
+    return res.status(400).json(errorResponse(error, 400));
   }
- 
-}
+};

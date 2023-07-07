@@ -275,7 +275,7 @@ exports.getStudentDetails = async function (req, res) {
         marksData.push({
           program_semester_id: m.program_semester_id,
           institute_programme_course_subject_id:
-            m.institute_programme_course_subject_id,
+           m.institute_programme_course_subject_id,
           eval_type_id: m.eval_type_id,
           eval_type_name: evalTypeDetails.name,
           total_marks: m.total_marks,
@@ -305,7 +305,7 @@ exports.getStudentDetails = async function (req, res) {
         resultData.push({
           institute_program_id: r.institute_program_id,
           institute_programme_course_subject_id:
-            r.institute_programme_course_subject_id,
+           r.institute_programme_course_subject_id,
           eval_type_id: r.eval_type_id,
           total_marks: r.total_marks,
           marks_obtained: r.marks_obtained,
@@ -359,7 +359,8 @@ exports.getStudentDetails = async function (req, res) {
       institute_name: institute.name,
       program_id: instituteProgramme.programme_id,
       program_name: program.name,
-      subject: subjectDetails.name,
+      subject_id: subjectDetails.id,
+      subject_name: subjectDetails.name,
       board_univ: instituteProgramme.board_univ,
       qualification: qualificationData,
     };

@@ -24,7 +24,7 @@ const CasteCategory = require("../models").CasteCategory;
 const Religion = require("../models").religion;
 const BloodGroup = require("../models").BloodGroup;
 const EmploymentType = require("../models").EmploymentType;
-const UserQualification = require("../models").UserQualification;
+const Designation = require("../models").Designation;
 const qualificationTypes = require("../models").QualificationTypes;
 const evalTypes = require("../models").EvalTypes;
 const subject = require("../models/").Subject;
@@ -147,19 +147,20 @@ exports.getInstituteStaffList = async function (req, res) {
 //Function to get student details: Paresh
 //Param:id = user's ID
 exports.getStaffDetails = async function (req, res) {
+  console.log(req.params.id)
   var jsondata = [];
-  const userId = req.user.id;
-  console.log(userId);
+  let userId = req.params.id ? req.params.id : req.user.id;
+  
   let staff = await Staff.findOne({
     attributes: ["id"],
     where: {
-      user_id: req.user.id,
+      user_id: userId,
     }, 
   });
 
   let userPersonalDetails = await UserPersonalDetails.findOne({
     where: {
-      user_id: req.user.id,
+      user_id: userId,
     },include: [
       {
         model: CasteCategory,
@@ -177,12 +178,16 @@ exports.getStaffDetails = async function (req, res) {
         model: BloodGroup,
         attributes: ["id", "name"]
       },
+      {
+        model: Country,
+        attributes: ["id", "nationality"]
+      },
     ],
   });
 
   let userContact = await UserContact.findOne({
     where: {
-      user_id: req.user.id,
+      user_id: userId,
     },
     include: [
       {
@@ -228,7 +233,7 @@ exports.getStaffDetails = async function (req, res) {
           {
             model: Country,
             attributes: ["id", "name", "nationality"],
-          },
+          },          
         ],
       },
       {
@@ -241,7 +246,7 @@ exports.getStaffDetails = async function (req, res) {
           {
             model: EmploymentType,
             // attributes: ["id", "name"]
-          }
+          },          
         ],
       },
       {
@@ -259,6 +264,21 @@ exports.getStaffDetails = async function (req, res) {
     ],
   });
 
+  let userDesignation = await UserDesignation.findOne({
+    where: {
+      user_id: userId,
+    },
+    include: [
+      {
+        model: Designation,
+        attributes: ["id", "name"],
+      },
+      {
+        model: EmploymentType,
+        attributes: ["id", "name"],
+      },
+    ],
+  });
   jsondata.push({
     user_id: userId,
     instituteStaff: instituteStaff,
@@ -270,8 +290,8 @@ exports.getStaffDetails = async function (req, res) {
     physically_disabled: userPersonalDetails.physically_disabled ? 1 : 0,
     physically_disabled_title: userPersonalDetails.physically_disabled,
     userContact: userContact,
-    nationality_title: userContact,
-    // staff: staff
+    // nationality_title: nationality,
+    userDesignation: userDesignation
     // remarks: remarksData,
     // contact_data: contactData,
   });

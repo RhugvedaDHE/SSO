@@ -26,9 +26,9 @@ module.exports = (sequelize, DataTypes) => {
       UserPersonalDetails.belongsTo(models.BloodGroup, {
         foreignKey: 'blood_group'
       })
-      // UserPersonalDetails.belongsTo(models.BloodGroup, {
-      //   foreignKey: 'nationality'
-      // })
+      UserPersonalDetails.belongsTo(models.Country, {
+        foreignKey: 'nationality'
+      })
     }
   }
   UserPersonalDetails.init({

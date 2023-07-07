@@ -12,10 +12,17 @@ console.log("In student routes");
 
 
 // Update a Staff with id
-router.post("/update-staff", authenticate, staff.updateInstituteStaff); 
+router.post("/update-staff", authenticate, staff.updateInstituteStaff);
 
-// Retrieve a single Student with id
+//get institute staff list
+router.get("/institute-list/:id", authenticate, staff.getInstituteStaffList); 
+
+// Retrieve a single staff with token
 router.get("/details", authenticate, staff.getStaffDetails);
+
+// Retrieve a single staff with id
+router.get("/details/:id", authenticate, staff.getStaffDetails);
+
 router.put("/verify", authenticate, staff.verifyStudent);
 
 
