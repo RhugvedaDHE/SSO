@@ -10,6 +10,10 @@ exports.create = function (req, res) {
     name: req.body.name,
     programme_desc: req.body.programme_desc,
     max_sem: req.body.max_sem,
+    type: req.body.type,
+    stream_id: req.body.stream_id,
+    order: req.body.order,
+    doc_type_id: req.body.doc_type_id,
   })
     .then((programmes) => {
       res.status(200).json(success("Programme created successfully!"));

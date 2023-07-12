@@ -29,10 +29,14 @@ module.exports = {
         type: Sequelize.STRING,
         unique:true
       },
+      doc_type_id: {
+        type: Sequelize.INTEGER,
+        unique:true
+      },
       is_active: {
         type: Sequelize.BOOLEAN,
         default: true
-      },
+      },     
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

@@ -11,15 +11,14 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      /*StudentMarks.belongsTo(models.user, {
-        foreignKey: "user_id",
-        as: "userCompany",
+      StudentMarks.belongsTo(models.StudentEnrollment, {
+        foreignKey: "student_enrollment_id",
       });
 
-      StudentMarks.belongsTo(models.organizationType, {
-        foreignKey: "organization_type_id",
-        as: "companyOrganizationType",
-      });*/
+      // StudentMarks.belongsTo(models.organizationType, {
+      //   foreignKey: "organization_type_id",
+      //   as: "companyOrganizationType",
+      // });
     }
   }
 

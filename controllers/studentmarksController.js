@@ -7,6 +7,9 @@ const db = require('../models');
 const StudentMarks = require('../models').StudentMarks;
 const StudentEnrollment = require('../models').StudentEnrollment;
 const Programme = require('../models').Programme;
+const User = require('../models').User;
+const UserDocs = require('../models').UserDocs;
+const DocumentType = require('../models').DocumentType;
 const { success, errorResponse, validation } = require("../responseApi");
 const e = require('express');
 
@@ -66,7 +69,7 @@ exports.findAll = async (req, res) => {
   let data = await StudentMarks.findAll(
   {
     order: [['createdAt', 'DESC']],
-    where: condition,
+    where: condition,    
   });
 
   if (data) {
@@ -74,14 +77,36 @@ exports.findAll = async (req, res) => {
     let finalData = [];
      
     for (const d of data) {    
-      let programmeDetails = await Programme.findAll({
+      let programmeDetails = await Programme.findOne({
         where: {
           id: d.program_id
         },
+        include: [{
+          model: DocumentType,
+          attributes: ["id", "name"],
+        }],
       });
 
+      const user = await StudentEnrollment.findOne({
+        attributes: [
+          "user_id",
+        ],
+        where: {
+          is_active: true,
+          id: d.student_enrollment_id,
+        },
+      });
+
+      let userdocs = await UserDocs.findOne({
+        where: {
+          user_id: user.user_id,
+          doc_type_id: programmeDetails.doc_type_id
+        }
+      })
+      const filePath = userdocs ? req.protocol + "://" + req.get("host") + "/static/user/" + userdocs.filename : null;
+
       finalData.push({
-        "id": d.id,
+          "id": d.id,
           "student_enrollment_id": d.student_enrollment_id,
           "program_id": d.program_id,
           "board_university": d.board_university,
@@ -98,7 +123,8 @@ exports.findAll = async (req, res) => {
           "createdAt": d.createdAt,
           "updatedAt": d.updatedAt,
           "deletedAt": d.deletedAt,
-          "programme_details":programmeDetails
+          "programme_details":programmeDetails,
+          "file_path": filePath,
       });
     }//end for
 

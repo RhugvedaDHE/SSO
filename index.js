@@ -56,6 +56,10 @@ var evalTypesRouter = require('./routes/evalType');
 var religionRouter = require('./routes/religion');
 var staffRouter = require('./routes/staff');
 var configRouter = require('./routes/config');
+var studentOtherskillsRouter = require('./routes/studentOtherskills');
+var additionalSkillsRouter = require('./routes/additionalSkills');
+var durationRouter = require('./routes/duration');
+var studentAdditionalSkillsRouter = require('./routes/studentAdditionalSkills');
 
 //APIs by Paresh A.
 var companyRouter = require('./routes/company');
@@ -113,6 +117,10 @@ application.use('/api/v1/evalType', evalTypesRouter);
 application.use('/api/v1/religion', religionRouter);
 application.use('/api/v1/staff', staffRouter);
 application.use('/api/v1/config', configRouter);
+application.use('/api/v1/studentotherskills', studentOtherskillsRouter);
+application.use('/api/v1/additionalskills', additionalSkillsRouter);
+application.use('/api/v1/duration', durationRouter);
+application.use('/api/v1/studentadditionalskills', studentAdditionalSkillsRouter);
 
 //APIs by Paresh A.
 application.use('/api/v1/company', companyRouter);

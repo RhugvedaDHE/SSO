@@ -7,13 +7,7 @@ const { success, errorResponse, validation } = require("../responseApi");
 
 // Create and Save a new Skill
 exports.create = async (req, res) => {
-    if (!req.body.name) {
-      res.status(400).send({
-        message: "Skill name can not be empty!"
-      });
-      res.status(200).json(success("Skill created successfully!"));
-    }
-  
+    
     // Create a Skill
     const skill = {
       name: req.body.name,
@@ -41,7 +35,7 @@ exports.findAll = (req, res) => {
   const name = req.query.name;
   var condition = name ? { name: { [Op.iLike]: `%${name}%` } } : null;
 
-  Skill.findAll({ where: condition })
+  Skill.findAll({ where: condition, group: ['id', 'type'] })
     .then(data => {
       res.status(200).json(success("Skills fetched successfully!", data));
     })
@@ -143,7 +137,12 @@ exports.deleteAll = (req, res) => {
 
 // Find all active Skill
 exports.findAllActive = (req, res) => {
-    Skill.findAll({ where: { active: true } })
+  console.log("heyyyyyy");
+    Skill.findAll({
+      attributes: ["id", "name", "type"],
+       where: { active: true }, 
+       group: ['id', 'type']
+    })
     .then(data => {
       res.send(data);
     })

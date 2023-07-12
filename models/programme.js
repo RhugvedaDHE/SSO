@@ -26,6 +26,9 @@ module.exports = (sequelize, DataTypes) => {
         as: "pId",
         foreignKey: "programme_id"
       })
+      Programme.belongsTo(models.DocumentType,{
+        foreignKey: "doc_type_id"
+      })
     }
   }
   Programme.init({
@@ -34,6 +37,7 @@ module.exports = (sequelize, DataTypes) => {
     programme_desc: DataTypes.STRING,
     type: DataTypes.STRING,
     stream_id: DataTypes.INTEGER,
+    doc_type_id: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: 1

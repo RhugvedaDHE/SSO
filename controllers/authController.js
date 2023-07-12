@@ -96,9 +96,11 @@ exports.getUserDetails = function (req, res) {
 
           const response = { 
             "User": userPersonalDetails,
+            "physically_disabled_title": userPersonalDetails.physically_disabled ? 1 : 2,
             "selected_role": selectedRole,
             "user_role": userRole,
             "user_Contact": userContact,
+            
           };
           response.type = {};
 

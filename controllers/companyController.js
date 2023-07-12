@@ -13,6 +13,7 @@ const Country = require("../models").Country;
 const City = require("../models").City;
 const UserRole = require("../models").UserRole;
 const Role = require("../models").Role;
+const EntityUser = require("../models").EntityUser;
 
 var multer = require("multer");
 //const uploadFile = require("../middlewares/upload");
@@ -273,9 +274,15 @@ exports.findOne = async function (req, res) {
       }
     ]
   });
+  let entityUser = await EntityUser.findOne({
+    where: {
+      user_id: req.user.id
+    }
+  })
+
   await Company.findAll({
     where: {
-      user_id: req.user.id,
+      id: entityUser.cio_id,
     },
     include: [
       {
