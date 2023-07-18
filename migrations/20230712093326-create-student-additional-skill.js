@@ -27,6 +27,9 @@ module.exports = {
       mode_id: {
         type: Sequelize.INTEGER
       },
+      user_docs_id: {
+        type: Sequelize.INTEGER
+      },
       is_active: {
         type: Sequelize.BOOLEAN,
         default: true

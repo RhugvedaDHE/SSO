@@ -112,17 +112,19 @@ router.post('/register-superadmin',[
   check('lastname').not().isEmpty().withMessage('Your Last name is required').isAlpha().withMessage('Last name must have only alphabets'),
 ],validate,Auth.registerSuperadmin);
 
-router.post('/register-admin',[
-check('phone').not().isEmpty().withMessage('Your phone is required').isNumeric().withMessage("Please enter a valid Phone"),
-check('email').not().isEmpty().withMessage('Your email is required'),
-check('role_id').not().isEmpty().withMessage('Your role is required').isNumeric().withMessage("Please select a valid Role"),
-check('designation_id').not().isEmpty().withMessage('Your designation is required').isNumeric().withMessage("Please select a valid Designation"),
-check('employementtype_id').not().isEmpty().withMessage('Your employment type is required').isNumeric().withMessage("Please select a valid employment type"),
-check('entity_type_id').not().isEmpty().withMessage('Your entity type is required').isNumeric().withMessage("Please select a valid entity type"),
-check('cio_id').not().isEmpty().withMessage('Your organisation/institute details are required').isNumeric().withMessage("Please select a valid organisation/institute"),
-check('firstname').not().isEmpty().withMessage('Your role is required'),
-check('lastname').not().isEmpty().withMessage('Your role is required')],
-validate, Auth.registerAdmins);
+router.post('/register-admin',
+// [
+// check('phone').not().isEmpty().withMessage('Your phone is required').isNumeric().withMessage("Please enter a valid Phone"),
+// check('email').not().isEmpty().withMessage('Your email is required'),
+// check('role_id').not().isEmpty().withMessage('Your role is required').isNumeric().withMessage("Please select a valid Role"),
+// check('designation_id').not().isEmpty().withMessage('Your designation is required').isNumeric().withMessage("Please select a valid Designation"),
+// check('employementtype_id').not().isEmpty().withMessage('Your employment type is required').isNumeric().withMessage("Please select a valid employment type"),
+// // check('entity_type_id').not().isEmpty().withMessage('Your entity type is required').isNumeric().withMessage("Please select a valid entity type"),
+// // check('cio_id').not().isEmpty().withMessage('Your organisation/institute details are required').isNumeric().withMessage("Please select a valid organisation/institute"),
+// check('firstname').not().isEmpty().withMessage('Your role is required'),
+// check('lastname').not().isEmpty().withMessage('Your role is required')],
+// validate, 
+Auth.registerAdmins);
 
 
 router.post('/register/company', [
@@ -156,10 +158,17 @@ check(
 .custom((value, { req }) => value === req.body.password),
 ], validate, Auth.register); // same as company admin
 
-router.post('/register/companyHR', Auth.register);
+router.post('/register/companyHR', [
+  check('organization_type_id').not().isEmpty().withMessage('Organisation type is required').isNumeric().withMessage("Please select a valid Organisation type"),
+  check('name').not().isEmpty().withMessage('Company name is required').isAlpha().withMessage('First name must have only alphabets'),
+  check('website').not().isEmpty().withMessage('Company website is required').isURL().withMessage("Please enter a valid URL"),
+  check('description').not().isEmpty().withMessage('Company description is required'),
+  check('firstname').not().isEmpty().withMessage('Your role is required'),], Auth.register);
+
+
 router.post('/register/companyGuide', Auth.register);
 
-router.post('/verify', Auth.verifyUsers);
+router.post('/verify', authenticate, Auth.verifyUsers);
 
 //profile
 router.post('/update-profile', authenticate, Auth.updateProfile);
@@ -170,3 +179,24 @@ router.post('/update-academics', authenticate, Auth.updateAcademics);
 router.post('/sign-undertaking', [check('undertaking').not().isEmpty().withMessage('Undertaking flag is required'),], authenticate, Auth.signUndertaking);
 
 module.exports = router;
+
+// organization_type_id: req.body.organization_type_id,
+// name: req.body.name,
+// logo: req.body.logo,
+// website: req.body.website,
+// description: req.body.description,
+// state_id: req.body.state_id,
+// district_id: req.body.district_id,
+// taluka_id: req.body.taluka_id,
+// village: req.body.village,
+// country_id: req.body.country_id,
+// landmark: req.body.landmark,
+// street: req.body.street,
+// pincode: req.body.pincode,
+// phone: req.body.phone,
+// email: req.body.email,
+// // reg_no: req.body.reg_no,
+// reg_certificate: "", //req.certificate.originalname,
+// verified: req.body.verified ? req.body.verified : false,
+// active: req.body.active ? req.body.active : true,
+// description: req.body.description,

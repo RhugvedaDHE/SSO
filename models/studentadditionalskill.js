@@ -23,6 +23,9 @@ module.exports = (sequelize, DataTypes) => {
       StudentAdditionalSkill.belongsTo(models.Mode, {
         foreignKey: 'mode_id'
       })
+      StudentAdditionalSkill.belongsTo(models.UserDocs, {
+        foreignKey: 'user_docs_id'
+      })
     }
   }
   StudentAdditionalSkill.init({
@@ -32,6 +35,7 @@ module.exports = (sequelize, DataTypes) => {
     duration_id: DataTypes.INTEGER,
     location: DataTypes.STRING,
     mode_id: DataTypes.INTEGER,
+    user_docs_id: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true

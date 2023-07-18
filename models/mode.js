@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Mode.init({
-    type: DataTypes.STRING,
+    name: DataTypes.STRING,
     is_active: DataTypes.BOOLEAN
   }, {
     sequelize,

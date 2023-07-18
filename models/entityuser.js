@@ -17,6 +17,18 @@ module.exports = (sequelize, DataTypes) => {
       EntityUser.belongsTo(models.EntityType, {
         foreignKey: 'entity_type_id'
       })
+      EntityUser.belongsTo(models.Company, {
+        foreignKey: 'cio_id'
+      })
+      EntityUser.belongsTo(models.Institute, {
+        foreignKey: 'cio_id'
+      })
+      EntityUser.belongsTo(models.Department, {
+        foreignKey: 'cio_id'
+      })
+      EntityUser.belongsTo(models.Service, {
+        foreignKey: 'cio_id'
+      })
     }
   }
   EntityUser.init({

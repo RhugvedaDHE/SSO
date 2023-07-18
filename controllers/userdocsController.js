@@ -6,7 +6,7 @@ const db = require("../models");
 //const uploadFile = require("../middleware/upload");
 const userDocs = require("../models").UserDocs;
 const docType = require("../models").DocumentType;
-const Company = require("../models").Company;
+const UserDocs = require("../models").UserDocs;
 
 var multer = require("multer");
 const { success, errorResponse, validation } = require("../responseApi");
@@ -69,7 +69,7 @@ exports.uploadDoc = async (req, res) => {
     limits: { fileSize: maxSize },
   }).single("document");
 
-  upload(req, res, function (error) {
+  upload(req, res, async function (error) {
     if (error) {
       console.log(error);
       res.send("Error Uploading File " + error);
@@ -91,27 +91,32 @@ exports.uploadDoc = async (req, res) => {
           DO UPDATE SET "filename" = $3,"updatedAt" = $5;`;
 
       // Execute the raw query
-      const jsondata = db.sequelize
-        .query(query, {
-          bind: [
-            req.body.user_id,
-            req.body.doc_type_id,
-            req.file.filename,
-            new Date(),
-            new Date(),
-          ],
-          type: db.Sequelize.QueryTypes.UPSERT,
-        })
+      const jsondata = await db.sequelize.query(query, {
+        bind: [
+          req.body.user_id,
+          req.body.doc_type_id,
+          req.file.filename,
+          new Date(),
+          new Date(),
+        ],
+        type: db.Sequelize.QueryTypes.UPSERT,
+      });
 
-        .then((data) => {
-          console.log("sccess");
-          res
-            .status(200)
-            .json(success("Student Document added successfully!", data));
-        })
-        .catch((err) => {
-          res.status(400).json(errorResponse(err, 400));
+      if (jsondata) {
+        let userDoc = await UserDocs.findOne({
+          where: {
+            user_id: req.body.user_id,
+            doc_type_id: req.body.doc_type_id,
+          },
         });
+        console.log(
+          "suuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuussssssssssssssssssssssssseeeeeeeeeeeeeeeeeecccccccc",
+          userDoc
+        );
+        res
+          .status(200)
+          .json(success("Student Document added successfully!", userDoc));
+      }
     }
   });
 };

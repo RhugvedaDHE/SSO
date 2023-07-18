@@ -10,6 +10,7 @@ const Programme = require('../models').Programme;
 const User = require('../models').User;
 const UserDocs = require('../models').UserDocs;
 const DocumentType = require('../models').DocumentType;
+const EvalTypes = require('../models').EvalTypes;
 const { success, errorResponse, validation } = require("../responseApi");
 const e = require('express');
 
@@ -70,6 +71,13 @@ exports.findAll = async (req, res) => {
   {
     order: [['createdAt', 'DESC']],
     where: condition,    
+    include: [{
+      model: Programme,
+      attributes: ["id", "name"],
+    },{
+      model: EvalTypes,
+      attributes: ["id", "name"],
+    }],
   });
 
   if (data) {
@@ -109,6 +117,7 @@ exports.findAll = async (req, res) => {
           "id": d.id,
           "student_enrollment_id": d.student_enrollment_id,
           "program_id": d.program_id,
+          "program_title": d.Programme.name,
           "board_university": d.board_university,
           "institute_name": d.institute_name,
           "programme_semester": d.programme_semester,
@@ -116,6 +125,7 @@ exports.findAll = async (req, res) => {
           "subject": d.subject,
           "year_of_passing": d.year_of_passing,
           "eval_type_id": d.eval_type_id,
+          "eval_type_title": d.EvalType.name,
           "total_marks": d.total_marks,
           "marks_obtained": d.marks_obtained,
           "grade_obtained": d.grade_obtained,

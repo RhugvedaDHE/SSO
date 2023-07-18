@@ -267,18 +267,18 @@ exports.findOne = async function (req, res) {
     where: {
       user_id: req.user.id,
     },
-    include:[
+    include: [
       {
         model: Role,
-        attributes: ["id", "name"]
-      }
-    ]
+        attributes: ["id", "name"],
+      },
+    ],
   });
   let entityUser = await EntityUser.findOne({
     where: {
-      user_id: req.user.id
-    }
-  })
+      user_id: req.user.id,
+    },
+  });
 
   await Company.findAll({
     where: {
@@ -308,10 +308,11 @@ exports.findOne = async function (req, res) {
     ],
   })
     .then((companies) => {
-      jsondata.push({ company: companies,
-      companyPersonalDetails: userPersonalDetails,
-      Role: userRole,
-     });
+      jsondata.push({
+        company: companies,
+        companyPersonalDetails: userPersonalDetails,
+        Role: userRole,
+      });
       res
         .status(200)
         .json(success("Company Details fetched successfully!", jsondata));
@@ -343,19 +344,23 @@ exports.update = (req, res) => {
           where: { id: id },
         });
 
-        res.send({
-          message: "Company was updated successfully.",
-        });
+        User.update({
+          is_verified: false,
+          status: "RESUB"
+        }, {
+          where:{
+            id: id,
+          }
+        })
+        res
+        .status(200)
+        .json(success("Company updated successfully!"));
       } else {
-        res.send({
-          message: `Cannot update Company with userId=${id}. Maybe Company was not found or req.body is empty!`,
-        });
+        res.status(400).json(errorResponse("Could not update a company", 400));
       }
     })
-    .catch((err) => {
-      res.status(500).send({
-        message: "Error updating Company with id=" + id,
-      });
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 500));
     });
 };
 
@@ -401,20 +406,6 @@ exports.deleteAll = (req, res) => {
     });
 };
 
-// Find all active Company
-exports.findAllActive = (req, res) => {
-  Company.findAll({ where: { active: true } })
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving tutorials.",
-      });
-    });
-};
-
 exports.userCompanies = (req, res) => {
   const ownerTypeId = req.body.ownerTypeId;
   const userId = req.body.userId;
@@ -429,5 +420,99 @@ exports.userCompanies = (req, res) => {
         message:
           err.message || "Some error occurred while retrieving tutorials.",
       });
+    });
+};
+
+exports.listCompanies = (req, res) => {
+  let where = {};
+  if (req.params.type == "verified") {
+    where = { is_verified: true, status: "VER" };
+  } else if (req.params.type == "not-verified"){
+    where = { is_verified: false, status: "REG" };
+  }
+  Company.findAll({
+    where: { active: true },
+    include: [
+      {
+        model: User,
+        attributes: ["id", "status"],
+        where: where
+      },
+    ],
+  })
+    .then((data) => {
+      res
+        .status(200)
+        .json(success("Company Details fetched successfully!", data));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};
+
+exports.getCompanyDetailsById = async function (req, res) {
+  console.log("heyyy thhheeerrrreeee!!!!!!");
+  var jsondata = [];
+  let userPersonalDetails = await UserPersonalDetails.findOne({
+    where: {
+      user_id: req.body.user_id,
+    },
+  });
+  let userRole = await UserRole.findOne({
+    where: {
+      user_id: req.body.user_id,
+    },
+    include: [
+      {
+        model: Role,
+        attributes: ["id", "name"],
+      },
+    ],
+  });
+  let entityUser = await EntityUser.findOne({
+    where: {
+      user_id: req.body.user_id,
+    },
+  });
+
+  await Company.findAll({
+    where: {
+      id: entityUser.cio_id,
+    },
+    include: [
+      {
+        model: City,
+        attributes: ["name"],
+      },
+      {
+        model: State,
+        attributes: ["name"],
+      },
+      {
+        model: District,
+        attributes: ["name"],
+      },
+      {
+        model: Country,
+        attributes: ["name"],
+      },
+      {
+        model: User,
+        attributes: ["username"],
+      },
+    ],
+  })
+    .then((companies) => {
+      jsondata.push({
+        company: companies,
+        companyPersonalDetails: userPersonalDetails,
+        Role: userRole,
+      });
+      res
+        .status(200)
+        .json(success("Company Details fetched successfully!", jsondata));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
     });
 };

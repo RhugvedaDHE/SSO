@@ -12,6 +12,9 @@ const State = require("../models").State;
 const Country = require("../models").Country;
 const District = require("../models").District;
 const Company = require("../models").Company;
+const Institute = require("../models").Institute;
+const Department = require("../models").Department;
+const Service = require("../models").Service;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
 const StudentMarks = require("../models").StudentMarks;
 const InstituteStaff = require("../models").InstituteStaff;
@@ -20,7 +23,7 @@ const UserDesignation = require("../models").UserDesignation;
 const EntityUser = require("../models").EntityUser;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const OTP = require("../models").OTP;
-const tokenList = {}
+const tokenList = {};
 
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
@@ -33,35 +36,35 @@ const {
 } = require("../responseApi");
 
 //change the function. make generic. if the type is institute, fetch institute details. if user belongs to dept, fetch dept details. if the user belongs to service,
-//fetch his 
+//fetch his
 exports.getUserDetails = function (req, res) {
   // var studentDetails =[];
-  UserPersonalDetails.findOne(
-    {
-      where: {
-        user_id: req.user.id,
-      }, include: [
-        {
-          model: User,
-          attributes: ["email", "phone"],
-        },
-      ],
-    }
-  )
+  UserPersonalDetails.findOne({
+    where: {
+      user_id: req.user.id,
+    },
+    include: [
+      {
+        model: User,
+        attributes: ["email", "phone"],
+      },
+    ],
+  })
     .then((userPersonalDetails) => {
       UserRole.findAll({
         attributes: [],
         where: {
           user_id: req.user.id,
-        }, include: [
+        },
+        include: [
           {
             model: Role,
-            attributes: ["id", "name"],
+            attributes: ["id", "name", "type"],
           },
         ],
-      }).then((userRole) => {
-        UserContact.findOne(
-          {
+      })
+        .then((userRole) => {
+          UserContact.findOne({
             where: {
               user_id: req.user.id,
             },
@@ -83,66 +86,104 @@ exports.getUserDetails = function (req, res) {
                 attributes: ["name"],
               },
             ],
-          }
-        ).then(async (userContact) => {
-          
-          let selectedRole = await Role.findOne({
-            attributes: ["id", "name", "type"],
-            where: {
-              id: req.user.role_id,
-            },
-            
-          });
-
-          const response = { 
-            "User": userPersonalDetails,
-            "physically_disabled_title": userPersonalDetails.physically_disabled ? 1 : 2,
-            "selected_role": selectedRole,
-            "user_role": userRole,
-            "user_Contact": userContact,
-            
-          };
-          response.type = {};
-
-          if(selectedRole.type == "institute" && selectedRole.name == "Student"){
-            let student = await StudentEnrollment.findOne({
+          }).then(async (userContact) => {
+            let selectedRole = await Role.findOne({
+              attributes: ["id", "name", "type"],
               where: {
-                user_id: req.user.id
-              }
+                id: req.user.role_id,
+              },
             });
-            let institute = await InstituteProgramme.findOne({
-              attributes: ["institute_id"],
-              where:{
-                id: student.institute_programme_id
+
+            const response = {
+              User: userPersonalDetails,
+              physically_disabled_title: userPersonalDetails.physically_disabled
+                ? 1
+                : 2,
+              user_role: userRole,
+              user_Contact: userContact,
+            };
+            response.type = {};
+            response.selected_role = {};
+            let queryOptions = {};
+            let cio = (cio_name = null);
+            console.log(selectedRole);
+            if (
+              selectedRole.type == "institute" &&
+              selectedRole.name == "Student"
+            ) {
+              let student = await StudentEnrollment.findOne({
+                where: {
+                  user_id: req.user.id,
+                },
+              });
+              let institute = await InstituteProgramme.findOne({
+                attributes: ["institute_id"],
+                where: {
+                  id: student.institute_programme_id,
+                },
+              });
+              if (student) {
+                response.student_enrollment_id = student.id;
               }
-            })
-            if(student){
-              response.student_enrollment_id = student.id;
+              response.type = institute;
+            } else if (
+              selectedRole.type == "dept" ||
+              selectedRole.type == "company" ||
+              selectedRole.type == "institute" ||
+              selectedRole.type == "service"
+            ) {
+              queryOptions = {
+                where: {
+                  user_id: req.user.id,
+                },
+                attributes: ["cio_id"],
+              };
+
+              if (selectedRole.type == "dept") {
+                queryOptions.include = [Department];
+              } else if (selectedRole.type == "company") {
+                queryOptions.include = [Company];
+              } else if (selectedRole.type == "institute") {
+                queryOptions.include = [Institute];
+              } else if (selectedRole.type == "service") {
+                queryOptions.include = [Service];
+              }
+
+              cio = await EntityUser.findOne(queryOptions);
+
+              cio_name =
+                selectedRole.type == "dept"
+                  ? cio.Department.name
+                  : selectedRole.type == "company"
+                  ? cio.Company.name
+                  : selectedRole.type == "institute"
+                  ? cio.Institute.name
+                  : selectedRole.type == "service"
+                  ? cio.Service.name
+                  : null;
+              response.type = cio;
             }
-            response.type = institute;
-          }
-          else if(selectedRole.type == "dept" || selectedRole.type == "company" || selectedRole.type == "institute" || selectedRole.type == "service"){
-            let cio = await EntityUser.findOne({
-              attributes: ["cio_id"],
-              where: {
-                user_id: req.user.id
-              }
-            });            
-            response.type = cio;
-          }
 
-          res
-            .status(200)
-            .json(success("User Details fetched successfully", response));
+            response.selected_role = {
+              id: selectedRole.id,
+              name: selectedRole.name,
+              type: selectedRole.type,
+              cio_name: cio_name,
+            };
+            // response.selected_role = selectedRole
+            res
+              .status(200)
+              .json(success("User Details fetched successfully", response));
+          });
         })
-      }).catch((error) => {
-        res.status(400).json(errorResponse(error, 400));
-      })
-
-    }).catch((error) => {
-      res.status(400).json(errorResponse(error, 400));
+        .catch((error) => {
+          res.status(400).json(errorResponse(error, 400));
+        });
     })
-}
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};
 
 exports.register = function (req, res) {
   var salt = bcrypt.genSaltSync(10);
@@ -163,7 +204,7 @@ exports.register = function (req, res) {
         password: hash,
         phone: req.body.phone,
         email: req.body.email,
-        status: "REG"
+        status: "REG",
       })
         .then((user) => {
           //save user id and college id in students and staff table
@@ -186,34 +227,41 @@ exports.register = function (req, res) {
                   }).then((userContact) => {
                     //check if student
                     if (req.body.role_id == 7) {
-                      console.log("inside studenntttttttttttttttttttttttttttttt");
+                      console.log(
+                        "inside studenntttttttttttttttttttttttttttttt"
+                      );
                       InstituteProgramme.findOne({
                         attributes: ["id"],
                         where: {
                           institute_id: req.body.institute_id,
-                          programme_id: req.body.programme_id
+                          programme_id: req.body.programme_id,
                         },
-                      }).then((instprog) => {
-                        console.log("instprog", instprog)
-                        console.log("instprog", instprog.id)
-                        StudentEnrollment.create({
-                          user_id: user.id,
-                          institute_programme_id: instprog.id,
-                          current_class: req.body.class,
-                          subject_id: req.body.subject_id
-                        })
-                          .then((studentEnrollment) => {
-                            res
-                              .status(200)
-                              .json(success("Student-User created successfully"));
-                          })
-                          .catch((error) => {
-                            res.status(400).json(errorResponse("enrollment", 400));
-                          });
-                      }).catch((error) => {
-                        res.status(400).json(errorResponse("InstProg", 400));
                       })
-
+                        .then((instprog) => {
+                          console.log("instprog", instprog);
+                          console.log("instprog", instprog.id);
+                          StudentEnrollment.create({
+                            user_id: user.id,
+                            institute_programme_id: instprog.id,
+                            current_class: req.body.class,
+                            subject_id: req.body.subject_id,
+                          })
+                            .then((studentEnrollment) => {
+                              res
+                                .status(200)
+                                .json(
+                                  success("Student-User created successfully")
+                                );
+                            })
+                            .catch((error) => {
+                              res
+                                .status(400)
+                                .json(errorResponse("enrollment", 400));
+                            });
+                        })
+                        .catch((error) => {
+                          res.status(400).json(errorResponse("InstProg", 400));
+                        });
                     }
                     //check if staff or non-teaching
                     else if (req.body.role_id == 6 || req.body.role_id == 2) {
@@ -253,12 +301,16 @@ exports.register = function (req, res) {
                                   );
                               })
                               .catch((error) => {
-                                res.status(400).json(errorResponse("userdes here", 400));
+                                res
+                                  .status(400)
+                                  .json(errorResponse("userdes here", 400));
                               });
                           })
                           .catch((error) => {
                             console.log(error);
-                            res.status(400).json(errorResponse("institutestaff", 400));
+                            res
+                              .status(400)
+                              .json(errorResponse("institutestaff", 400));
                           });
                       });
                     } else if (req.body.role_id == 12) {
@@ -282,7 +334,7 @@ exports.register = function (req, res) {
                         pincode: req.body.pincode,
                         phone: req.body.phone,
                         email: req.body.email,
-                        reg_no: req.body.reg_no,
+                        // reg_no: req.body.reg_no,
                         reg_certificate: "", //req.certificate.originalname,
                         verified: req.body.verified ? req.body.verified : false,
                         active: req.body.active ? req.body.active : true,
@@ -321,9 +373,15 @@ exports.register = function (req, res) {
                         .catch((error) => {
                           res.status(400).json(errorResponse(error, 400));
                         });
-                    } else if (req.body.role_id == 10 || req.body.role_id == 11) {
+                    } else if (
+                      req.body.role_id == 10 ||
+                      req.body.role_id == 11
+                    ) {
                       //Company HR or Guide
                       console.log("In company HR/Guide create");
+                      user.status = "VER";
+                      user.is_verified = true;
+                      user.save();
 
                       const companyHRData = {
                         user_id: user.id,
@@ -350,7 +408,7 @@ exports.register = function (req, res) {
                           res.status(400).json(errorResponse(error, 400));
                         });
                     }
-                  })
+                  });
                 })
                 .catch((error) => {
                   res.status(400).json(errorResponse("here", 400));
@@ -378,7 +436,7 @@ exports.registerAdmins = function (req, res) {
   var userCredentialsdata;
   userCredentialsdata = userCredentials(email, phone);
   //console.log("Username:",userCredentialsdata.username);
-  console.log("Password:", userCredentialsdata.password)
+  console.log("Password:", userCredentialsdata.password);
 
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(userCredentialsdata.password.toString(), salt);
@@ -388,7 +446,8 @@ exports.registerAdmins = function (req, res) {
     password: hash,
     phone: req.body.phone,
     email: req.body.email,
-    status: "REG"
+    status: "VER",
+    is_verified: true,
   }).then((user) => {
     //save superAdmin Role
     UserRole.create({
@@ -458,8 +517,13 @@ exports.registerAdmins = function (req, res) {
                   });
               })
               .catch((error) => {
-                console.log("*********************************************************************");
-                console.log("errrrooorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrris: ", error);
+                console.log(
+                  "*********************************************************************"
+                );
+                console.log(
+                  "errrrooorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrris: ",
+                  error
+                );
                 res
                   .status(400)
                   .json(errorResponse("Failed to save Admin Designation", 400));
@@ -478,6 +542,7 @@ exports.registerAdmins = function (req, res) {
 };
 
 exports.registerSuperadmin = function (req, res) {
+  console.log(req.body);
   const email = req.body.email;
   const phone = req.body.phone;
 
@@ -493,7 +558,8 @@ exports.registerSuperadmin = function (req, res) {
     password: hash,
     phone: req.body.phone,
     email: req.body.email,
-    status: "REG"
+    status: "VER",
+    is_verified: true,
   })
     .then((user) => {
       //save superAdmin Role
@@ -575,15 +641,15 @@ exports.login = function (req, res) {
     },
   })
     .then((user) => {
-      console.log(user)
+      console.log(user);
       UserRole.findOne({
         where: {
           user_id: user.id,
-          preferred_role: true
+          preferred_role: true,
         },
       })
         .then((role) => {
-          console.log(role)
+          console.log(role);
           tokendata = {
             username: user.username,
             userId: user.id,
@@ -599,7 +665,6 @@ exports.login = function (req, res) {
           const result = bcrypt.compareSync(req.body.password, user.password);
 
           if (result) {
-
             // var refreshToken = jwt.sign(
             //   JSON.parse(JSON.stringify(tokendata)),
             //   process.env.REFRESH_TOKEN_SECRET,
@@ -633,74 +698,88 @@ exports.login = function (req, res) {
           }
         })
         .catch((error) => {
-          console.log("errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrr", error)
+          console.log(
+            "errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrr",
+            error
+          );
           res.status(400).json(errorResponse(error, 400));
         });
     })
     .catch((error) => {
-    console.log("hhheeeaaarrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrr", error);
-    res.status(400).json(errorResponse(error, 400))});
+      console.log(
+        "hhheeeaaarrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrr",
+        error
+      );
+      res.status(400).json(errorResponse(error, 400));
+    });
 };
 
 //update profile
 exports.updateProfile = async function (req, res) {
-  console.log("hey there", req.body)
-  await
-    UserPersonalDetails.update(req.body, {
-      where: { user_id: req.user.id }
-    })
-      .then((updated) => {
-        UserContact.update(req.body, {
-          where: { user_id: req.user.id }
-        }).then(response => {
-          if (response == 1) {
-            res.send({
-              message: "User profile was updated successfully."
-            });
-          } else {
-            res.send({
-              message: "Could not update User profile!"
-            });
-          }
-        })
-      }).catch((error) => {
-        console.log(error)
-        res
-          .status(400)
-          .json(errorResponse("Please check your details!", 400));
-      })
-};
+  console.log("hey there", req.body);
 
-//update profile
-exports.updateAcademics = function (req, res) {
-  StudentEnrollment.findOne({
-    attributes: ["id"],
-    where: { id: req.user.id },
-  }).then((student) => {
-    StudentMarks.update(req.body, {
-      where: { id: student.id },
-    })
-      .then((response) => {
+  await User.update(
+    { status: "RESUB", is_verified: false },
+    { where: { id: req.user.id } }
+  );
+
+  await UserPersonalDetails.update(req.body, {
+    where: { user_id: req.user.id },
+  })
+    .then((updated) => {
+      UserContact.update(req.body, {
+        where: { user_id: req.user.id },
+      }).then((response) => {
         if (response == 1) {
           res.send({
-            message: "User Academics was updated successfully."
+            message: "User profile was updated successfully.",
           });
         } else {
           res.send({
-            message: "Could not update User profile!"
+            message: "Could not update User profile!",
           });
         }
-      })
-    }).catch((error) => {
-      res
-        .status(400)
-        .json(errorResponse("Please check your details!", 400));
+      });
     })
-  };
+    .catch((error) => {
+      console.log(error);
+      res.status(400).json(errorResponse("Please check your details!", 400));
+    });
+};
+
+//update profile
+exports.updateAcademics = async function (req, res) {
+  await User.update(
+    { status: "RESUB", is_verified: false },
+    { where: { user_id: req.user.id } }
+  );
+
+  StudentEnrollment.findOne({
+    attributes: ["id"],
+    where: { id: req.user.id },
+  })
+    .then((student) => {
+      StudentMarks.update(req.body, {
+        where: { id: student.id },
+      }).then((response) => {
+        if (response == 1) {
+          res.send({
+            message: "User Academics was updated successfully.",
+          });
+        } else {
+          res.send({
+            message: "Could not update User profile!",
+          });
+        }
+      });
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse("Please check your details!", 400));
+    });
+};
 
 //updatePassword
 exports.updatePassword = function (req, res) {
-
   User.findOne({
     where: { id: req.user.id },
   })
@@ -710,14 +789,16 @@ exports.updatePassword = function (req, res) {
       user.save();
 
       res.status(200).json(success("User Password updated successfully!"));
-    }).catch((error) => {
-      res.status(400).json(errorResponse("User Password not changed successsfully!", 400));
+    })
+    .catch((error) => {
+      res
+        .status(400)
+        .json(errorResponse("User Password not changed successsfully!", 400));
     });
 };
 
 //forgotPassword
 exports.forgotPassword = function (req, res) {
-
   User.findOne({
     where: { email: req.body.email },
   })
@@ -728,12 +809,14 @@ exports.forgotPassword = function (req, res) {
         user.save();
 
         res.status(200).json(success("User Password updated successfully!"));
-      }
-      else {
+      } else {
         res.status(400).json(errorResponse("User Not Found!", 400));
       }
-    }).catch((error) => {
-      res.status(400).json(errorResponse("User Password not changed successsfully!", 400));
+    })
+    .catch((error) => {
+      res
+        .status(400)
+        .json(errorResponse("User Password not changed successsfully!", 400));
     });
 };
 
@@ -743,11 +826,14 @@ exports.verifyUsers = function (req, res) {
   })
     .then((user) => {
       user.is_verified = true;
+      user.status = "VER";
+      user.verified_by = req.user.id;
       user.save();
       res.status(200).json(success("User Verifed successfully!"));
-    }).catch((error) => {
-      res.status(400).json(errorResponse("Could not verify users!", 400));
     })
+    .catch((error) => {
+      res.status(400).json(errorResponse("Could not verify users!", 400));
+    });
 };
 
 //switch the user role
@@ -764,18 +850,15 @@ exports.switchUserRole = function (req, res) {
       expiresIn: 1200,
     }
   );
-
-  res
-    .status(200)
-    .json(success("User role switched successfully!", token));
-}
+  res.status(200).json(success("User role switched successfully!", token));
+};
 
 //refresh the token
 exports.refreshToken = function (req, res) {
   User.findOne({
     where: {
-      id: req.body.user_id
-    }
+      id: req.body.user_id,
+    },
   }).then((user) => {
     // refresh the damn token
     UserRole.findOne({
@@ -784,64 +867,71 @@ exports.refreshToken = function (req, res) {
       },
     })
       .then((role) => {
-
         const postData = req.body;
         // if refresh token exists
-        if ((postData.refresh_token) && (postData.refresh_token in tokenList)) {
-          console.log("inside here")
+        if (postData.refresh_token && postData.refresh_token in tokenList) {
+          console.log("inside here");
           const tokendata = {
             username: user.username,
             userId: user.id,
             userRole: role.role_id,
           };
-          const token = jwt.sign(tokendata, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_LIFE })
+          const token = jwt.sign(tokendata, process.env.JWT_SECRET, {
+            expiresIn: process.env.TOKEN_LIFE,
+          });
           // const response = {
           //     "token": token,
           // }
           // update the token in the list
-          console.log("inside reached on top here")
-          tokenList[postData.refresh_token].token = token
-          console.log("inside reached here")
-          res.status(200).json(success("User Role changed successfully!", token));
-        }
-        else {
-          console.log("inside else")
+          console.log("inside reached on top here");
+          tokenList[postData.refresh_token].token = token;
+          console.log("inside reached here");
+          res
+            .status(200)
+            .json(success("User Role changed successfully!", token));
+        } else {
+          console.log("inside else");
           res.status(404).json(success("User Not found!"));
         }
-      }).catch((error) => {
-        res.status(400).json(errorResponse(error, 400));
       })
-  })
-}
+      .catch((error) => {
+        res.status(400).json(errorResponse(error, 400));
+      });
+  });
+};
 
 //is_verified status
 exports.getUserStatus = function (req, res) {
   User.findOne({
     attributes: ["is_verified", "status", "is_signed"],
     where: {
-      id: req.user.id
-    }
-  }).then((user) => {
-    res.status(200).json(success("User Status fetched successfully!", user));
-  }).catch((error) => {
-    res.status(400).json(errorResponse(error, 400));
+      id: req.user.id,
+    },
   })
-}
+    .then((user) => {
+      res.status(200).json(success("User Status fetched successfully!", user));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};
 
 //sign Undertaking status
 exports.signUndertaking = async function (req, res) {
-  console.log("body jfdvjdfjvbdjnbjnndfjbnjdf", req.body)
+  console.log("body jfdvjdfjvbdjnbjnndfjbnjdf", req.body);
   await User.findOne({
     where: {
-      id: req.user.id
-    }
-  }).then((user) => {
-    console.log(req.body)
-    user.is_signed = req.body.undertaking;
-    user.status = "SUB";
-    user.save();
-    res.status(200).json(success("User Status updated successfully!", user));
-  }).catch((error) => {
-    res.status(400).json(errorResponse(error, 400));
+      id: req.user.id,
+    },
   })
-}
+    .then((user) => {
+      console.log(req.body);
+      user.is_signed = req.body.undertaking;
+      user.status = "SUB";
+      user.save();
+      res.status(200).json(success("User Status updated successfully!", user));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};

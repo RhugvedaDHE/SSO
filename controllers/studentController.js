@@ -106,13 +106,14 @@ exports.getStudentList = async function (req, res) {
 exports.getInstituteStudentList = async function (req, res) {
   const instituteId = req.params.id;
 
-  var query = ` SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed FROM public."StudentEnrollments" as s
-  INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s.institute_programme_id
-  INNER JOIN public."Institutes" as i ON i.id = ip.institute_id
-  INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id
-  INNER JOIN public."Users" as users ON up.user_id = users.id
-  WHERE i."id" = ${instituteId} AND users.is_signed=true AND users.status='SUB' AND users.is_verified=false
-  ORDER BY s."id" ASC`;
+  var query = `SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed, s.id as student_enrollment_id, s.subject_id, subjects.id as sid, subjects.name as subject_name FROM public."StudentEnrollments" as s`;
+  query+= ` INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s."institute_programme_id"`;
+  query+= ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
+  query+= ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
+  query+= ` INNER JOIN public."Users" as users ON up.user_id = users.id`;
+  query+= ` LEFT JOIN public."Subjects" as subjects ON s.subject_id = subjects.id`;
+  query+= ` WHERE i."id" = ${instituteId} AND users.is_signed=true AND users.status='SUB' AND users.is_verified=false`;
+  query+= ` ORDER BY s."id" ASC`;
 
   const jsondata = await db.sequelize.query(query, {
     type: db.Sequelize.QueryTypes.SELECT,
@@ -129,11 +130,11 @@ exports.getInstituteStudentList = async function (req, res) {
 exports.getVerifiedInstituteStudentList = async function (req, res) {
   const instituteId = req.params.id;
 
-  var query = ` SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed FROM public."StudentEnrollments" as s
-  INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s.institute_programme_id
+  var query = ` SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed FROM public."StudentEnrollments" as s s.subject_id, subjects.id as sid, subjects.name as subject_name INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s.institute_programme_id
   INNER JOIN public."Institutes" as i ON i.id = ip.institute_id
   INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id
   INNER JOIN public."Users" as users ON up.user_id = users.id
+  LEFT JOIN public."Subjects" as subjects ON s.subject_id = subjects.id
   WHERE i."id" = ${instituteId} AND users.is_signed=true AND users.status='VER' AND users.is_verified=true
   ORDER BY s."id" ASC`;
 
@@ -528,19 +529,19 @@ exports.getStudentDetails = async function (req, res) {
       firstname: userdetails.firstname,
       lastname: userdetails.lastname,
       gender: userdetails.gender,
-      gender_title: genderDetails.name,
+      gender_title: genderDetails ? genderDetails.name : null,
       castcategory: userdetails.castcategory_id,
-      castcategory_title: userdetails.CasteCategory.name,
+      castcategory_title: userdetails.CasteCategory ? userdetails.CasteCategory.name : null,
       religion: userdetails.religion_id,
-      religion_title: userdetails.religion.name,
+      religion_title: userdetails.religion ? userdetails.religion.name : null,
       email: userdetails.email,
       phone: userdetails.phone,
-      dob: userdetails.dob.toLocaleDateString('en-ZA').replaceAll("/", "-"),
+      dob: userdetails.dob ? userdetails.dob.toLocaleDateString('en-ZA').replaceAll("/", "-") : null,
       aadhar: userdetails.aadhar,
       blood_group: userdetails.blood_group,
-      blood_group_title: bloodDetails.name,
+      blood_group_title: bloodDetails ? bloodDetails.name : null,
       nationality: userdetails.nationality,
-      nationality_title: countryDetails.name,
+      nationality_title: countryDetails ? countryDetails.name : null,
       physically_disabled: userdetails.physically_disabled ? 1 : 0,
       physically_disabled_title: userdetails.physically_disabled,
       is_signed: is_signed.is_signed,

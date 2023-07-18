@@ -15,6 +15,14 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "student_enrollment_id",
       });
 
+      StudentMarks.belongsTo(models.Programme, {
+        foreignKey: "program_id",
+      });
+
+      StudentMarks.belongsTo(models.EvalTypes, {
+        foreignKey: "eval_type_id",
+      });
+
       // StudentMarks.belongsTo(models.organizationType, {
       //   foreignKey: "organization_type_id",
       //   as: "companyOrganizationType",

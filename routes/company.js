@@ -19,14 +19,16 @@ router.post("/",[
 router.get("/all", company.findAll);
 
 // Retrieve all published company
-router.get("/active", company.findAllActive);
+router.get("/list/:type", authenticate, company.listCompanies);
 
 //upload
 router.post("/uploadlogo", company.uploadLogo);
 router.post("/uploadcertificate", company.uploadCertificate);
 
-// Retrieve a single Company with id
+// Retrieve a single Company with token
 router.get("/details", authenticate, company.findOne);
+// Retrieve a single Company with id
+router.get("/details/:user_id", authenticate, company.getCompanyDetailsById);
 
 // Update a Company with id
 router.post("/update", authenticate, company.update);

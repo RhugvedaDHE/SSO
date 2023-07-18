@@ -1,7 +1,7 @@
 const db = require("../models");
 const { success, errorResponse, validation } = require("../responseApi");
 
-const Mode = db.mode;
+const Mode = require("../models").Mode;
 const Op = db.Sequelize.Op;
 
 // Create and Save a new Mode
@@ -10,7 +10,7 @@ exports.create = async (req, res) => {
 
     // Create a Mode
     const mode = {
-      type: req.body.name,
+      name: req.body.name,
       is_active: true,
       updateAt:null
     };
