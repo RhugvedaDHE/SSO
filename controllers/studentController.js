@@ -4,6 +4,8 @@ const bcrypt = require("bcryptjs");
 const db = require("../models");
 
 const User = require("../models").User;
+const UserDocs = require("../models").UserDocs;
+const DocumentType = require("../models").DocumentType;
 const religion = require("../models").religion;
 const Country = require("../models").Country;
 const City = require("../models").City;
@@ -44,19 +46,35 @@ const {
 //function to get list of al the students, this function will be not used currently:Paresh
 exports.getStudentList = async function (req, res) {
   const data = await StudentEnrollment.findAll({
-    attributes: ["user_id", "id", "academic_year", "institute_programme_id"],
+    attributes: ["user_id", "id", "academic_year", "institute_programme_id", "current_semester"],
     where: {
       is_active: true,
     },
+    limit: 15,
+    offset: req.params.offset,
   });
   if (data) {
     var jsondata = [];
     for (const d of data) {
       let userdetails = await UserPersonalDetails.findOne({
-        attributes: ["firstname", "lastname"],
+        attributes: ["firstname", "lastname", "email", "phone"],
         where: {
           user_id: d.user_id,
         },
+      });
+
+      let userdocs = await UserDocs.findOne({
+        attributes: ["filename"],
+        where: {
+          user_id: d.user_id,
+        },
+        include: [{
+          model: DocumentType,
+          where:{
+            name: "Application Picture"
+          }
+          }
+        ]
       });
 
       let instituteProgramme = await InstituteProgramme.findOne({
@@ -84,8 +102,12 @@ exports.getStudentList = async function (req, res) {
         user_id: d.user_id,
         student_enrollemnt_id: d.id,
         academic_year: d.academic_year,
+        current_semester: d.current_semester,
         firstname: userdetails.firstname,
         lastname: userdetails.lastname,
+        email: userdetails.email,
+        phone: userdetails.phone,
+        picture: userdocs ? req.protocol + "://" + req.get("host") + "/static/user/" + userdocs.filename : null,
         institute_id: instituteProgramme.institute_id,
         institute_name: institute.name,
         program_id: instituteProgramme.programme_id,
@@ -617,3 +639,21 @@ exports.verifyStudent = (req, res) => {
         );
     });
 };
+
+
+exports.listOfStudents = async (req, res) =>{
+
+  await StudentEnrollment.findAll({
+      where: {
+        is_active: true,
+      },
+      limit: 5,
+      offset: req.body.offset,
+    
+}).then(function (result) {
+  return res
+  .status(200)
+  .json(success("Students list retrived successfully!", result));
+});
+
+}

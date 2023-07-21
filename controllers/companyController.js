@@ -5,6 +5,9 @@ const bcrypt = require("bcryptjs");
 const db = require("../models");
 //const uploadFile = require("../middleware/upload");
 const Company = require("../models").Company;
+const Institute = require("../models").Institute;
+const Department = require("../models").Department;
+const Service = require("../models").Service;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
 const User = require("../models").User;
 const State = require("../models").State;
@@ -425,6 +428,7 @@ exports.userCompanies = (req, res) => {
 
 exports.listCompanies = (req, res) => {
   let where = {};
+  var companies = [];
   if (req.params.type == "verified") {
     where = { is_verified: true, status: "VER" };
   } else if (req.params.type == "not-verified"){
@@ -435,15 +439,79 @@ exports.listCompanies = (req, res) => {
     include: [
       {
         model: User,
-        attributes: ["id", "status"],
+        where: {
+          is_verified: true,
+          status: "VER",
+        },
+        attributes: ["id", "status", "verified_by"],
         where: where
       },
     ],
   })
-    .then((data) => {
+    .then(async (data) => {
+      
+
+     
+   
+      for (d of data){
+      
+        let ur = await UserRole.findOne({
+          where: {
+            id: d.User.verified_by
+          },
+          include: [
+            {
+              model: Role
+            }
+          ]
+        });
+       
+        queryOptions = {
+          where: {
+            user_id: ur.user_id,
+          },
+          attributes: ["cio_id"],
+        };
+        
+        if (ur.Role.type == "dept") {
+          queryOptions.include = [Department];
+        } else if (ur.Role.type == "company") {
+          queryOptions.include = [Company];
+        } else if (
+          ur.Role.type == "institute" &&
+          ur.Role.name != "Student"
+        ) {
+          console.log("herereferfrdfevtvetvdtv")
+          queryOptions.include = [Institute];
+        } else if (ur.Role.type == "service") {
+          queryOptions.include = [Service];
+        }
+
+        console.log("qurtyoprions", queryOptions)
+        let cio_ur = await EntityUser.findOne(queryOptions);
+       
+        let cio_name_ur =
+          ur.Role.type == "dept"
+            ? cio_ur.Department.name
+            : ur.Role.type == "company"
+            ? cio_ur.Company.name
+            : ur.Role.type == "institute" && ur.Role.name != "Student"
+            ? cio_ur.Institute.name
+            : ur.Role.type == "service"
+            ? cio_ur.Service.name
+            : null;
+        
+        companies.push({
+          company: d,          
+          verified_by: {
+            role_type: ur.Role.type,
+            cio_name: cio_name_ur
+          }
+        })
+      }
       res
         .status(200)
-        .json(success("Company Details fetched successfully!", data));
+        .json(success("Company Details fetched successfully!", companies));
     })
     .catch((error) => {
       res.status(400).json(errorResponse(error, 400));
@@ -455,12 +523,12 @@ exports.getCompanyDetailsById = async function (req, res) {
   var jsondata = [];
   let userPersonalDetails = await UserPersonalDetails.findOne({
     where: {
-      user_id: req.body.user_id,
+      user_id: req.params.user_id,
     },
   });
   let userRole = await UserRole.findOne({
     where: {
-      user_id: req.body.user_id,
+      user_id: req.params.user_id,
     },
     include: [
       {
@@ -471,7 +539,7 @@ exports.getCompanyDetailsById = async function (req, res) {
   });
   let entityUser = await EntityUser.findOne({
     where: {
-      user_id: req.body.user_id,
+      user_id: req.params.user_id,
     },
   });
 

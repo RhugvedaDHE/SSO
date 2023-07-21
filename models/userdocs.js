@@ -14,6 +14,9 @@ module.exports = (sequelize, DataTypes) => {
       UserDocs.belongsTo(models.User, {
         foreignKey: "user_id",
       });
+      UserDocs.belongsTo(models.DocumentType, {
+        foreignKey: "doc_type_id",
+      });
 
       /*UserDocs.belongsTo(models.organizationType, {
         foreignKey: "organization_type_id",

@@ -14,6 +14,10 @@ console.log("In student routes");
 //router.get("/all", student.getStudentList);
 
 router.get("/all/:id", student.getInstituteStudentList);
+
+//list of all the students
+router.get("/list/all/:offset", student.getStudentList);
+
 router.get("/all/verified/:id", student.getVerifiedInstituteStudentList);
 
 // Retrieve a single Student with id
