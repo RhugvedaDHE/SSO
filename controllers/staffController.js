@@ -14,11 +14,12 @@ const City = require("../models").City;
 const State = require("../models").State;
 const District = require("../models").District;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
-const StudentEnrollment = require("../models").StudentEnrollment;
+const Institute = require("../models").Institute;
+const EntityUser = require("../models").EntityUser;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const Institutes = require("../models").Institute;
-const Programmes = require("../models").Programme;
-const Stream = require("../models").Stream;
+// const Role = require("../models").Role;
+const UserRole = require("../models").UserRole;
 const UserContact = require("../models").UserContact;
 const CasteCategory = require("../models").CasteCategory;
 const Religion = require("../models").religion;
@@ -43,144 +44,119 @@ const {
   userCredentials,
   EmailNotification,
 } = require("../responseApi");
+const userpersonaldetails = require("../models/userpersonaldetails");
 
 //Function to get list of all institute's staff: paresh
 //We need to get list of all the staff whoes profile is complete hence adding profile_status field
 //param :id which is institute ID
 exports.getInstituteStaffList = async function (req, res) {
   const instituteId = req.params.id;
-  //const programId = req.params.ProgramId;
 
-  const instituteProgrammeResult = await InstituteProgramme.findAll({
-    attributes: ["id", "institute_id", "programme_id"],
+  await EntityUser.findAll({
     where: {
-      institute_id: instituteId,
+      entity_type_id: 1,
+      cio_id: instituteId,
     },
-  });
-
-  console.log(instituteProgrammeResult);
-  if (instituteProgrammeResult) {
-    var jsondata = [];
-    var cnt = 0;
-
-    for (const eachrow of instituteProgrammeResult) {
-      cnt++;
-
-      let studentEnrollmentRow = await StudentEnrollment.findOne({
-        attributes: [
-          "user_id",
-          "id",
-          "academic_year",
-          "institute_programme_id",
-        ],
+    include: [
+      {
+        model: User,
         where: {
-          institute_programme_id: eachrow.id,
+          is_verified: true,
+          status: "VER",
         },
-      });
+        attributes: ["id", "username"]
+      },
+      {
+        model: Institute,       
+        attributes: ["id", "name"]
+      },
+    ],
+  })
+    .then( async (instituteStaff) => {
+      console.log(instituteStaff)
+      let userPersonDetails;
+      let userRole;
+      if (instituteStaff) {
+        var jsondata = [];
+      
+        for  (const staff of instituteStaff)  {
+          
+          userPersonDetails = await UserPersonalDetails.findOne({
+            attributes: ["firstname", "lastname"],
+            where: {
+              user_id: staff.user_id,
+            },
+          })
+          
+          let userRole = await UserRole.findOne({
+            where: {
+              user_id: staff.user_id,
+            },
+            include: [
+              {
+                model: Role,
+                attributes: ["id", "name"],
+              },
+            ],
+          });
 
-      if (studentEnrollmentRow) {
-        let userdetails = await UserPersonalDetails.findOne({
-          attributes: ["firstname", "lastname"],
-          where: {
-            user_id: studentEnrollmentRow.user_id,
-          },
-          // include: [
-          //   {
-          //     model: User,
-          //     attributes: ["email", "phone"],
-          //     where: {
-          //       is_active: true,
-          //       is_signed: true,
-          //       is_verified: false
-          //     }
-          //   },
-          // ],
-        });
-
-        console.log(userdetails);
-
-        let institute = await Institutes.findOne({
-          attributes: ["name"],
-          where: {
-            id: eachrow.institute_id,
-          },
-        });
-
-        let program = await Programmes.findOne({
-          attributes: ["name", "stream_id"],
-          where: {
-            id: eachrow.programme_id,
-          },
-        });
-
-        let streamRow = await Stream.findOne({
-          attributes: ["id", "name"],
-          where: {
-            id: program.stream_id,
-          },
-        });
-
-        jsondata.push({
-          srno: cnt,
-          user_id: studentEnrollmentRow.user_id,
-          student_enrollemnt_id: studentEnrollmentRow.id,
-          academic_year: studentEnrollmentRow.academic_year,
-          firstname: userdetails.firstname,
-          lastname: userdetails.lastname,
-          institute_id: eachrow.institute_id,
-          institute_name: institute.name,
-          stream_id: streamRow.id,
-          stream_name: streamRow.name,
-          program_id: eachrow.programme_id,
-          program_name: program.name,
-        });
+          jsondata.push({
+            user_id: staff.user_id,
+            firstname: userPersonDetails.firstname,
+            lastname: userPersonDetails.lastname,
+            role: userRole.Role.name,
+            role_id: userRole.Role.id,
+            institute_name: staff.Institute.name
+          });
+        }
       }
-    }
-    return res
-      .status(200)
-      .json(success("Students fetched successfully!", jsondata));
-  } else {
-    return res.status(400).json(errorResponse(error, 400));
-  }
+      return res
+        .status(200)
+        .json(success("Staff fetched successfully!", jsondata));
+    })
+    .catch((error) => {
+      return res.status(400).json(errorResponse(error, 400));
+    });
 };
 
-//Function to get student details: Paresh
+//Function to get staff details: Paresh
 //Param:id = user's ID
 exports.getStaffDetails = async function (req, res) {
-  console.log(req.params.id)
+  console.log(req.params.id);
   var jsondata = [];
   let userId = req.params.id ? req.params.id : req.user.id;
-  
+
   let staff = await Staff.findOne({
     attributes: ["id"],
     where: {
       user_id: userId,
-    }, 
+    },
   });
 
   let userPersonalDetails = await UserPersonalDetails.findOne({
     where: {
       user_id: userId,
-    },include: [
+    },
+    include: [
       {
         model: CasteCategory,
-        attributes: ["id", "name"]
+        attributes: ["id", "name"],
       },
       {
         model: Religion,
-        attributes: ["id", "name"]
+        attributes: ["id", "name"],
       },
       {
         model: Gender,
-        attributes: ["id", "name"]
+        attributes: ["id", "name"],
       },
       {
         model: BloodGroup,
-        attributes: ["id", "name"]
+        attributes: ["id", "name"],
       },
       {
         model: Country,
-        attributes: ["id", "nationality"]
+        attributes: ["id", "nationality"],
       },
     ],
   });
@@ -233,7 +209,7 @@ exports.getStaffDetails = async function (req, res) {
           {
             model: Country,
             attributes: ["id", "name", "nationality"],
-          },          
+          },
         ],
       },
       {
@@ -246,7 +222,7 @@ exports.getStaffDetails = async function (req, res) {
           {
             model: EmploymentType,
             // attributes: ["id", "name"]
-          },          
+          },
         ],
       },
       {
@@ -284,14 +260,22 @@ exports.getStaffDetails = async function (req, res) {
     instituteStaff: instituteStaff,
     declaration: instituteStaff.Staff.User.is_signed, //.Staff.User.is_signed,
     userPersonalDetails: userPersonalDetails,
-    dob: userPersonalDetails.dob ? userPersonalDetails.dob.toLocaleDateString('en-ZA').replaceAll("/", "-") : null, 
-    from_date: instituteStaff.from_date ? instituteStaff.from_date.toLocaleDateString('en-ZA').replaceAll("/", "-") : null,
-    to_date: instituteStaff.to_date ? instituteStaff.to_date.toLocaleDateString('en-ZA').replaceAll("/", "-") : null,
+    dob: userPersonalDetails.dob
+      ? userPersonalDetails.dob.toLocaleDateString("en-ZA").replaceAll("/", "-")
+      : null,
+    from_date: instituteStaff.from_date
+      ? instituteStaff.from_date
+          .toLocaleDateString("en-ZA")
+          .replaceAll("/", "-")
+      : null,
+    to_date: instituteStaff.to_date
+      ? instituteStaff.to_date.toLocaleDateString("en-ZA").replaceAll("/", "-")
+      : null,
     physically_disabled: userPersonalDetails.physically_disabled ? 1 : 0,
     physically_disabled_title: userPersonalDetails.physically_disabled,
     userContact: userContact,
     // nationality_title: nationality,
-    userDesignation: userDesignation
+    userDesignation: userDesignation,
     // remarks: remarksData,
     // contact_data: contactData,
   });

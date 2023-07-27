@@ -66,7 +66,7 @@ exports.findAll = async (req, res) => {
       },
       {
         model: UserDocs,
-        attributes: ["id", "filename"],
+        attributes: ["id", "filename", "doc_type_id"],
       },
     ],
   })
@@ -162,7 +162,7 @@ exports.findAllAddSkillsInstAdmin = async (req, res) => {
       },
       {
         model: UserDocs,
-        attributes: ["id", "filename"],
+        attributes: ["id", "filename", "doc_type_id"],
       },
     ],
   })

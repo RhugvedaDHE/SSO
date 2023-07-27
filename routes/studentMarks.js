@@ -6,7 +6,7 @@ const validate = require('../middlewares/validate');
 const studentMarks = require('../controllers/studentmarksController');
 const authenticate = require('../middlewares/authenticate');
 //var multer = require('multer');
-
+const authorization = require('../middlewares/authorization');
 
 console.log("In studentMarks routes");
 

@@ -134,6 +134,7 @@ exports.findAll = async (req, res) => {
           "updatedAt": d.updatedAt,
           "deletedAt": d.deletedAt,
           "programme_details":programmeDetails,
+          "file_id": userdocs.id,
           "file_path": filePath,
       });
     }//end for

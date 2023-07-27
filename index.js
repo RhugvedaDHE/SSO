@@ -60,6 +60,10 @@ var studentOtherskillsRouter = require('./routes/studentOtherskills');
 var additionalSkillsRouter = require('./routes/additionalSkills');
 var durationRouter = require('./routes/duration');
 var studentAdditionalSkillsRouter = require('./routes/studentAdditionalSkills');
+var permissionRouter = require('./routes/permission');
+var userPermissionRouter = require('./routes/userPermission');
+var userMenuItemRouter = require('./routes/userMenuItem');
+var menuItemRouter = require('./routes/menuItem');
 
 //APIs by Paresh A.
 var companyRouter = require('./routes/company');
@@ -121,6 +125,10 @@ application.use('/api/v1/studentotherskills', studentOtherskillsRouter);
 application.use('/api/v1/additionalskills', additionalSkillsRouter);
 application.use('/api/v1/duration', durationRouter);
 application.use('/api/v1/studentadditionalskills', studentAdditionalSkillsRouter);
+application.use('/api/v1/permission', permissionRouter);
+application.use('/api/v1/user-permission', userPermissionRouter);
+application.use('/api/v1/user-menuitem', userMenuItemRouter);
+application.use('/api/v1/menuitem', menuItemRouter);
 
 //APIs by Paresh A.
 application.use('/api/v1/company', companyRouter);

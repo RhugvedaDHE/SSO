@@ -151,7 +151,6 @@ exports.getUserDetails = function (req, res) {
               id: req.user.role_id,
             },
           });
-
           const response = {
             User: userPersonalDetails,
             physically_disabled_title: userPersonalDetails.physically_disabled
@@ -201,7 +200,7 @@ exports.getUserDetails = function (req, res) {
               queryOptions.include = [Department];
             } else if (selectedRole.type == "company") {
               queryOptions.include = [Company];
-            } else if (selectedRole.type == "institute" && selectedRole.Role.name != "Student") {
+            } else if (selectedRole.type == "institute" && selectedRole.name != "Student") {
               queryOptions.include = [Institute];
             } else if (selectedRole.type == "service") {
               queryOptions.include = [Service];

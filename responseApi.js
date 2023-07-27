@@ -88,7 +88,7 @@ exports.success = (message, data) => {
   exports.EmailNotification=(from, to , subject, template,otp,username,password)=>{
     console.log("email microservice")
         try {
-          const response = axios.post('http://192.168.0.115:3002/otp/send-email', {
+          const response = axios.post('http://192.168.0.113:3002/otp/send-email', {
             from: from,
             to: to,
             subject:subject,
