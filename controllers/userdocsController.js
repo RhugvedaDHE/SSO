@@ -42,7 +42,27 @@ exports.uploadDoc = async (req, res) => {
 
       var temp_file_extension = temp_file_arr[1];
 
-      callback(null, "user_" + Date.now() + "." + temp_file_extension);
+      if (req.body.doc_type_id == 21) {
+        callback(
+          null,
+          "offer_" +
+            Date.now() +
+            "_" +
+            temp_file_name +
+            "." +
+            temp_file_extension
+        );
+      } else {
+        callback(
+          null,
+          "user_" +
+            Date.now() +
+            "_" +
+            temp_file_name +
+            "." +
+            temp_file_extension
+        );
+      }
     },
   });
 
@@ -50,7 +70,7 @@ exports.uploadDoc = async (req, res) => {
   var upload = multer({
     storage: storage,
     fileFilter: function (req, file, callback) {
-      var ext = path.extname(file.originalname);
+      //var ext = path.extname(storage.filename);
       /*if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
                               return callback(new Error('Only images are allowed'))
                           }
@@ -86,42 +106,90 @@ exports.uploadDoc = async (req, res) => {
       // };
       // console.log(userDocsData);
       // Save UserDocs in the database
-      const query = `
-          INSERT INTO public."UserDocs" ("user_id", "doc_type_id", "filename", "createdAt", "updatedAt")
-          VALUES ($1, $2, $3, $4, $5)
-          ON CONFLICT ("user_id", "doc_type_id")
-          DO UPDATE SET "filename" = $3,"updatedAt" = $5;`;
+      docId = req.body.doc_id;
 
-      // Execute the raw query
-      const jsondata = await db.sequelize.query(query, {
-        bind: [
-          req.body.user_id,
-          req.body.doc_type_id,
-          req.file.filename,
-          new Date(),
-          new Date(),
-        ],
-        type: db.Sequelize.QueryTypes.UPSERT,
-      });
+      if (docId) {
+        //find the file details and unlink the existing file
+        userDocs.findByPk(docId).then((data) => {
+          if (data) {
+            console.log(__dirname);
+            const directoryPath = baseDirectory + "/uploads/user/";
+            console.log(directoryPath);
 
-      if (jsondata) {
-        let userDoc = await UserDocs.findOne({
-          where: {
-            user_id: req.body.user_id,
-            doc_type_id: req.body.doc_type_id,
-          },
+            fs.unlink(directoryPath + data.filename, (err) => {
+              if (err) {
+                throw err;
+              }
+
+              console.log("Delete File successfully.");
+            });
+          }
         });
-        console.log(
-          "suuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuussssssssssssssssssssssssseeeeeeeeeeeeeeeeeecccccccc",
-          userDoc
-        );
-        res
-          .status(200)
-          .json(success("Student Document added successfully!", userDoc));
+
+        /*const query = `
+        UPDATE public."UserDocs" SET "user_id" = $1, "doc_type_id" = $2, "filename" = $3, "updatedAt" = $4 WHERE id = $5`;
+        console.log(req.file.filename);
+        // Execute the raw query
+        const jsondata = await db.sequelize.query(query, {
+          bind: [
+            req.body.user_id,
+            req.body.doc_type_id,
+            req.file.filename,
+            new Date(),
+            $docId,
+          ],
+          type: db.Sequelize.QueryTypes.UPDATE,
+        });
+
+        if (jsondata) {
+          
+          console.log("su", jsondata);
+          res
+            .status(200)
+            .json(success("Student Document updated successfully!", jsondata));
+        }
+        */
+        const filename = req.file.filename;
+
+        const userDoc = {
+          user_id: req.body.title,
+          doc_type_id: req.body.doc_type_id,
+          filename: filename,
+          createdAt: new Date(),
+          updateAt: null,
+        };
+
+        const docUpdated = await userDocs.update(userDoc, {
+          where: { id: docId },
+        });
+
+        if (docUpdated) {
+          res
+            .status(200)
+            .json(success("Student Document added successfully!", docUpdated));
+        }
+      } else {
+        console.log("Testing file name:", req.file.filename);
+        const filename = req.file.filename;
+
+        const userDoc = {
+          user_id: req.body.title,
+          doc_type_id: req.body.doc_type_id,
+          filename: filename,
+          createdAt: new Date(),
+          updateAt: null,
+        };
+        userDocs.create(userDoc).then((data) => {
+          console.log("su", data);
+          res
+            .status(200)
+            .json(success("Student Document added successfully!", data));
+        });
       }
     }
   });
 };
+
 
 // Retrieve all UserDocs from the database.
 exports.findAll = async (req, res) => {

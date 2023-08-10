@@ -18,6 +18,8 @@ const UserRole = require("../models").UserRole;
 const Role = require("../models").Role;
 const EntityUser = require("../models").EntityUser;
 
+const logoPath = "http://" + "192.168.0.121:3000" + "/static/company/logo/";
+
 var multer = require("multer");
 //const uploadFile = require("../middlewares/upload");
 const path = require("path");
@@ -183,63 +185,113 @@ exports.uploadCertificate = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-  /*console.log("in controller company");
+  console.log("in controller company");
   console.log(req.body);
 
   if (!req.body.name) {
     res.status(400).send({
-      message: "Name can not be empty!"
+      message: "Name can not be empty!",
     });
     return;
   }
 
-    User.create({
-        username: req.body.username,
-        password: "123456",
-        phone: req.body.phone,
-        email: req.body.email,
-    })
-    .then( (user) => { 
-        // Create a Company
-        const company = {
-          organization_type_id:req.body.organization_type_id,
-          owner_type_id:req.body.owner_type_id,
-          user_id:user.id,
-          name: req.body.name,
-          //logo: req.body.logo,
-          state_id:req.body.state_id,
-          district_id:req.body.district_id,
-          taluka_id:req.body.taluka_id,
-          village_id:req.body.village_id,
-          city_id:req.body.city_id,
-          landmark:req.body.landmark,
-          street:req.body.street,
-          pincode:req.body.pincode,
-          phone:req.body.phone,
-          email:req.body.email,
-          reg_no:req.body.reg_no,
-          reg_certificate: "",//req.certificate.originalname,
-          verified:req.body.verified ? req.body.verified : false,
-          active: req.body.active ? req.body.active : true,
-          updateAt:null
-        };
+  User.create({
+    username: req.body.username,
+    password: "123456",
+    phone: req.body.phone,
+    email: req.body.email,
+  }).then((user) => {
+    // Create a Company
+    const company = {
+      organization_type_id: req.body.organization_type_id,
+      owner_type_id: req.body.owner_type_id,
+      user_id: user.id,
+      name: req.body.name,
+      //logo: req.body.logo,
+      country_id: req.body.country_id,
+      state_id: req.body.state_id,
+      district_id: req.body.district_id,
+      taluka_id: req.body.taluka_id,
+      village_id: req.body.village_id,
+      city_id: req.body.city_id,
+      landmark: req.body.landmark,
+      street: req.body.street,
+      pincode: req.body.pincode,
+      phone: req.body.phone,
+      email: req.body.email,
+      reg_no: req.body.reg_no,
+      reg_certificate: "", //req.certificate.originalname,
+      verified: req.body.verified ? req.body.verified : false,
+      active: req.body.active ? req.body.active : true,
+      updateAt: null,
+    };
 
-        // Save Company in the database
-        Company.create(company)
-          .then(data => {
-            
-            //Fire mail 
+    // Save Company in the database
+    Company.create(company)
+      .then((data) => {
+        //Fire mail
 
-            //return the response
-            res.send(data);
-          })
-          .catch(err => {
-            res.status(500).send({
-              message:
-                err.message || "Some error occurred while creating the Company."
-            });
+        //return the response
+        res.send(data);
+      })
+      .catch((err) => {
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while creating the Company.",
         });
-    });*/
+      });
+  });
+};
+
+exports.createCompanyDHE = async (req, res) => {
+  console.log("in controller company");
+  console.log(req.body);
+
+  if (!req.body.name) {
+    res.status(400).send({
+      message: "Comapny name cannot be empty!",
+    });
+    return;
+  }
+
+  // Create a Company
+  const company = {
+    organization_type_id: req.body.organization_type_id,
+    user_id: req.body.user_id,
+    name: req.body.name,
+    description: req.body.description,
+    //logo: req.body.logo,
+    country_id: req.body.country_id,
+    state_id: req.body.state_id,
+    district_id: req.body.district_id,
+    taluka_id: req.body.taluka_id,
+    village: req.body.village,
+    landmark: req.body.landmark,
+    street: req.body.street,
+    pincode: req.body.pincode,
+    phone: req.body.phone,
+    email: req.body.email,
+    website: req.body.website,
+    reg_no: req.body.reg_no,
+    verified: true,
+    active: req.body.active ? req.body.active : true,
+    updateAt: null,
+  };
+
+  // Save Company in the database
+  Company.create(company)
+    .then((data) => {
+      //Fire mail
+
+      //return the response
+      res.status(200).json(success("Company created successfully!", data));
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while creating the Company.",
+      });
+    });
 };
 
 exports.findAll = async function (req, res) {
@@ -409,21 +461,80 @@ exports.deleteAll = (req, res) => {
     });
 };
 
-exports.userCompanies = (req, res) => {
-  const ownerTypeId = req.body.ownerTypeId;
-  const userId = req.body.userId;
-  Company.findAll({
-    where: { OwnerTypeId: ownerTypeId, user_id: userId, active: true },
+exports.userCompanies = async (req, res) => {
+  //const ownerTypeId = req.body.ownerTypeId;
+  const userId = req.params.id;
+
+  let query = `SELECT c.*,s.name as state_name, d.name as district_name, o.name as country_name, y.name as city_name`;
+  query += ` FROM public."Companies" as c `;
+  query += ` LEFT JOIN public."States" as s ON s."id" = c.state_id`;
+  query += ` LEFT JOIN public."Districts" as d ON d."id" = c.district_id`;
+  query += ` LEFT JOIN public."Countries" as o ON o."id" = c.country_id`;
+  query += ` LEFT JOIN public."Cities" as y ON y."id" = c.taluka_id`;
+  query += ` WHERE c."user_id" = ${userId}`;
+  query += ` ORDER BY c.id DESC`;
+
+  const result = await db.sequelize.query(query, {
+    type: db.Sequelize.QueryTypes.SELECT,
+  });
+
+  let outArray = [];
+  if (result) {
+    for (const c of result) {
+      const filePath = logoPath + c.logo;
+
+      outArray.push({
+        id: c.id,
+        organization_type_id: c.organization_type_id,
+        user_id: c.user_id,
+        name: c.name,
+        logo: filePath,
+        state_id: c.state_id,
+        district_id: c.district_id,
+        taluka_id: c.taluka_id,
+        country_id: c.country_id,
+        landmark: c.landmark,
+        street: c.street,
+        pincode: c.pincode,
+        phone: c.phone,
+        reg_no: c.reg_no,
+        reg_certificate: c.reg_certificate,
+        email: c.email,
+        verified: c.verified,
+        active: c.active,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+        deletedAt: c.deletedAt,
+        village: c.village,
+        description: c.description,
+        website: c.website,
+        state_name: c.state_name,
+        district_name: c.district_name,
+        country_name: c.country_name,
+        city_name: c.city_name,
+      });
+    }
+
+    return res
+      .status(200)
+      .json(success("Jobs fetched successfully!", outArray));
+  } else {
+    return res.status(400).json(errorResponse(error, 400));
+  }
+  /*Company.findAll({
+    where: { user_id: userId, active: true },
   })
     .then((data) => {
-      res.send(data);
+      return res
+        .status(200)
+        .json(success("Companies fetched successfully!", data));
     })
     .catch((err) => {
       res.status(500).send({
         message:
           err.message || "Some error occurred while retrieving tutorials.",
       });
-    });
+    });*/
 };
 
 exports.listCompanies = (req, res) => {
@@ -582,5 +693,19 @@ exports.getCompanyDetailsById = async function (req, res) {
     })
     .catch((error) => {
       res.status(400).json(errorResponse(error, 400));
+    });
+};
+
+// Find all active Company
+exports.findAllActive = (req, res) => {
+  Company.findAll({ where: { active: true } })
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while retrieving tutorials.",
+      });
     });
 };
