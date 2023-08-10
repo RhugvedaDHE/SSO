@@ -52,6 +52,7 @@ exports.getUserDetails = function (req, res) {
     ],
   })
     .then((userPersonalDetails) => {
+      
       UserRole.findAll({
         attributes: [],
         where: {
@@ -63,186 +64,213 @@ exports.getUserDetails = function (req, res) {
             attributes: ["id", "name", "type"],
           },
         ],
-      }).then(async (userRole) => {
-        let user_roles = [];
-        //if not student
+      })
+        .then(async (userRole) => {
+         
+          let user_roles = [];
+          //if not student
+          let cio_name_ur;
+          for (ur of userRole) {
+            if (ur.Role.name == "Student") {
+              let student = await StudentEnrollment.findOne({
+                where: {
+                  user_id: req.user.id,
+                },
+              });
 
-        for (ur of userRole) {
-          
-          console.log("ur is fjdbfjgbjfnjfngjnfgnjdfnjgnjdngjdngjdngjdngjnjgn", ur.Role.name)
-          if (ur.Role.type == "institute" && ur.Role.name != "Student") {
-            console.log("ushuysr6rstydrts", ur.Role.name);
-            queryOptions = {
-              where: {
-                user_id: req.user.id,
-              },
-              attributes: ["cio_id"],
-            };
+              let institute = await InstituteProgramme.findOne({
+                attributes: ["institute_id"],
+                where: {
+                  id: student.institute_programme_id,
+                },
+                include: [
+                  {
+                    model: Institute,
+                    attributes: ["name"]
+                  }
+                ]
+              });
+              cio_name_ur = institute.Institute.name;
+            }else{
+             
+              queryOptions = {
+                where: {
+                  user_id: req.user.id,
+                },
+                attributes: ["cio_id"],
+              };
 
-            if (ur.Role.type == "dept") {
-              queryOptions.include = [Department];
-            } else if (ur.Role.type == "company") {
-              queryOptions.include = [Company];
-            } else if (
-              ur.Role.type == "institute" &&
-              ur.Role.name != "Student"
-            ) {
-              queryOptions.include = [Institute];
-            } else if (ur.Role.type == "service") {
-              queryOptions.include = [Service];
-            }
+              if (ur.Role.type == "dept") {
+                queryOptions.include = [Department];
+              } else if (ur.Role.type == "company") {
+                queryOptions.include = [Company];
+              } else if (
+                ur.Role.type == "institute" &&
+                ur.Role.name != "Student"
+              ) {
+                queryOptions.include = [Institute];
+              } else if (ur.Role.type == "service") {
+                console.log("Service ut is oitsbhdbvjhbsd");
+                queryOptions.include = [Service];
+              }
 
-            let cio_ur = await EntityUser.findOne(queryOptions);
-            console.log(
-              "vfnsdbndbsnv hdj vbvdjsbvjbdjbvjsbvjsbv Sjsbvj",
-              cio_ur
-            );
-            let cio_name_ur =
-              ur.Role.type == "dept"
-                ? cio_ur.Department.name
-                : ur.Role.type == "company"
-                ? cio_ur.Company.name
-                : ur.Role.type == "institute" && ur.Role.name != "Student"
-                ? cio_ur.Institute.name
-                : ur.Role.type == "service"
-                ? cio_ur.Service.name
-                : null;
+              let cio_ur = await EntityUser.findOne(queryOptions);
+
+              cio_name_ur =
+                ur.Role.type == "dept"
+                  ? cio_ur.Department.name
+                  : ur.Role.type == "company"
+                  ? cio_ur.Company.name
+                  : ur.Role.type == "institute" && ur.Role.name != "Student"
+                  ? cio_ur.Institute.name
+                  : ur.Role.type == "service"
+                  ? cio_ur.Service.name
+                  : null;
+
+              
+             
+            }//else
             user_roles.push({
               id: ur.Role.id,
               name: ur.Role.name,
               type: ur.Role.type,
               cio_name: cio_name_ur,
             });
-          }
-        }
-        //if student
-        // else {
+          } //for userRole
 
-        // }
-        console.log(
-          "hedffsflloooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
-        );
-        UserContact.findOne({
-          where: {
-            user_id: req.user.id,
-          },
-          include: [
-            {
-              model: City,
-              attributes: ["name"],
-            },
-            {
-              model: State,
-              attributes: ["name"],
-            },
-            {
-              model: District,
-              attributes: ["name"],
-            },
-            {
-              model: Country,
-              attributes: ["name"],
-            },
-          ],
-        }).then(async (userContact) => {
-          let selectedRole = await Role.findOne({
-            attributes: ["id", "name", "type"],
+          
+          UserContact.findOne({
             where: {
-              id: req.user.role_id,
+              user_id: req.user.id,
             },
-          });
-          const response = {
-            User: userPersonalDetails,
-            physically_disabled_title: userPersonalDetails.physically_disabled
-              ? 1
-              : 2,
-            user_role: user_roles.length ? user_roles : userRole,
-            user_Contact: userContact,
-          };
-          response.type = {};
-          response.selected_role = {};
-          let queryOptions = {};
-          let cio = (cio_name = null);
+            include: [
+              {
+                model: City,
+                attributes: ["name"],
+              },
+              {
+                model: State,
+                attributes: ["name"],
+              },
+              {
+                model: District,
+                attributes: ["name"],
+              },
+              {
+                model: Country,
+                attributes: ["name"],
+              },
+            ],
+          }).then(async (userContact) => {
+            let selectedRole = await Role.findOne({
+              attributes: ["id", "name", "type"],
+              where: {
+                id: req.user.role_id,
+              },
+            });
+            const response = {
+              User: userPersonalDetails,
+              physically_disabled_title: userPersonalDetails.physically_disabled
+                ? 1
+                : 2,
+              user_role: user_roles.length ? user_roles : userRole, /////////////////////////////////////
+              user_Contact: userContact,
+            };
+            response.type = {};
+            response.selected_role = {};
+            let queryOptions = {};
+            let cio = (cio_name = null);
 
-          if (
-            selectedRole.type == "institute" &&
-            selectedRole.name == "Student"
-          ) {
-            let student = await StudentEnrollment.findOne({
-              where: {
-                user_id: req.user.id,
-              },
-            });
-            let institute = await InstituteProgramme.findOne({
-              attributes: ["institute_id"],
-              where: {
-                id: student.institute_programme_id,
-              },
-            });
-            if (student) {
-              response.student_enrollment_id = student.id;
+            if (
+              selectedRole.type == "institute" &&
+              selectedRole.name == "Student"
+            ) {
+              let student = await StudentEnrollment.findOne({
+                where: {
+                  user_id: req.user.id,
+                },
+              });
+              let institute = await InstituteProgramme.findOne({
+                attributes: ["institute_id"],
+                where: {
+                  id: student.institute_programme_id,
+                },
+                include: [
+                  {
+                    model: Institute,
+                    attributes: ["name"]
+                  }
+                ]
+              });
+              if (student) {
+                response.student_enrollment_id = student.id;
+                cio_name = institute.Institute.name;
+              }
+              response.type = institute;
+            } else if (
+              selectedRole.type == "dept" ||
+              selectedRole.type == "company" ||
+              selectedRole.type == "institute" ||
+              selectedRole.type == "service"
+            ) {
+              queryOptions = {
+                where: {
+                  user_id: req.user.id,
+                },
+                attributes: ["cio_id"],
+              };
+
+              if (selectedRole.type == "dept") {
+                queryOptions.include = [Department];
+              } else if (selectedRole.type == "company") {
+                queryOptions.include = [Company];
+              } else if (
+                selectedRole.type == "institute" &&
+                selectedRole.name != "Student"
+              ) {
+                queryOptions.include = [Institute];
+              } else if (selectedRole.type == "service") {
+                queryOptions.include = [Service];
+              }
+
+              cio = await EntityUser.findOne(queryOptions);
+
+              cio_name =
+                selectedRole.type == "dept"
+                  ? cio.Department.name
+                  : selectedRole.type == "company"
+                  ? cio.Company.name
+                  : selectedRole.type == "institute" &&
+                    ur.Role.name != "Student"
+                  ? cio.Institute.name
+                  : selectedRole.type == "service"
+                  ? cio.Service.name
+                  : null;
+              response.type = cio;
             }
-            response.type = institute;
-          } else if (
-            selectedRole.type == "dept" ||
-            selectedRole.type == "company" ||
-            selectedRole.type == "institute" ||
-            selectedRole.type == "service"
-          ) {
-            queryOptions = {
-              where: {
-                user_id: req.user.id,
-              },
-              attributes: ["cio_id"],
+            
+            response.selected_role = {
+              id: selectedRole.id,
+              name: selectedRole.name,
+              type: selectedRole.type,
+              cio_name: cio_name,
             };
 
-            if (selectedRole.type == "dept") {
-              queryOptions.include = [Department];
-            } else if (selectedRole.type == "company") {
-              queryOptions.include = [Company];
-            } else if (selectedRole.type == "institute" && selectedRole.name != "Student") {
-              queryOptions.include = [Institute];
-            } else if (selectedRole.type == "service") {
-              queryOptions.include = [Service];
-            }
-
-            cio = await EntityUser.findOne(queryOptions);
-
-            cio_name =
-              selectedRole.type == "dept"
-                ? cio.Department.name
-                : selectedRole.type == "company"
-                ? cio.Company.name
-                : selectedRole.type == "institute" && ur.Role.name != "Student"
-                ? cio.Institute.name
-                : selectedRole.type == "service"
-                ? cio.Service.name
-                : null;
-            response.type = cio;
-          }
-
-          response.selected_role = {
-            id: selectedRole.id,
-            name: selectedRole.name,
-            type: selectedRole.type,
-            cio_name: cio_name,
-          };
-        response.selected_role = selectedRole
-        res
-          .status(200)
-          .json(success("User Details fetched successfully", response));
-      });
+            res
+              .status(200)
+              .json(success("User Details fetched successfully", response));
+          });
+        })
+        .catch((error) => {
+          res.status(400).json(errorResponse(error, 400));
+        });
     })
     .catch((error) => {
       res.status(400).json(errorResponse(error, 400));
     });
-  })
-  .catch((error) => {
-    res.status(400).json(errorResponse(error, 400));
-  });
 };
 
-exports.register = async function (req, res) { 
+exports.register = async function (req, res) {
   // const result = await sequelize.transaction(async (t) => {
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(req.body.password, salt);
@@ -468,7 +496,7 @@ exports.register = async function (req, res) {
                     }
                   });
                 })
-              // }) //transaction close
+                // }) //transaction close
                 .catch((error) => {
                   res.status(400).json(errorResponse("here", 400));
                 });
@@ -484,7 +512,6 @@ exports.register = async function (req, res) {
     .catch((error) => {
       res.status(400).json(errorResponse(error, 400));
     });
-  
 };
 
 exports.registerAdmins = function (req, res) {
@@ -885,12 +912,11 @@ exports.verifyUsers = async function (req, res) {
     where: { id: req.body.user_id },
   })
     .then(async (user) => {
-      
       let ur = await UserRole.findOne({
         where: {
           user_id: req.user.id,
-          role_id: req.user.role_id
-        }
+          role_id: req.user.role_id,
+        },
       });
       user.is_verified = true;
       user.status = "VER";

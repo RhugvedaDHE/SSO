@@ -11,10 +11,14 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      AdditionalSkill.belongsTo(models.DocumentType, {
+        foreignKey: 'doc_type_id'
+      })
     }
   }
   AdditionalSkill.init({
     name: DataTypes.STRING,
+    doc_type_id: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true

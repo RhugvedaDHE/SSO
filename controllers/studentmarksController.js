@@ -236,7 +236,7 @@ exports.updateMarks = async (req, res) => {
 
 // Delete a StudentMarks with the specified id in the request
 exports.delete = (req, res) => {
-  const id = req.params.id;
+  const id = req.body.id;
 
   StudentMarks.destroy({
     where: { id: id }

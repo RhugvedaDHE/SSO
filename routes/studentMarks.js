@@ -25,7 +25,7 @@ router.get("/all/:id", studentMarks.findAll);
 router.post("/update-marks", authenticate, studentMarks.updateMarks);
 
 
-// router.delete("/:id", studentMarks.delete);
+router.post("/delete", studentMarks.delete);
 
 // router.delete("/", studentMarks.deleteAll);
 module.exports = router;

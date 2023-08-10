@@ -17,6 +17,9 @@ router.post("/uploaddoc", userDocs.uploadDoc);
 // Retrieve all user docs
 router.get("/all/:id", userDocs.findAll);
 
+//create a undertaking doc
+router.get("/create", authenticate, userDocs.createUndertakingPdf);
+
 // router.post("/showfile", userDocs.showImage);
 
 // Retrieve a single  with id

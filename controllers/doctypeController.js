@@ -24,7 +24,7 @@ exports.create = async (req, res) => {
       return;
     }
   
-    // Create a DocumentType
+    // Create a DocumentTypefindAllActive
     const doctype = {
       name: req.body.name,
       ParentId: req.body.parentId,
@@ -150,7 +150,13 @@ exports.deleteAll = (req, res) => {
 
 // Find all active DocumentType
 exports.findAllActive = (req, res) => {
-    DocumentType.findAll({ where: { is_active: true } })
+    DocumentType.findAll({ where: 
+      { is_active: true, 
+        ParentId: {
+          [Op.ne]: 0,
+        },
+      } 
+    })
     .then(data => {
       //res.send(data);
       res.status(200).json(success("DocumentType Listed successfully!", data))

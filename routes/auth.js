@@ -179,24 +179,3 @@ router.post('/update-academics', authenticate, Auth.updateAcademics);
 router.post('/sign-undertaking', [check('undertaking').not().isEmpty().withMessage('Undertaking flag is required'),], authenticate, Auth.signUndertaking);
 
 module.exports = router;
-
-// organization_type_id: req.body.organization_type_id,
-// name: req.body.name,
-// logo: req.body.logo,
-// website: req.body.website,
-// description: req.body.description,
-// state_id: req.body.state_id,
-// district_id: req.body.district_id,
-// taluka_id: req.body.taluka_id,
-// village: req.body.village,
-// country_id: req.body.country_id,
-// landmark: req.body.landmark,
-// street: req.body.street,
-// pincode: req.body.pincode,
-// phone: req.body.phone,
-// email: req.body.email,
-// // reg_no: req.body.reg_no,
-// reg_certificate: "", //req.certificate.originalname,
-// verified: req.body.verified ? req.body.verified : false,
-// active: req.body.active ? req.body.active : true,
-// description: req.body.description,

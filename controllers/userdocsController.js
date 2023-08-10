@@ -10,8 +10,10 @@ const UserDocs = require("../models").UserDocs;
 
 var multer = require("multer");
 const { success, errorResponse, validation } = require("../responseApi");
-
 const env = process.env.NODE_ENV || "development";
+
+const PDFDocument = require('pdfkit');
+
 
 let PORT = process.env.PORT;
 //const uploadUrl = 'http://192.168.1.184:3000/static';
@@ -327,3 +329,46 @@ exports.deleteAll = (req, res) => {
         );
     });
 };
+
+
+exports.createUndertakingPdf = async function (req, res) {
+
+  let fileName = "user_" + Date.now() + "." + "pdf";
+
+  let pdfDoc = new PDFDocument;
+  pdfDoc.pipe(fs.createWriteStream("C:/Users/admin/new-sequelize/uploads/user/" + fileName));
+  pdfDoc.text("BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH");
+  pdfDoc.end();
+
+  
+  const query = `
+          INSERT INTO public."UserDocs" ("user_id", "doc_type_id", "filename", "createdAt", "updatedAt")
+          VALUES ($1, $2, $3, $4, $5)
+          ON CONFLICT ("user_id", "doc_type_id")
+          DO UPDATE SET "filename" = $3,"updatedAt" = $5;`;
+
+      // Execute the raw query
+      const jsondata = await db.sequelize.query(query, {
+        bind: [
+          req.user.id,
+          22,
+          fileName,
+          new Date(),
+          new Date(),
+        ],
+        type: db.Sequelize.QueryTypes.UPSERT,
+      });
+
+      if (jsondata) {
+        let userDoc = await UserDocs.findOne({
+          where: {
+            user_id: req.user.id,
+            doc_type_id: 22,
+          },
+        });
+        
+        res
+          .status(200)
+          .json(success("Student Undertaking document created successfully!", req.protocol + "://" + req.get("host") + "/static/user/" + fileName));
+      }
+    } 

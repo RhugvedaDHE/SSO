@@ -12,6 +12,10 @@ module.exports = {
       name: {
         type: Sequelize.STRING
       },
+      doc_type_id: {
+        type: Sequelize.INTEGER,
+        unique:true
+      },
       is_active: {
         type: Sequelize.BOOLEAN,
         default: true
