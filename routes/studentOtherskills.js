@@ -20,6 +20,9 @@ router.post("/add", authenticate, OtherSkills.addStudentSkills);
 // Retrieve all OtherSkills
 router.get("/all", OtherSkills.findAll);
 
+// Retrieve all Student Other Skills
+router.get("/student/all", authenticate, OtherSkills.getStudentOtherSkills);
+
 // Retrieve all published OtherSkills
 router.get("/active", OtherSkills.findAllActive);
 

@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const db = require("../models");
 //const uploadFile = require("../middleware/upload");
 const StudentGuardian = require("../models").StudentGuardian;
+const Gender = require("../models").Gender;
 const StudentEnrollment = require("../models").StudentEnrollment;
 const { success, errorResponse, validation } = require("../responseApi");
 
@@ -15,7 +16,6 @@ const Op = require("sequelize").Op;
 
 // Create and Save a new StudentGuardian
 exports.create = async (req, res) => {
-  console.log("in controller studentGuardian", req.body);
 
   await StudentEnrollment.findOne({
     attributes: ["id"],
@@ -33,7 +33,7 @@ exports.create = async (req, res) => {
       gender: req.body.gender_id,
       occupation: req.body.occupation,
       designation: req.body.designation,
-      word_address: req.body.wordAddress,
+      work_address: req.body.work_address,
       annual_income: req.body.annualIncome,
       is_deceased: req.body.isDeceased,
       is_employed: req.body.isEmployed,
@@ -82,7 +82,13 @@ exports.findAll = async (req, res) => {
       ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } }
       : null;
 
-    StudentGuardian.findAll({ where: condition })
+    StudentGuardian.findAll({ where: condition, include:[
+      {
+        model: Gender,
+        attributes: ["id", "name"],
+      },
+    ], },
+      )
       .then((data) => {
         //res.status(200).json(success("Guardians fetched successfully!", data));
 

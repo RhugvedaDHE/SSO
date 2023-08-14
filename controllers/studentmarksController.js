@@ -104,7 +104,7 @@ exports.findAll = async (req, res) => {
           id: d.student_enrollment_id,
         },
       });
-
+      console.log("doctype", programmeDetails.doc_type_id)
       let userdocs = await UserDocs.findOne({
         where: {
           user_id: user.user_id,

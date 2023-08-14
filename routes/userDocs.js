@@ -12,7 +12,7 @@ console.log("In userDocs routes");
 
 
 
-router.post("/uploaddoc", userDocs.uploadDoc);
+router.post("/uploaddoc", authenticate, userDocs.uploadDoc);
 
 // Retrieve all user docs
 router.get("/all/:id", userDocs.findAll);

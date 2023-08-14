@@ -11,6 +11,7 @@ const Country = require("../models").Country;
 const City = require("../models").City;
 const State = require("../models").State;
 const District = require("../models").District;
+const Gender = require("../models").Gender;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
 const StudentEnrollment = require("../models").StudentEnrollment;
 const InstituteProgramme = require("../models").InstituteProgramme;
@@ -257,6 +258,12 @@ exports.getStudentDetails = async function (req, res) {
         is_active: true,
         student_enrollment_id: studentEntrollmentData.id,
       },
+      include:[
+        {
+          model: Gender,
+          attributes: ["id", "name"],
+        },
+      ],
     });
     if (studentGuardianResult) {
       var guardianData = [];
@@ -271,6 +278,8 @@ exports.getStudentDetails = async function (req, res) {
           designation: d.designation,
           occupation: d.occupation,
           work_address: d.work_address,
+          gender_id: d.Gender.id,
+          gender: d.Gender.name,
           annual_income: d.annual_income,
           created_at: d.createdAt,
         });

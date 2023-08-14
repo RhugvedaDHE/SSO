@@ -20,6 +20,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "student_enrollment_id",
         as: "studentEnrollmentId",
       });
+
+      StudentGuardian.belongsTo(models.Gender, {
+        foreignKey: "gender",
+      });
     }
   }
 
@@ -59,6 +63,9 @@ module.exports = (sequelize, DataTypes) => {
       },
       annual_income: {
         type: DataTypes.DECIMAL
+      },
+      gender: {
+        type: DataTypes.INTEGER
       },
       is_active: {
         type: DataTypes.BOOLEAN,

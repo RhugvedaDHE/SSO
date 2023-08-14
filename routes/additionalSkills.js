@@ -18,4 +18,6 @@ router.post("/",[
 // Retrieve all AdditionalSkills
 router.get("/all", AdditionalOtherSkills.findAll);
 
+router.post("/delete", AdditionalOtherSkills.findAll);
+
 module.exports = router;

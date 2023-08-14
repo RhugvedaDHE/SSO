@@ -47,3 +47,23 @@ exports.findAll = (req, res) => {
       });
     });
 };
+
+
+// Retrieve all OtherSkill from the database.
+exports.delete = (req, res) => {
+  AdditionalSkill.destroy({
+    where: { id: req.body.stud_add_skill_id },
+  })
+    .then((data) => {
+      res
+        .status(200)
+        .json(success("Additional Skills deleted successfully!"));
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message:
+          err.message ||
+          "Some error occurred while deleting Additional skills.",
+      });
+    });
+};

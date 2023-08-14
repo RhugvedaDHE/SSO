@@ -127,9 +127,9 @@ exports.update = async (req, res) => {
 // Create and Save a new StudentMarks
 exports.delete = async (req, res) => {
   console.log("in controller stud add skills");
- 
+  
   await StudentAdditionalSkill.destroy({
-    where: { id: req.body.stud_add_skill_id, user_id: req.user.id },
+    where: { additional_skill_id: req.body.stud_add_skill_id, user_id: req.user.id },
   })
     .then((data) => {
       res

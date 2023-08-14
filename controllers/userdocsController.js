@@ -152,7 +152,7 @@ exports.uploadDoc = async (req, res) => {
         const filename = req.file.filename;
 
         const userDoc = {
-          user_id: req.body.title,
+          user_id: req.user.id,
           doc_type_id: req.body.doc_type_id,
           filename: filename,
           createdAt: new Date(),
@@ -173,7 +173,7 @@ exports.uploadDoc = async (req, res) => {
         const filename = req.file.filename;
 
         const userDoc = {
-          user_id: req.body.title,
+          user_id: req.user.id,
           doc_type_id: req.body.doc_type_id,
           filename: filename,
           createdAt: new Date(),

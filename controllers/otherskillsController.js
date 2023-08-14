@@ -191,3 +191,23 @@ if(deleted)
   user.save();
   res.status(200).json(success("Student skills added successfully!"));  
 };
+
+// Retrieve all OtherSkill from the database.
+exports.getStudentOtherSkills = (req, res) => {
+  console.log(req.query.name);
+
+  OtherSkill.findAll(
+    { where: {
+      user_id: req.user.id
+    }
+  })
+    .then(data => {
+      res.status(200).json(success("Student OtherSkills fetched successfully!", data));
+    })
+    .catch(err => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while retrieving skills."
+      });
+    });
+};
