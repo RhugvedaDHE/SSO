@@ -471,7 +471,7 @@ exports.userCompanies = async (req, res) => {
   query += ` LEFT JOIN public."Districts" as d ON d."id" = c.district_id`;
   query += ` LEFT JOIN public."Countries" as o ON o."id" = c.country_id`;
   query += ` LEFT JOIN public."Cities" as y ON y."id" = c.taluka_id`;
-  query += ` WHERE c."user_id" = ${userId}`;
+  query += ` WHERE c."owner_id" = ${userId}`;
   query += ` ORDER BY c.id DESC`;
 
   const result = await db.sequelize.query(query, {
