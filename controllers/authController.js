@@ -907,7 +907,7 @@ exports.forgotPassword = function (req, res) {
     });
 };
 
-exports.verifyUsers = async function (req, res) {
+exports.addStatus = async function (req, res) {
   User.findOne({
     where: { id: req.body.user_id },
   })
@@ -918,14 +918,17 @@ exports.verifyUsers = async function (req, res) {
           role_id: req.user.role_id,
         },
       });
-      user.is_verified = true;
-      user.status = "VER";
+      user.is_verified = req.body.is_verified;
+      user.status = req.body.status;
       user.verified_by = ur.id;
       user.save();
+
+      //update remarks table
+
       res.status(200).json(success("User Verifed successfully!"));
     })
     .catch((error) => {
-      res.status(400).json(errorResponse("Could not verify users!", 400));
+      res.status(400).json(errorResponse("Could not Chnage the status!", 400));
     });
 };
 

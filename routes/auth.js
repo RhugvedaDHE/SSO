@@ -168,7 +168,7 @@ router.post('/register/companyHR', [
 
 router.post('/register/companyGuide', Auth.register);
 
-router.post('/verify', authenticate, Auth.verifyUsers);
+router.post('/verify', authenticate, Auth.addStatus);
 
 //profile
 router.post('/update-profile', authenticate, Auth.updateProfile);

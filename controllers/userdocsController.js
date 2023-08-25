@@ -27,7 +27,7 @@ const fs = require("fs");
 const Op = require("sequelize").Op;
 
 exports.uploadDoc = async (req, res) => {
-  console.log("in controller user doc - upload user");
+  console.log("in controller user doc - upload user", req.body);
 
   var storage = multer.diskStorage({
     destination: function (request, file, callback) {

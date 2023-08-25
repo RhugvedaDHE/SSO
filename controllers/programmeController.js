@@ -3,7 +3,7 @@ const Programme = require("../models").Programme;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const { success, errorResponse, validation } = require("../responseApi");
 const programme = require("../models/programme");
-
+const db = require("../models");
 exports.create = function (req, res) {
   console.log(req.body);
   Programme.create({
@@ -42,9 +42,8 @@ exports.get = async function (req, res) {
   await Programme.findAll({
     where: {
       is_active: true,
-    },order: [
-      ['order', 'ASC'],
-  ],
+    },
+    order: [["order", "ASC"]],
   })
     .then((programmes) => {
       res
@@ -57,6 +56,10 @@ exports.get = async function (req, res) {
 };
 
 exports.getProgSems = async function (req, res) {
+  console.log(
+    "hey there!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+    req.body.programme_id
+  );
   const semesters = [];
   await Programme.findOne({
     where: {
@@ -64,10 +67,10 @@ exports.getProgSems = async function (req, res) {
       is_active: true,
     },
   })
-    .then((programme) => {           
-      for(let i=1; i<=programme.max_sem; i++){
+    .then((programme) => {
+      for (let i = 1; i <= programme.max_sem; i++) {
         semesters.push(programme.type + " SEM " + i);
-      }        
+      }
       res
         .status(200)
         .json(success("Programme semesters fetched successfully!", semesters));
@@ -78,29 +81,45 @@ exports.getProgSems = async function (req, res) {
 };
 
 exports.getInstituteProgramme = async function (req, res) {
-  await InstituteProgramme.findAll({
-    where: {
-      institute_id: req.body.institute_id,
-      is_active: true,
-    },
-  })
-    .then((instprogrammes) => {
-      instprogrammes.forEach((instProg) => {
-        Programme.findAll({
-          where: {
-            id: instProg.programme_id,
-            is_active: true,
-          },
-        }).then((programmes) => {
-          res
-            .status(200)
-            .json(
-              success("Institute-Programmes fetched successfully!", programmes)
-            );
-        });
-      });
-    })
-    .catch((error) => {
-      res.status(400).json(errorResponse(error, 400));
-    });
+  const instituteId = req.body.institute_id;
+
+  var query = `SELECT ip.*, progs.*`;
+  query+= ` FROM public."InstituteProgrammes" as ip`;
+  query+= ` INNER JOIN public."Programmes" as progs ON ip.programme_id = progs.id `;
+  query+= ` WHERE ip."institute_id" = ${instituteId}`;
+  // query+= ` ORDER BY s."id" ASC`;
+
+  const jsondata = await db.sequelize.query(query, {
+    type: db.Sequelize.QueryTypes.SELECT,
+  });
+
+  // await InstituteProgramme.findAll({
+  //   where: {
+  //     institute_id: req.body.institute_id,
+  //     is_active: true,
+  //   },
+  // })
+  //   .then((instprogrammes) => {
+  //     var instprog = [];
+  //     instprogrammes.forEach(async (instProg) => {
+  //       await Programme.findOne({
+  //         where: {
+  //           id: instProg.programme_id,
+  //           is_active: true,
+  //         },
+  //       }).then(async (programmes) => {
+  //         console.log(programmes.name)
+  //         instprog.push({
+  //           id: 12,
+  //           name: "programmes.name"
+  //         });
+  //       });
+  //     });
+      res
+        .status(200)
+        .json(success("Institute-Programmes fetched successfully!", jsondata));
+    // })
+    // .catch((error) => {
+    //   res.status(400).json(errorResponse(error, 400));
+    // });
 };

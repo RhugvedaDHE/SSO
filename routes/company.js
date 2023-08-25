@@ -15,6 +15,13 @@ router.post("/",[
     check('name').not().isEmpty().withMessage('Company name is required'),
 ], validate, company.create);
 
+router.post(
+    "/dhe",
+    [check("name").not().isEmpty().withMessage("Company name is required")],
+    validate,
+    company.createCompanyDHE
+  );
+
 // Retrieve all company
 router.get("/all", company.findAll);
 
@@ -29,6 +36,12 @@ router.post("/uploadcertificate", company.uploadCertificate);
 router.get("/details", authenticate, company.findOne);
 // Retrieve a single Company with id
 router.get("/details/:user_id", authenticate, company.getCompanyDetailsById);
+
+//retrive all user companies
+router.get("/user_companies/:id", company.userCompanies);
+
+// Retrieve a single Company with id
+router.get("/companydetails/:id", company.getCompanyDetails);
 
 // Update a Company with id
 router.post("/update", authenticate, company.update);

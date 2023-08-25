@@ -20,6 +20,14 @@ application.use(bodyParser.json()); // parse requests of content-type - applicat
 application.use(passport.initialize());
 require("./middlewares/jwt")(passport);
 
+// const {
+//     success,
+//     errorResponse,
+//     validation,
+//     userCredentials,
+//     EmailNotification,
+//   } = require("../responseApi");
+
 //Used for static file path eg uploaded images etc:Paresh
 application.use('/static', express.static('uploads'));
 
@@ -166,7 +174,29 @@ application.post('/q', function(req, res) {
     res.send(req.body.name)
 })
 
+// return res.status(400).send({
+//     ^
+
+// TypeError: Cannot read properties of undefined (reading 'status')
+// at process.<anonymous> (C:\Users\admin\new-sequelize\index.js:172:16)
+// at process.emit (node:events:513:28)
+// at process._fatalException (node:internal/process/execution:149:25)
+// at processPromiseRejections (node:internal/process/promises:288:13)
+// at process.processTicksAndRejections (node:internal/process/task_queues:96:32)
+
+// Node.js v18.12.1
+// [nodemon] app crashed - waiting for file changes before starting...
+
 //Error Handler
+process.on('uncaughtException', function (error, result, res, next){
+    console.log('Caught exception: ' + error + " bfbvuj  " + next);
+    // return res.status(400).send({
+    //     message: "Content can not be empty!"
+    //  }); 
+    // next(createError(400));
+   return 0;
+});
+
 var createError = require('http-errors');
 // catch 404 and forward to error handler
 application.use(function(req, res, next) {

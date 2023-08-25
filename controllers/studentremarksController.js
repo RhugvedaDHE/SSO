@@ -48,7 +48,8 @@ exports.findAll = (req, res) => {
 
   const studentEnrollmentId = req.params.id;
   var condition = studentEnrollmentId
-    ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } }
+    ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId },
+        is_active: true }
     : null;
 
   StudentRemarks.findAll({ where: condition })

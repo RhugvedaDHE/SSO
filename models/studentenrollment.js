@@ -16,13 +16,16 @@ module.exports = (sequelize, DataTypes) => {
       }),
       StudentEnrollment.belongsTo(models.InstituteProgramme, {
         foreignKey: 'institute_programme_id'
+      }),
+      StudentEnrollment.belongsTo(models.Class, {
+        foreignKey: 'current_class'
       })
     }
   }
   StudentEnrollment.init({
     user_id: DataTypes.INTEGER,
     institute_programme_id: DataTypes.INTEGER,
-    current_class: DataTypes.STRING,
+    current_class: DataTypes.INTEGER,
     academic_year: DataTypes.STRING,
     current_semester: DataTypes.STRING,
     section: DataTypes.STRING,

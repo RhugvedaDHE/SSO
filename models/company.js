@@ -96,6 +96,12 @@ module.exports = (sequelize, DataTypes) => {
       verified: {
         type: DataTypes.BOOLEAN
       },
+      owner_id: {
+        type: DataTypes.INTEGER
+      },
+      owner_type_id: {
+        type: DataTypes.INTEGER
+      },
       active: {
         type: DataTypes.BOOLEAN
       },

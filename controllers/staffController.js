@@ -78,7 +78,9 @@ exports.getInstituteStaffList = async function (req, res) {
       let userRole;
       if (instituteStaff) {
         var jsondata = [];
-      
+        jsondata.push({
+          count: instituteStaff.length
+        })
         for  (const staff of instituteStaff)  {
           
           userPersonDetails = await UserPersonalDetails.findOne({
@@ -371,5 +373,80 @@ exports.updateInstituteStaff = async (req, res) => {
     })
     .catch((error) => {
       res.status(400).json(errorResponse(error, 400));
+    });
+};
+
+//Function to get list of all institute's verified staff: veda
+//param :id which is institute ID
+exports.getVerifiedInstituteStaffList = async function (req, res) {
+  const instituteId = req.params.id;
+
+  await EntityUser.findAll({
+    where: {
+      entity_type_id: 1,
+      cio_id: instituteId,
+    },
+    include: [
+      {
+        model: User,
+        where: {
+          is_verified: true,
+          status: "VER",
+        },
+        attributes: ["id", "username"]
+      },
+      {
+        model: Institute,       
+        attributes: ["id", "name"]
+      },
+    ],
+  })
+    .then( async (instituteStaff) => {
+      console.log(instituteStaff)
+      let userPersonDetails;
+      let userRole;
+      if (instituteStaff) {
+        var jsondata = [];
+        jsondata.push({
+          count: 44
+        })
+        for  (const staff of instituteStaff)  {
+          
+          userPersonDetails = await UserPersonalDetails.findOne({
+            attributes: ["firstname", "lastname"],
+            where: {
+              user_id: staff.user_id,
+            },
+          })
+          
+          let userRole = await UserRole.findOne({
+            where: {
+              user_id: staff.user_id,
+            },
+            include: [
+              {
+                model: Role,
+                attributes: ["id", "name"],
+              },
+            ],
+          });
+
+          jsondata.push({
+            user_id: 33333,
+            firstname: userPersonDetails.firstname,
+            lastname: userPersonDetails.lastname,
+            role: userRole.Role.name,
+            role_id: userRole.Role.id,
+            institute_name: staff.Institute.name
+          });
+        }
+        
+      }
+      return res
+        .status(200)
+        .json(success("Staff fetched successfully!", jsondata));
+    })
+    .catch((error) => {
+      return res.status(400).json(errorResponse(error, 400));
     });
 };

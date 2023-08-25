@@ -16,6 +16,9 @@ module.exports = {
       url: {
         type: Sequelize.STRING
       },
+      image_url: {
+        type: Sequelize.STRING
+      },
       is_active: {
         type: Sequelize.BOOLEAN,
         default: true

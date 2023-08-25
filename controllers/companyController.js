@@ -709,3 +709,68 @@ exports.findAllActive = (req, res) => {
       });
     });
 };
+
+/*
+ * Get company details for DHE admin
+ * Note: As per Rhugveda taluka is considered as city
+ */
+exports.getCompanyDetails = async function (req, res) {
+  const companyId = req.params.id;
+
+  let query = `SELECT c.*,s.name as state_name, d.name as district_name, o.name as country_name, y.name as city_name`;
+  query += ` FROM public."Companies" as c `;
+  query += ` LEFT JOIN public."States" as s ON s."id" = c.state_id`;
+  query += ` LEFT JOIN public."Districts" as d ON d."id" = c.district_id`;
+  query += ` LEFT JOIN public."Countries" as o ON o."id" = c.country_id`;
+  query += ` LEFT JOIN public."Cities" as y ON y."id" = c.taluka_id`;
+  query += ` WHERE c."id" = ${companyId}`;
+  query += ` LIMIT 1`;
+
+  const result = await db.sequelize.query(query, {
+    type: db.Sequelize.QueryTypes.SELECT,
+  });
+
+  let outArray = [];
+  if (result) {
+    for (const c of result) {
+      const filePath = logoPath + c.logo;
+
+      outArray.push({
+        id: c.id,
+        organization_type_id: c.organization_type_id,
+        user_id: c.user_id,
+        name: c.name,
+        logo: filePath,
+        state_id: c.state_id,
+        district_id: c.district_id,
+        taluka_id: c.taluka_id,
+        country_id: c.country_id,
+        landmark: c.landmark,
+        street: c.street,
+        pincode: c.pincode,
+        phone: c.phone,
+        reg_no: c.reg_no,
+        reg_certificate: c.reg_certificate,
+        email: c.email,
+        verified: c.verified,
+        active: c.active,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+        deletedAt: c.deletedAt,
+        village: c.village,
+        description: c.description,
+        website: c.website,
+        state_name: c.state_name,
+        district_name: c.district_name,
+        country_name: c.country_name,
+        city_name: c.city_name,
+      });
+    }
+
+    return res
+      .status(200)
+      .json(success("Jobs fetched successfully!", outArray[0]));
+  } else {
+    return res.status(400).json(errorResponse(error, 400));
+  }
+};

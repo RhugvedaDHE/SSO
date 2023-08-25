@@ -36,7 +36,16 @@ exports.getServiceRole = async function (req, res){
             through: 'ServiceRole',  
         }],
     }).then(services => {
-        res.status(200).json(success("Service-Role fetched successfully!", services))
+        var jsondata = [];
+        for (const service of services){
+            jsondata.push({
+                id: service.id,
+                name: service.name,
+                url: service.url,
+                image_url: req.protocol + "://" + req.get("host") + "/static/service/" + service.image_url,
+            })
+        }
+        res.status(200).json(success("Service-Role fetched successfully!", jsondata))
     }).catch(error => {
         res.status(400).json(errorResponse(error, 400));
     })

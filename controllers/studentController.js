@@ -18,6 +18,7 @@ const InstituteProgramme = require("../models").InstituteProgramme;
 const Institutes = require("../models").Institute;
 const Programmes = require("../models").Programme;
 const CasteCategory = require("../models").CasteCategory;
+const Class = require("../models").Class;
 const studentGuardian = require("../models").StudentGuardian;
 const studentMarks = require("../models").StudentMarks;
 const studentResult = require("../models").StudentResult;
@@ -47,15 +48,31 @@ const {
 //function to get list of al the students, this function will be not used currently:Paresh
 exports.getStudentList = async function (req, res) {
   const data = await StudentEnrollment.findAll({
-    attributes: ["user_id", "id", "academic_year", "institute_programme_id", "current_semester"],
+    attributes: [
+      "user_id",
+      "id",
+      "current_class",
+      "academic_year",
+      "institute_programme_id",
+      "current_semester",
+    ],
+    include: [
+      {
+        model: Class,
+      },
+    ],
     where: {
       is_active: true,
     },
+
     limit: 15,
     offset: req.params.offset,
   });
   if (data) {
     var jsondata = [];
+    jsondata.push({
+      count: data.length
+    })
     for (const d of data) {
       let userdetails = await UserPersonalDetails.findOne({
         attributes: ["firstname", "lastname", "email", "phone"],
@@ -69,13 +86,14 @@ exports.getStudentList = async function (req, res) {
         where: {
           user_id: d.user_id,
         },
-        include: [{
-          model: DocumentType,
-          where:{
-            name: "Application Picture"
-          }
-          }
-        ]
+        include: [
+          {
+            model: DocumentType,
+            where: {
+              name: "Application Picture",
+            },
+          },
+        ],
       });
 
       let instituteProgramme = await InstituteProgramme.findOne({
@@ -99,6 +117,34 @@ exports.getStudentList = async function (req, res) {
         },
       });
 
+      //student academic details---------------------------------------
+      var academic;
+      let subjectDetails = {};
+      if (d.subject_id) {
+        subjectDetails = await subject.findOne({
+          where: {
+            id: d.subject_id,
+          },
+        });
+      } else {
+        subjectDetails.name = "";
+      }
+      academic = {
+        student_enrollemnt_id: d.id,
+        academic_year: d.academic_year,
+        institute_id: instituteProgramme.institute_id,
+        institute_name: institute.name,
+        program_id: instituteProgramme.programme_id,
+        program_name: program.name,
+        subject_id: subjectDetails.id,
+        subject_name: subjectDetails.name,
+        board_univ: instituteProgramme.board_univ,
+        current_semester: d.current_semester,
+        current_class: d.Class,
+        // qualification: qualificationData,
+      };
+      //END student academic details-----------------------------------
+
       jsondata.push({
         user_id: d.user_id,
         student_enrollemnt_id: d.id,
@@ -108,11 +154,18 @@ exports.getStudentList = async function (req, res) {
         lastname: userdetails.lastname,
         email: userdetails.email,
         phone: userdetails.phone,
-        picture: userdocs ? req.protocol + "://" + req.get("host") + "/static/user/" + userdocs.filename : null,
+        picture: userdocs
+          ? req.protocol +
+            "://" +
+            req.get("host") +
+            "/static/user/" +
+            userdocs.filename
+          : null,
         institute_id: instituteProgramme.institute_id,
         institute_name: institute.name,
         program_id: instituteProgramme.programme_id,
         program_name: program.name,
+        academic: academic,
       });
     }
     return res
@@ -128,19 +181,36 @@ exports.getStudentList = async function (req, res) {
 //param :id which is institute ID
 exports.getInstituteStudentList = async function (req, res) {
   const instituteId = req.params.id;
-
-  var query = `SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed, s.id as student_enrollment_id, s.subject_id, subjects.id as sid, subjects.name as subject_name FROM public."StudentEnrollments" as s`;
-  query+= ` INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s."institute_programme_id"`;
-  query+= ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
-  query+= ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
-  query+= ` INNER JOIN public."Users" as users ON up.user_id = users.id`;
-  query+= ` LEFT JOIN public."Subjects" as subjects ON s.subject_id = subjects.id`;
-  query+= ` WHERE i."id" = ${instituteId} AND users.is_signed=true AND users.status='SUB' AND users.is_verified=false`;
-  query+= ` ORDER BY s."id" ASC`;
+  
+  var query = `SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed, s.id as student_enrollment_id, s.subject_id, subjects.id as sid, subjects.name as subject_name, progs.name as pname, class.id as current_class_id, class.name as current_class_name FROM public."StudentEnrollments" as s`;
+  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class" = "class"."id"`;
+  query += ` INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s."institute_programme_id"`;
+  query += ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
+  query += ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
+  query += ` INNER JOIN public."Users" as users ON up.user_id = users.id`;
+  query += ` LEFT JOIN public."Subjects" as subjects ON s.subject_id = subjects.id`;
+  query += ` INNER JOIN public."Programmes" as progs ON ip.programme_id = progs.id `;
+  query += ` WHERE i."id" = ${instituteId} AND users.is_signed=true AND users.status='SUB' AND users.is_verified=false`;
+  query += ` ORDER BY s."id" ASC`;
 
   const jsondata = await db.sequelize.query(query, {
     type: db.Sequelize.QueryTypes.SELECT,
   });
+  //student academic details---------------------------------------
+
+  // academic = {
+  //   student_enrollemnt_id: d.id,
+  //   academic_year: d.academic_year,
+  //   institute_id: instituteProgramme.institute_id,
+  //   institute_name: institute.name,
+  //   program_id: instituteProgramme.programme_id,
+  //   program_name: program.name,
+  //   subject_id: subjectDetails.id,
+  //   subject_name: subjectDetails.name,
+  //   board_univ: instituteProgramme.board_univ,
+  //   // qualification: qualificationData,
+  // };
+  //END student academic details-----------------------------------
 
   return res
     .status(200)
@@ -153,13 +223,15 @@ exports.getInstituteStudentList = async function (req, res) {
 exports.getVerifiedInstituteStudentList = async function (req, res) {
   const instituteId = req.params.id;
 
-  var query = ` SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed FROM public."StudentEnrollments" as s s.subject_id, subjects.id as sid, subjects.name as subject_name INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s.institute_programme_id
-  INNER JOIN public."Institutes" as i ON i.id = ip.institute_id
-  INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id
-  INNER JOIN public."Users" as users ON up.user_id = users.id
-  LEFT JOIN public."Subjects" as subjects ON s.subject_id = subjects.id
-  WHERE i."id" = ${instituteId} AND users.is_signed=true AND users.status='VER' AND users.is_verified=true
-  ORDER BY s."id" ASC`;
+  var query = ` SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed progs.name as pname FROM public."StudentEnrollments" as s s.subject_id, subjects.id as sid, subjects.name as subject_name, class.id as current_class_id, class.name as current_class_name INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s.institute_programme_id`;
+  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class" = "class"."id"`;
+  query += ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
+  query += ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
+  query += ` INNER JOIN public."Users" as users ON up.user_id = users.id`;
+  query += ` LEFT JOIN public."Subjects" as subjects ON s.subject_id = subjects.id`;
+  query += ` INNER JOIN public."Programmes" as progs ON ip.programme_id = progs.id`;
+  query += ` WHERE i."id" = ${instituteId} AND users.is_signed=true AND users.status='VER' AND users.is_verified=true`;
+  query += ` ORDER BY s."id" ASC`;
 
   const jsondata = await db.sequelize.query(query, {
     type: db.Sequelize.QueryTypes.SELECT,
@@ -215,11 +287,11 @@ exports.getStudentDetails = async function (req, res) {
         "physically_disabled",
         "castcategory_id",
         "religion_id",
-        "createdAt",       
+        "createdAt",
       ],
       where: {
         user_id: studentEntrollmentData.user_id,
-      },     
+      },
       include: [
         {
           model: CasteCategory,
@@ -258,7 +330,7 @@ exports.getStudentDetails = async function (req, res) {
         is_active: true,
         student_enrollment_id: studentEntrollmentData.id,
       },
-      include:[
+      include: [
         {
           model: Gender,
           attributes: ["id", "name"],
@@ -307,7 +379,7 @@ exports.getStudentDetails = async function (req, res) {
         marksData.push({
           program_semester_id: m.program_semester_id,
           institute_programme_course_subject_id:
-           m.institute_programme_course_subject_id,
+            m.institute_programme_course_subject_id,
           eval_type_id: m.eval_type_id,
           eval_type_name: evalTypeDetails.name,
           total_marks: m.total_marks,
@@ -337,7 +409,7 @@ exports.getStudentDetails = async function (req, res) {
         resultData.push({
           institute_program_id: r.institute_program_id,
           institute_programme_course_subject_id:
-           r.institute_programme_course_subject_id,
+            r.institute_programme_course_subject_id,
           eval_type_id: r.eval_type_id,
           total_marks: r.total_marks,
           marks_obtained: r.marks_obtained,
@@ -562,12 +634,16 @@ exports.getStudentDetails = async function (req, res) {
       gender: userdetails.gender,
       gender_title: genderDetails ? genderDetails.name : null,
       castcategory: userdetails.castcategory_id,
-      castcategory_title: userdetails.CasteCategory ? userdetails.CasteCategory.name : null,
+      castcategory_title: userdetails.CasteCategory
+        ? userdetails.CasteCategory.name
+        : null,
       religion: userdetails.religion_id,
       religion_title: userdetails.religion ? userdetails.religion.name : null,
       email: userdetails.email,
       phone: userdetails.phone,
-      dob: userdetails.dob ? userdetails.dob.toLocaleDateString('en-ZA').replaceAll("/", "-") : null,
+      dob: userdetails.dob
+        ? userdetails.dob.toLocaleDateString("en-ZA").replaceAll("/", "-")
+        : null,
       aadhar: userdetails.aadhar,
       blood_group: userdetails.blood_group,
       blood_group_title: bloodDetails ? bloodDetails.name : null,
@@ -649,20 +725,16 @@ exports.verifyStudent = (req, res) => {
     });
 };
 
-
-exports.listOfStudents = async (req, res) =>{
-
+exports.listOfStudents = async (req, res) => {
   await StudentEnrollment.findAll({
-      where: {
-        is_active: true,
-      },
-      limit: 5,
-      offset: req.body.offset,
-    
-}).then(function (result) {
-  return res
-  .status(200)
-  .json(success("Students list retrived successfully!", result));
-});
-
-}
+    where: {
+      is_active: true,
+    },
+    limit: 5,
+    offset: req.body.offset,
+  }).then(function (result) {
+    return res
+      .status(200)
+      .json(success("Students list retrived successfully!", result));
+  });
+};

@@ -36,8 +36,8 @@ exports.get = async function (req, res) {
             "id": service1.id,
             "name": service1.name,
             "url": service1.url,
+            "image_url": req.protocol + "://" + req.get("host") + "/static/service/" + service1.image_url,
         });
-        console.log("services are: ", services);
     }
     res.status(200).json(success("Services for the logged in user fetched successfully!", services))
 
