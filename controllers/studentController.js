@@ -222,8 +222,8 @@ exports.getInstituteStudentList = async function (req, res) {
 //param :id which is institute ID
 exports.getVerifiedInstituteStudentList = async function (req, res) {
   const instituteId = req.params.id;
-
-  var query = ` SELECT DISTINCT(s.user_id),up.*,s.*,ur.user_id as userrole, userpersonal.firstname as verifiedby_fname,userpersonal.lastname as verifiedby_lname, users.is_verified, users.verified_by as verifiedby, users.status, users.is_signed, progs.name as pname, s.subject_id, subjects.id as sid, subjects.name as subject_name, class.id as current_class_id, class.name as current_class_name FROM public."StudentEnrollments" as s INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s.institute_programme_id`;
+  var jsondata = [];
+  var query = ` SELECT DISTINCT(s.user_id),up.*,s.*,s.id as student_enrollment_id, ur.user_id as userrole, userpersonal.firstname as verifiedby_fname,userpersonal.lastname as verifiedby_lname, users.is_verified, users.verified_by as verifiedby, users.status, users.is_signed, progs.name as pname, s.subject_id, subjects.id as sid, subjects.name as subject_name, class.id as current_class_id, class.name as current_class_name FROM public."StudentEnrollments" as s INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s.institute_programme_id`;
   query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class" = "class"."id"`;
   query += ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
   query += ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
@@ -235,10 +235,15 @@ exports.getVerifiedInstituteStudentList = async function (req, res) {
   query += ` WHERE i."id" = ${instituteId} AND users.is_signed=true AND users.status='VER' AND users.is_verified=true`;
   query += ` ORDER BY s."id" ASC`;
 
-  const jsondata = await db.sequelize.query(query, {
+  const studentData = await db.sequelize.query(query, {
     type: db.Sequelize.QueryTypes.SELECT,
   });
 
+  
+    jsondata.push({
+      count: studentData.length,
+      studentData: studentData
+    })
   return res
     .status(200)
     .json(success("Students fetched successfully!", jsondata));

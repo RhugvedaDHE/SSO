@@ -148,3 +148,15 @@ exports.getDepartmentAdmin=async function(req,res){
       res.status(400).json(errorResponse(error, 400));
   })
 };
+
+//Assign roles to user
+exports.assignRole=async function(req,res){
+  const count = await UserRole.create({
+      user_id: req.body.user_id,
+      role_id: req.body.role_id,
+    }).then(userrole => {
+      res.status(200).json(success("Role assigned to the user successfully!"))
+  }).catch(error => {
+      res.status(400).json(errorResponse(error, 400));
+  })
+};

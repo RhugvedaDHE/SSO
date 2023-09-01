@@ -64,7 +64,7 @@ exports.getInstituteStaffList = async function (req, res) {
           is_verified: true,
           status: "VER",
         },
-        attributes: ["id", "username"]
+        attributes: ["id", "username", "verified_by"]
       },
       {
         model: Institute,       
@@ -73,7 +73,6 @@ exports.getInstituteStaffList = async function (req, res) {
     ],
   })
     .then( async (instituteStaff) => {
-      console.log(instituteStaff)
       let userPersonDetails;
       let userRole;
       if (instituteStaff) {
@@ -101,14 +100,28 @@ exports.getInstituteStaffList = async function (req, res) {
               },
             ],
           });
+          
+          let staffUserRole = await UserRole.findOne({
+            where: {
+              id: staff.User.verified_by,
+            }            
+          });
 
+          let verifiedBy = await UserPersonalDetails.findOne({
+            where: {
+              user_id: staffUserRole.user_id
+            }
+          })
+          
           jsondata.push({
             user_id: staff.user_id,
             firstname: userPersonDetails.firstname,
             lastname: userPersonDetails.lastname,
             role: userRole.Role.name,
             role_id: userRole.Role.id,
-            institute_name: staff.Institute.name
+            institute_name: staff.Institute.name,
+            verifiedby_fname: verifiedBy.firstname,
+            verifiedby_lname: verifiedBy.lastname,
           });
         }
       }
@@ -431,13 +444,27 @@ exports.getVerifiedInstituteStaffList = async function (req, res) {
             ],
           });
 
+          let staffUserRole = await UserRole.findOne({
+            where: {
+              user_id: staff.verified_by,
+            }            
+          });
+
+          let verifiedBy = UserPersonalDetails.findOne({
+            where: {
+              user_id: staffUserRole.user_id
+            }
+          })
+
           jsondata.push({
             user_id: 33333,
             firstname: userPersonDetails.firstname,
             lastname: userPersonDetails.lastname,
             role: userRole.Role.name,
             role_id: userRole.Role.id,
-            institute_name: staff.Institute.name
+            institute_name: staff.Institute.name,
+            verifiedby_fname: verifiedBy.first_name,
+            verifiedby_lname: verifiedBy.last_name,
           });
         }
         

@@ -39,6 +39,10 @@ module.exports = (sequelize, DataTypes) => {
       role_type_id:{
         type: DataTypes.INTEGER
       },
+      is_active: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
       createdAt: {
         type: DataTypes.DATE
       },

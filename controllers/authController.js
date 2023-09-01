@@ -17,6 +17,7 @@ const Department = require("../models").Department;
 const Service = require("../models").Service;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
 const StudentMarks = require("../models").StudentMarks;
+const StudentRemarks = require("../models").StudentRemarks;
 const InstituteStaff = require("../models").InstituteStaff;
 const StudentEnrollment = require("../models").StudentEnrollment;
 const UserDesignation = require("../models").UserDesignation;
@@ -406,6 +407,8 @@ exports.register = async function (req, res) {
                       const companyData = {
                         organization_type_id: req.body.organization_type_id,
                         user_id: user.id,
+                        owner_type_id: req.body.owner_type_id,
+                        owner_id: req.body.owner_id,
                         name: req.body.name,
                         logo: req.body.logo,
                         website: req.body.website,
@@ -728,6 +731,7 @@ exports.login = function (req, res) {
     },
   })
     .then((user) => {
+      // if(user){
       console.log(user);
       UserRole.findOne({
         where: {
@@ -907,9 +911,11 @@ exports.forgotPassword = function (req, res) {
     });
 };
 
+//to be changed not yet complete
 exports.addStatus = async function (req, res) {
+  //get info of who's verifying
   User.findOne({
-    where: { id: req.body.user_id },
+    where: { id: req.user.id },
   })
     .then(async (user) => {
       let ur = await UserRole.findOne({
@@ -924,10 +930,21 @@ exports.addStatus = async function (req, res) {
       user.save();
 
       //update remarks table
+      let studentEntrollmentData = await StudentEnrollment.findOne({
+        where: {
+          user_id: req.body.user_id
+        },
+      });
 
-      res.status(200).json(success("User Verifed successfully!"));
+      let studentRemarks = await StudentRemarks.update(
+        { is_active: true },
+        { where: { student_enrollment_id: studentEntrollmentData.id } }
+      );
+
+      res.status(200).json(success("User Status updated successfully!"));
     })
     .catch((error) => {
+      console.log(error)
       res.status(400).json(errorResponse("Could not Chnage the status!", 400));
     });
 };

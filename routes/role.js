@@ -20,4 +20,6 @@ router.get('/getInstituteAdmin/',  Role.getInstituteAdmin);
 router.get('/getUniversityAdmin/',  Role.getUniversityAdmin);
 router.get('/getDepartmentAdmin/',  Role.getDepartmentAdmin);
 
+router.post('/assign-role/',  Role.assignRole);
+
 module.exports = router;

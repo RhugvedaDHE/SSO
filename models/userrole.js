@@ -22,7 +22,10 @@ module.exports = (sequelize, DataTypes) => {
   UserRole.init({
     user_id: DataTypes.INTEGER,
     role_id: DataTypes.INTEGER,
-    preferred_role: DataTypes.BOOLEAN,
+    preferred_role: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: 0
+    },
     is_active: DataTypes.BOOLEAN
   }, {
     sequelize,

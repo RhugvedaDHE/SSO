@@ -12,8 +12,7 @@ var multer = require("multer");
 const { success, errorResponse, validation } = require("../responseApi");
 const env = process.env.NODE_ENV || "development";
 
-const PDFDocument = require('pdfkit');
-
+const PDFDocument = require("pdfkit");
 
 let PORT = process.env.PORT;
 //const uploadUrl = 'http://192.168.1.184:3000/static';
@@ -189,7 +188,6 @@ exports.uploadDoc = async (req, res) => {
     }
   });
 };
-
 
 // Retrieve all UserDocs from the database.
 exports.findAll = async (req, res) => {
@@ -398,45 +396,182 @@ exports.deleteAll = (req, res) => {
     });
 };
 
-
 exports.createUndertakingPdf = async function (req, res) {
-
   let fileName = "user_" + Date.now() + "." + "pdf";
 
-  let pdfDoc = new PDFDocument;
-  pdfDoc.pipe(fs.createWriteStream("C:/Users/admin/new-sequelize/uploads/user/" + fileName));
-  pdfDoc.text("BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH");
+  let pdfDoc = new PDFDocument();
+  pdfDoc.pipe(
+    fs.createWriteStream(
+      "C:/Users/admin/new-sequelize/uploads/user/" + fileName
+    )
+  );
+  pdfDoc.text(
+    "BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH"
+  );
   pdfDoc.end();
 
-  
   const query = `
           INSERT INTO public."UserDocs" ("user_id", "doc_type_id", "filename", "createdAt", "updatedAt")
           VALUES ($1, $2, $3, $4, $5)
           ON CONFLICT ("user_id", "doc_type_id")
           DO UPDATE SET "filename" = $3,"updatedAt" = $5;`;
 
+  // Execute the raw query
+  const jsondata = await db.sequelize.query(query, {
+    bind: [req.user.id, 22, fileName, new Date(), new Date()],
+    type: db.Sequelize.QueryTypes.UPSERT,
+  });
+
+  if (jsondata) {
+    let userDoc = await UserDocs.findOne({
+      where: {
+        user_id: req.user.id,
+        doc_type_id: 22,
+      },
+    });
+
+    res
+      .status(200)
+      .json(
+        success(
+          "Student Undertaking document created successfully!",
+          req.protocol + "://" + req.get("host") + "/static/user/" + fileName
+        )
+      );
+  }
+};
+
+// exports.uploadUndertakingPdf = async function (req, res) {
+//   const http = require('http'); // or 'https' for https:// URLs
+//   const fs = require('fs');
+
+//   const file = fs.createWriteStream("./uploads/user", { flags: "wrposta+" });
+//   const request = http.get(req.body.fileUrl, function(response) {
+//     response.pipe(file);
+
+//     // after download completed close filestream
+//     file.on("finish", () => {
+//         file.close();
+//         console.log("Download Completed");
+
+//         let undertaking_doc_id = userDocs.findOne({
+//           where: {
+//             user_id: req.user.id,
+//             doc_type_id: 22
+//           }
+//         });
+//         const userDoc = {
+//           user_id: req.user.id,
+//           doc_type_id: 22,
+//           filename: req.body.filename,
+//           createdAt: new Date(),
+//           updateAt: null,
+//         };
+
+//         let docUpdated =  userDocs.update(userDoc, {
+//           where: { id: undertaking_doc_id.id },
+//         });
+
+//             // Execute the raw query
+//             let jsondata =  db.sequelize.query(query, {
+//               bind: [
+//                 req.user.id,
+//                 22,
+//                 req.body.filename,
+//                 new Date(),
+//                 new Date(),
+//               ],
+//               type: db.Sequelize.QueryTypes.UPSERT,
+//             });
+
+//             if (jsondata) {
+//               let userDoc =  UserDocs.findOne({
+//                 where: {
+//                   user_id: req.user.id,
+//                   doc_type_id: 22,
+//                 },
+//               });
+
+//               res
+//                 .status(200)
+//                 .json(success("Student Undertaking document created successfully!", req.protocol + "://" + req.get("host") + "/static/user/" + fileName));
+//             }
+//     });
+//   });
+
+//     }
+
+exports.uploadUndertakingPdf = async function (req, res) {
+  const axios = require("axios");
+  const fs = require("fs");
+  const path = require("path");
+  const rootPath = "C:/Users/admin/new-sequelize";
+  const url = req.body.fileUrl;
+  const staticLocation = path.join(
+    rootPath,
+    "/uploads/user",
+    req.body.filename
+  ); // Change 'downloaded_file.ext' to desired file name and extension
+  axios
+    .get(req.body.fileUrl, { responseType: "stream" })
+    .then((response) => {
+      // Saving file to working directory
+      const writer = response.data.pipe(fs.createWriteStream(staticLocation));
+      console.log("File downloaded and saved successfully.");
+      let undertaking_doc_id = userDocs.findOne({
+        where: {
+          user_id: req.user.id,
+          doc_type_id: 22,
+        },
+      });
+      const userDoc = {
+        user_id: req.user.id,
+        doc_type_id: 22,
+        filename: req.body.filename,
+        createdAt: new Date(),
+        updateAt: null,
+      };
+
+      let docUpdated = userDocs.update(userDoc, {
+        where: { id: undertaking_doc_id.id },
+      });
+
       // Execute the raw query
-      const jsondata = await db.sequelize.query(query, {
-        bind: [
-          req.user.id,
-          22,
-          fileName,
-          new Date(),
-          new Date(),
-        ],
+      let jsondata = db.sequelize.query(query, {
+        bind: [req.user.id, 22, req.body.filename, new Date(), new Date()],
         type: db.Sequelize.QueryTypes.UPSERT,
       });
 
       if (jsondata) {
-        let userDoc = await UserDocs.findOne({
+        let userDoc = UserDocs.findOne({
           where: {
             user_id: req.user.id,
             doc_type_id: 22,
           },
         });
-        
+
         res
           .status(200)
-          .json(success("Student Undertaking document created successfully!", req.protocol + "://" + req.get("host") + "/static/user/" + fileName));
+          .json(
+            success(
+              "Student Undertaking document created successfully!",
+              req.protocol +
+                "://" +
+                req.get("host") +
+                "/static/user/" +
+                fileName
+            )
+          );
       }
-    } 
+    })
+    .catch((error) => {
+      res
+        .status(400)
+        .json(
+          errorResponse(
+            err + ` Cannot upload Student's signed undertaking!`,
+            400
+          )
+        );   
+    });
+};
