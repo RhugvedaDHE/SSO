@@ -4,6 +4,7 @@ require("dotenv").config();
 const bcrypt = require("bcryptjs");
 const db = require("../models");
 //const uploadFile = require("../middleware/upload");
+const User = require("../models").User;
 const userDocs = require("../models").UserDocs;
 const docType = require("../models").DocumentType;
 const UserDocs = require("../models").UserDocs;
@@ -398,7 +399,7 @@ exports.deleteAll = (req, res) => {
 
 exports.createUndertakingPdf = async function (req, res) {
   let fileName = "user_" + Date.now() + "." + "pdf";
-
+  let jsondata = [];
   let pdfDoc = new PDFDocument();
   pdfDoc.pipe(
     fs.createWriteStream(
@@ -417,12 +418,12 @@ exports.createUndertakingPdf = async function (req, res) {
           DO UPDATE SET "filename" = $3,"updatedAt" = $5;`;
 
   // Execute the raw query
-  const jsondata = await db.sequelize.query(query, {
+  const response = await db.sequelize.query(query, {
     bind: [req.user.id, 22, fileName, new Date(), new Date()],
     type: db.Sequelize.QueryTypes.UPSERT,
   });
 
-  if (jsondata) {
+  if (response) {
     let userDoc = await UserDocs.findOne({
       where: {
         user_id: req.user.id,
@@ -430,12 +431,16 @@ exports.createUndertakingPdf = async function (req, res) {
       },
     });
 
+    jsondata.push({
+      filename: fileName,
+      fileurl: req.protocol + "://" + req.get("host") + "/static/user/" + fileName,
+    })
     res
       .status(200)
       .json(
         success(
           "Student Undertaking document created successfully!",
-          req.protocol + "://" + req.get("host") + "/static/user/" + fileName
+          jsondata
         )
       );
   }
@@ -501,7 +506,8 @@ exports.createUndertakingPdf = async function (req, res) {
 
 //     }
 
-exports.uploadUndertakingPdf = async function (req, res) {
+//download undertaking signedoc (called from PHP)
+exports.downloadSignedUndertakingPdf = async function (req, res) {
   const axios = require("axios");
   const fs = require("fs");
   const path = require("path");
@@ -514,7 +520,7 @@ exports.uploadUndertakingPdf = async function (req, res) {
   ); // Change 'downloaded_file.ext' to desired file name and extension
   axios
     .get(req.body.fileUrl, { responseType: "stream" })
-    .then((response) => {
+    .then(async (response) => {
       // Saving file to working directory
       const writer = response.data.pipe(fs.createWriteStream(staticLocation));
       console.log("File downloaded and saved successfully.");
@@ -532,37 +538,43 @@ exports.uploadUndertakingPdf = async function (req, res) {
         updateAt: null,
       };
 
-      let docUpdated = userDocs.update(userDoc, {
-        where: { id: undertaking_doc_id.id },
-      });
+      await userDocs
+        .update(userDoc, {
+          where: { id: undertaking_doc_id.id },
+        })
+        .then(async (response) => {
+          // Execute the raw query
+          let jsondata = db.sequelize.query(query, {
+            bind: [req.user.id, 22, req.body.filename, new Date(), new Date()],
+            type: db.Sequelize.QueryTypes.UPSERT,
+          });
 
-      // Execute the raw query
-      let jsondata = db.sequelize.query(query, {
-        bind: [req.user.id, 22, req.body.filename, new Date(), new Date()],
-        type: db.Sequelize.QueryTypes.UPSERT,
-      });
+          if (jsondata) {
+            let userDoc = UserDocs.findOne({
+              where: {
+                user_id: req.user.id,
+                doc_type_id: 22,
+              },
+            });
 
-      if (jsondata) {
-        let userDoc = UserDocs.findOne({
-          where: {
-            user_id: req.user.id,
-            doc_type_id: 22,
-          },
+            //update is_signed in users to true
+            await User.update({is_signed: true}, {
+              where: { id: req.user.id },
+            })            
+            res
+              .status(200)
+              .json(
+                success(
+                  "Student Undertaking document created successfully!",
+                  req.protocol +
+                    "://" +
+                    req.get("host") +
+                    "/static/user/" +
+                    fileName
+                )
+              );
+          }
         });
-
-        res
-          .status(200)
-          .json(
-            success(
-              "Student Undertaking document created successfully!",
-              req.protocol +
-                "://" +
-                req.get("host") +
-                "/static/user/" +
-                fileName
-            )
-          );
-      }
     })
     .catch((error) => {
       res
@@ -572,6 +584,6 @@ exports.uploadUndertakingPdf = async function (req, res) {
             err + ` Cannot upload Student's signed undertaking!`,
             400
           )
-        );   
+        );
     });
 };

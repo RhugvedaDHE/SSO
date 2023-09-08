@@ -59,6 +59,7 @@ exports.getStudentList = async function (req, res) {
     include: [
       {
         model: Class,
+        model: User,
       },
     ],
     where: {
@@ -140,8 +141,7 @@ exports.getStudentList = async function (req, res) {
         subject_name: subjectDetails.name,
         board_univ: instituteProgramme.board_univ,
         current_semester: d.current_semester,
-        current_class: d.Class,
-        // qualification: qualificationData,
+        current_class: d.Class,        
       };
       //END student academic details-----------------------------------
 
@@ -161,6 +161,7 @@ exports.getStudentList = async function (req, res) {
             "/static/user/" +
             userdocs.filename
           : null,
+          status: d.User.status,
         institute_id: instituteProgramme.institute_id,
         institute_name: institute.name,
         program_id: instituteProgramme.programme_id,

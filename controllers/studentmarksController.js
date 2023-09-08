@@ -65,6 +65,7 @@ exports.create = async (req, res) => {
 // Retrieve all StudentMarks from the database.
 exports.findAll = async (req, res) => {
   const studentEnrollmentId = req.params.id;
+  console.log(req.params.id);
   var condition = studentEnrollmentId ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } } : null;
 
   let data = await StudentMarks.findAll(
@@ -104,13 +105,14 @@ exports.findAll = async (req, res) => {
           id: d.student_enrollment_id,
         },
       });
-      console.log("doctype", programmeDetails.doc_type_id)
+      
       let userdocs = await UserDocs.findOne({
         where: {
           user_id: user.user_id,
           doc_type_id: programmeDetails.doc_type_id
         }
       })
+     
       const filePath = userdocs ? req.protocol + "://" + req.get("host") + "/static/user/" + userdocs.filename : null;
 
       finalData.push({

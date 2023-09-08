@@ -170,12 +170,22 @@ router.post('/register/companyGuide', Auth.register);
 
 router.post('/update-status', authenticate, Auth.addStatus);
 
+//verify student
+router.post('/verify-student', authenticate, Auth.verifyStudent);
+
 //profile
-router.post('/update-profile', authenticate, Auth.updateProfile);
+router.post('/update-profile', [ 
+  check('nationality').not().isEmpty().withMessage('Nationality field is required'),
+  check('gender').not().isEmpty().withMessage('Your gender is required'),], authenticate, validate, Auth.updateProfile);
+  
 router.post('/update-academics', authenticate, Auth.updateAcademics);
+
+//test notifications
+router.get('/create-notification', Auth.createNotification);
 
 
 //undertaking
 router.post('/sign-undertaking', [check('undertaking').not().isEmpty().withMessage('Undertaking flag is required'),], authenticate, Auth.signUndertaking);
+router.post('/check-undertaking-status', authenticate, Auth.checkIfUndertakingSigned);
 
 module.exports = router;

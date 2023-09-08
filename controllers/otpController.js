@@ -21,10 +21,17 @@ exports.generate = async function (req, res) {
       is_active: true,
       otp_type: req.body.type,
     },
-  }).then((results) => {
-    console.log("results: ", results);
+  }).then(async (results) => {
+    var jsondata = [];
+
     if (results && results.attempts <= 2) {
       const attempts = results.attempts + 1;
+      jsondata = [];
+      jsondata.push({
+        attempts: attempts,
+        otp: otp,
+      });
+
       results.attempts = attempts;
       results.otp = bcrypt.hashSync(otp, salt);
       results.time = Date.now();
@@ -33,11 +40,14 @@ exports.generate = async function (req, res) {
       if (req.body.type == "email" || req.body.type == "forgot_password") {
         //send OTP to email ;
         var subject = "";
-        req.body.type == "forgot_password"
-          ? (subject = "Forgot password OTP")
-          : "OTP for SUGAM";
+        if (req.body.type == "forgot_password") {
+          subject = "Forgot password OTP";
+        } else {
+          subject = "OTP for SUGAM";
+        }
         const template = "otp";
-        response = EmailNotification(
+        console.log("subbbjjeccttt", req.body.type);
+        response = await EmailNotification(
           process.env.EMAIL_FROM,
           req.body.to,
           subject,
@@ -46,9 +56,10 @@ exports.generate = async function (req, res) {
           "",
           ""
         );
-        console.log("heyyy response id: ", response);
         if (response) {
-          res.status(200).json(success("OTP generated successfully!", otp));
+          res
+            .status(200)
+            .json(success("OTP generated successfully!", jsondata));
         } else {
           res.status(400).json(errorResponse("Failed to Forward OTP", 400));
         }
@@ -57,32 +68,43 @@ exports.generate = async function (req, res) {
           "Hello! OTP To verify Phone is " +
           otp +
           ". OTP is valid for 10 minutes.-Directorate of Higher Education.";
-        console.log(template);
+
         response = SMSNotification(req.body.to, template);
-        console.log("heyyy response id: ", response);
+
         if (response) {
-          res.status(200).json(success("OTP generated successfully!", otp));
+          res
+            .status(200)
+            .json(success("OTP generated successfully!", jsondata));
         } else {
           res.status(400).json(errorResponse("Failed to Forward OTP", 400));
         }
       }
     } else if (!results) {
-      OTP.create({
+      console.log("herwwwwwwwwwwwwwwwwwwwwwwwwwwwctAAAAAAAAAAAAAAAAAAAAAe");
+
+      await OTP.create({
         otp: bcrypt.hashSync(otp, salt),
         otp_type: req.body.type,
         details: req.body.to,
         attempts: 1,
       })
-        .then((result) => {
+        .then(async (result) => {
+          var jsondata = [];
+          jsondata.push({
+            attempts: 1,
+            otp: otp,
+          });
           if (req.body.type == "email" || req.body.type == "forgot_password") {
             //send OTP to email ;
 
-            const subject = "";
-            req.body.type == "forgot_password"
-              ? (subject = "Forgot password OTP")
-              : "OTP for SUGAM";
+            var subject = "";
+            if (req.body.type == "forgot_password") {
+              subject = "Forgot password OTP";
+            } else {
+              subject = "OTP for SUGAM";
+            }
             const template = "otp";
-            response = EmailNotification(
+            response = await EmailNotification(
               process.env.EMAIL_FROM,
               req.body.to,
               subject,
@@ -91,23 +113,33 @@ exports.generate = async function (req, res) {
               "",
               ""
             );
-            console.log("heyyy response id: ", response);
+
             if (response) {
-              res.status(200).json(success("OTP generated successfully!", otp));
+              res
+                .status(200)
+                .json(success("OTP generated successfully!", jsondata));
             } else {
               res.status(400).json(errorResponse("Failed to Forward OTP", 400));
             }
           } else {
+            var jsondata = [];
+            jsondata.push({
+              attempts: 1,
+              otp: otp,
+            });
+
             //send OTP to phone
             const template =
               "Hello! OTP To verify Phone is " +
               otp +
               ". OTP is valid for 10 minutes.-Directorate of Higher Education.";
-            console.log(template);
-            response = SMSNotification(req.body.to, template);
-            console.log("heyyy response id: ", response);
+
+            response = await SMSNotification(req.body.to, template);
+
             if (response) {
-              res.status(200).json(success("OTP generated successfully!", otp));
+              res
+                .status(200)
+                .json(success("OTP generated successfully!", jsondata));
             } else {
               res.status(400).json(errorResponse("Failed to Forward OTP", 400));
             }
@@ -117,11 +149,17 @@ exports.generate = async function (req, res) {
           res.status(400).json(errorResponse(error, 400));
         });
     } else {
+      const attempts = results.attempts + 1;
+      jsondata.push({
+        attempts: attempts,
+        otp: 0,
+      });
       res
         .status(200)
         .json(
           success(
-            "Please come back tomorrow! You have exceeded today's attempts!"
+            "Please come back tomorrow! You have exceeded today's attempts!",
+            jsondata
           )
         );
     }
@@ -141,10 +179,8 @@ exports.verify = async function (req, res) {
       var timeStart = results.time.getTime();
       var timeEnd = Date.now();
 
-      var validity = ((timeEnd - timeStart) / 60 / 1000); //in minutes
-      console.log("validity is _________________________________________________", validity)
-      console.log("Start is _________________________________________________", timeStart)
-      console.log("end is _________________________________________________", timeEnd)
+      var validity = (timeEnd - timeStart) / 60 / 1000; //in minutes
+
       if (validity <= 10) {
         if (bcrypt.compareSync(req.body.otp, results.otp)) {
           if (req.body.type == "phone") {
@@ -166,7 +202,6 @@ exports.verify = async function (req, res) {
                 email: req.body.details,
               },
             }).then((user) => {
-              console.log(user);
               // if (!user.email_verified) {
               //   user.email_verified = true;
               //   // user.save({ fields: ["email_verified"] });
@@ -206,84 +241,79 @@ exports.verify = async function (req, res) {
     });
 };
 
-exports.reset_attempts=async function (req, res) {
-  console.log("reached reset attempts")
+exports.reset_attempts = async function (req, res) {
   const tenMinutesAgo = new Date();
   tenMinutesAgo.setMinutes(tenMinutesAgo.getMinutes() - 10);
 
-  const results=await OTP.findOne({
-      attributes:['otp_type','details','attempts'],
-      where: {
-          attempts: 3,
-          time: {
-            [Op.lte]: tenMinutesAgo,
-          }
+  const results = await OTP.findOne({
+    attributes: ["otp_type", "details", "attempts"],
+    where: {
+      attempts: 3,
+      time: {
+        [Op.lte]: tenMinutesAgo,
       },
-    })
-    if(results){
-      // console.log('results=',results)
-      if(results.otp_type=='email'){
-          console.log("finding email is in User Table")
-          User.findOne({
-              where: {
-                email: results.details,
-              }
-            }).then((emailotp)=>{
-             console.log('email verified=',emailotp.email_verified)
-              if (emailotp.email_verified==false) {
-                  console.log("reached email verification setting attempts to 0")
-                  OTP.update({attempts:0},{where:{details:results.details}})
-                  console.log("finished resetting attempts to 0")
-                }
-            }) .catch((error) => {
-              res.status(400).json(errorResponse(error, 400));
-            });
-      }
-      if(results.otp_type=='phone'){
-          console.log("finding Phone is in User Table")
-          User.findOne({
-              where: {
-                phone: results.details,
-              }
-            }).then((phoneotp)=>{
-              if (phoneotp.phone_verified==false) {
-                  console.log("reached Phone verification setting attempts to 0")
-                  OTP.update({attempts:0},{where:{details:results.details}})
-                  console.log("finished resetting Phone attempts to 0")
-                }
-            }) .catch((error) => {
-              res.status(400).json(errorResponse(error, 400));
-            });
-      }
-     
-  }else{
-      console.log("no data to update")
+    },
+  });
+  if (results) {
+    if (results.otp_type == "email") {
+      User.findOne({
+        where: {
+          email: results.details,
+        },
+      })
+        .then((emailotp) => {
+          if (emailotp.email_verified == false) {
+            OTP.update(
+              { attempts: 0 },
+              { where: { details: results.details } }
+            );
+          }
+        })
+        .catch((error) => {
+          res.status(400).json(errorResponse(error, 400));
+        });
+    }
+    if (results.otp_type == "phone") {
+      User.findOne({
+        where: {
+          phone: results.details,
+        },
+      })
+        .then((phoneotp) => {
+          if (phoneotp.phone_verified == false) {
+            OTP.update(
+              { attempts: 0 },
+              { where: { details: results.details } }
+            );
+          }
+        })
+        .catch((error) => {
+          res.status(400).json(errorResponse(error, 400));
+        });
+    }
+  } else {
   }
 };
 
-
-
-exports.resetForgotPassword_attempts=async function (req, res) {
-  console.log("reached Forgot Password attempts")
+exports.resetForgotPassword_attempts = async function (req, res) {
   const thirtyMinutesAgo = new Date();
   thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
 
-  const results=await OTP.findOne({
-      attributes:['otp_type','details','attempts'],
-      where: {
-          attempts: 3,
-          otp_type:'forgot_password',
-          time: {
-            [Op.lte]: thirtyMinutesAgo,
-          }
+  const results = await OTP.findOne({
+    attributes: ["otp_type", "details", "attempts"],
+    where: {
+      attempts: 3,
+      otp_type: "forgot_password",
+      time: {
+        [Op.lte]: thirtyMinutesAgo,
       },
-    })
-    if(results){
-                  console.log("reached forgot password resetting attemp")
-                  OTP.update({attempts:0},{where:{details:results.details,otp_type:results.otp_type}})
-                  console.log("finished resetting attempts to 0")
-             
-  }else{
-      console.log("no data to update")
+    },
+  });
+  if (results) {
+    OTP.update(
+      { attempts: 0 },
+      { where: { details: results.details, otp_type: results.otp_type } }
+    );
+  } else {
   }
 };

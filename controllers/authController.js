@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
 
+const notificationController = require("../controllers/notificationController");
 const User = require("../models").User;
 const UserRole = require("../models").UserRole;
 const UserContact = require("../models").UserContact;
@@ -35,7 +36,9 @@ const {
   validation,
   userCredentials,
   EmailNotification,
+  CreateNotification,
 } = require("../responseApi");
+const { response } = require("express");
 
 //change the function. make generic. if the type is institute, fetch institute details. if user belongs to dept, fetch dept details. if the user belongs to service,
 //fetch his
@@ -53,7 +56,6 @@ exports.getUserDetails = function (req, res) {
     ],
   })
     .then((userPersonalDetails) => {
-      
       UserRole.findAll({
         attributes: [],
         where: {
@@ -67,7 +69,6 @@ exports.getUserDetails = function (req, res) {
         ],
       })
         .then(async (userRole) => {
-         
           let user_roles = [];
           //if not student
           let cio_name_ur;
@@ -87,13 +88,12 @@ exports.getUserDetails = function (req, res) {
                 include: [
                   {
                     model: Institute,
-                    attributes: ["name"]
-                  }
-                ]
+                    attributes: ["name"],
+                  },
+                ],
               });
               cio_name_ur = institute.Institute.name;
-            }else{
-             
+            } else {
               queryOptions = {
                 where: {
                   user_id: req.user.id,
@@ -127,10 +127,7 @@ exports.getUserDetails = function (req, res) {
                   : ur.Role.type == "service"
                   ? cio_ur.Service.name
                   : null;
-
-              
-             
-            }//else
+            } //else
             user_roles.push({
               id: ur.Role.id,
               name: ur.Role.name,
@@ -139,7 +136,6 @@ exports.getUserDetails = function (req, res) {
             });
           } //for userRole
 
-          
           UserContact.findOne({
             where: {
               user_id: req.user.id,
@@ -199,9 +195,9 @@ exports.getUserDetails = function (req, res) {
                 include: [
                   {
                     model: Institute,
-                    attributes: ["name"]
-                  }
-                ]
+                    attributes: ["name"],
+                  },
+                ],
               });
               if (student) {
                 response.student_enrollment_id = student.id;
@@ -249,7 +245,7 @@ exports.getUserDetails = function (req, res) {
                   : null;
               response.type = cio;
             }
-            
+
             response.selected_role = {
               id: selectedRole.id,
               name: selectedRole.name,
@@ -334,6 +330,14 @@ exports.register = async function (req, res) {
                             subject_id: req.body.subject_id,
                           })
                             .then((studentEnrollment) => {
+                              var response =
+                                notificationController.createNotification(
+                                  49,
+                                  userRole.id,
+                                  "Registration",
+                                  "Your Resgistration has been created Successfully! "
+                                );
+                              console.log(response);
                               res
                                 .status(200)
                                 .json(
@@ -341,9 +345,7 @@ exports.register = async function (req, res) {
                                 );
                             })
                             .catch((error) => {
-                              res
-                                .status(400)
-                                .json(errorResponse("enrollment", 400));
+                              res.status(400).json(errorResponse(error, 400));
                             });
                         })
                         .catch((error) => {
@@ -569,7 +571,7 @@ exports.registerAdmins = function (req, res) {
                 })
                   .then((EntityUser) => {
                     console.log("call email Notification function");
-                    var from = "dhe.abhishek@gmail.com";
+                    var from = process.env.EMAIL_FROM;
                     var subject = "User Credentials";
                     var template = "welcome";
                     var response;
@@ -671,7 +673,7 @@ exports.registerSuperadmin = function (req, res) {
             .then((SuperAdminCreation) => {
               //Send Email
               console.log("call email Notification function");
-              var from = "dhe.abhishek@gmail.com";
+              var from = process.env.EMAIL_FROM;
               var subject = "User Credentials";
               var template = "welcome";
               var response;
@@ -932,7 +934,7 @@ exports.addStatus = async function (req, res) {
       //update remarks table
       let studentEntrollmentData = await StudentEnrollment.findOne({
         where: {
-          user_id: req.body.user_id
+          user_id: req.body.user_id,
         },
       });
 
@@ -944,7 +946,7 @@ exports.addStatus = async function (req, res) {
       res.status(200).json(success("User Status updated successfully!"));
     })
     .catch((error) => {
-      console.log(error)
+      console.log(error);
       res.status(400).json(errorResponse("Could not Chnage the status!", 400));
     });
 };
@@ -1046,5 +1048,111 @@ exports.signUndertaking = async function (req, res) {
     })
     .catch((error) => {
       res.status(400).json(errorResponse(error, 400));
+    });
+};
+
+//test notif
+exports.createNotification = async function (req, res) {
+  try {
+    let userRole = await UserRole.findOne({
+      where: {
+        user_id: req.user.id,
+        role_id: req.user.role_id,
+      },
+    });
+    var response = notificationController.createNotification(
+      request.body.from_userrole,
+      userRole.id,
+      req.body.subject,
+      req.body.message
+    );
+    console.log("response notification is: ", response);
+    res
+      .status(200)
+      .json(success("Notification created successfully!!", response));
+  } catch (error) {
+    console.log("Error-response notification is: ", error);
+  }
+};
+
+//Check if undertaking is signed (with token)
+exports.checkIfUndertakingSigned = async function (req, res) {
+  await User.findOne({
+    where: {
+      id: req.user.id,
+    },
+  })
+    .then((user) => {
+      let message = "";
+      user.is_signed
+        ? (message = "Undertaking Signed successfully!")
+        : (message = "Please sign the undertaking!");
+
+      res.status(200).json(success(message, user.is_signed));
+    })
+    .catch((error) => {
+      console.log("Error in checking the status of undertaking", error);
+    });
+};
+
+
+// verfify/rejected or student profile mark incomplete
+exports.verifyStudent = async (req, res) => {
+  const id = req.body.user_id;
+  let is_verified = false;
+  let status = "";
+
+  // if (JSON.stringify(data).includes(req.body.is_verified)) {
+  //   for (key in data.statuses) {
+  //     if (req.body.is_verified == key) {
+  //       status = data.statuses[key];
+  //     }
+  //   }
+  // }
+  let ur = await UserRole.findOne({
+    where: {
+      user_id: req.user.id,
+      role_id: req.user.role_id,
+    },
+  });
+
+  req.body.status == "VER"
+    ? (is_verified = true)
+    : (is_verified = false);
+
+  const updatefields = {
+    is_verified: is_verified,
+    status: req.body.status,
+    verified_by: ur.id
+  };
+
+  User.update(updatefields, {
+    where: { id: id },
+  })
+    .then((num) => {
+      if (num == 1) {
+        return res
+          .status(200)
+          .json(success("Students status updated successfully!"));
+      } else {
+        return res
+          .status(400)
+          .json(
+            errorResponse(
+              `Cannot update Student with id=${id}. Maybe Student was not found`,
+              400
+            )
+          );
+      }
+    })
+    .catch((err) => {
+      return res
+        .status(400)
+        .json(
+          errorResponse(
+            `Cannot update Student with id=${id}. Maybe Server error`,
+            400
+          )
+        );
     });
 };

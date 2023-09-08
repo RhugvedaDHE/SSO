@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const application = express(); // initialize our express app
 const passport = require("passport");
 const cron = require('node-cron');
+var path = require('path');
 
 const cors = require('cors');
 application.use(cors({
@@ -20,13 +21,13 @@ application.use(bodyParser.json()); // parse requests of content-type - applicat
 application.use(passport.initialize());
 require("./middlewares/jwt")(passport);
 
-// const {
-//     success,
-//     errorResponse,
-//     validation,
-//     userCredentials,
-//     EmailNotification,
-//   } = require("../responseApi");
+const {
+    success,
+    errorResponse,
+    validation,
+    userCredentials,
+    EmailNotification,
+  } = require( path.resolve( __dirname, "./responseApi.js" ) );
 
 //Used for static file path eg uploaded images etc:Paresh
 application.use('/static', express.static('uploads'));
@@ -72,6 +73,7 @@ var permissionRouter = require('./routes/permission');
 var userPermissionRouter = require('./routes/userPermission');
 var userMenuItemRouter = require('./routes/userMenuItem');
 var menuItemRouter = require('./routes/menuItem');
+var notificationRouter = require('./routes/notification');
 
 //APIs by Paresh A.
 var companyRouter = require('./routes/company');
@@ -137,6 +139,7 @@ application.use('/api/v1/permission', permissionRouter);
 application.use('/api/v1/user-permission', userPermissionRouter);
 application.use('/api/v1/user-menuitem', userMenuItemRouter);
 application.use('/api/v1/menuitem', menuItemRouter);
+application.use('/api/v1/notification', notificationRouter);
 
 //APIs by Paresh A.
 application.use('/api/v1/company', companyRouter);
@@ -190,6 +193,7 @@ application.post('/q', function(req, res) {
 //Error Handler
 process.on('uncaughtException', function (error, result, res, next){
     console.log('Caught exception: ' + error + " bfbvuj  " + next);
+    // res.status(400).json(errorResponse(error, 400));
     // return res.status(400).send({
     //     message: "Content can not be empty!"
     //  }); 

@@ -540,6 +540,7 @@ exports.userCompanies = async (req, res) => {
 exports.listCompanies = (req, res) => {
   let where = {};
   var companies = [];
+  
   if (req.params.type == "verified") {
     where = { is_verified: true, status: "VER" };
   } else if (req.params.type == "not-verified"){
@@ -559,66 +560,87 @@ exports.listCompanies = (req, res) => {
       },
     ],
   })
-    .then(async (data) => {
-      
-
+    .then(async (data) => {   
      
-   
       for (d of data){
-      
-        let ur = await UserRole.findOne({
-          where: {
-            id: d.User.verified_by
-          },
-          include: [
-            {
-              model: Role
-            }
-          ]
-        });
-       
-        queryOptions = {
-          where: {
-            user_id: ur.user_id,
-          },
-          attributes: ["cio_id"],
-        };
-        
-        if (ur.Role.type == "dept") {
-          queryOptions.include = [Department];
-        } else if (ur.Role.type == "company") {
-          queryOptions.include = [Company];
-        } else if (
-          ur.Role.type == "institute" &&
-          ur.Role.name != "Student"
-        ) {
-          console.log("herereferfrdfevtvetvdtv")
-          queryOptions.include = [Institute];
-        } else if (ur.Role.type == "service") {
-          queryOptions.include = [Service];
-        }
-
-        console.log("qurtyoprions", queryOptions)
-        let cio_ur = await EntityUser.findOne(queryOptions);
-       
-        let cio_name_ur =
-          ur.Role.type == "dept"
-            ? cio_ur.Department.name
-            : ur.Role.type == "company"
-            ? cio_ur.Company.name
-            : ur.Role.type == "institute" && ur.Role.name != "Student"
-            ? cio_ur.Institute.name
-            : ur.Role.type == "service"
-            ? cio_ur.Service.name
-            : null;
-        
-        companies.push({
-          company: d,          
-          verified_by: {
-            role_type: ur.Role.type,
-            cio_name: cio_name_ur
+        if(d.User.verified_by){
+          let ur = await UserRole.findOne({
+            where: {
+              id: d.User.verified_by
+            },
+            include: [
+              {
+                model: Role
+              }
+            ]
+          });
+          
+          queryOptions = {
+            where: {
+              user_id: ur.user_id,
+            },
+            attributes: ["cio_id"],
+          };
+          
+          if (ur.Role.type == "dept") {
+            queryOptions.include = [Department];
+          } else if (ur.Role.type == "company") {
+            queryOptions.include = [Company];
+          } else if (
+            ur.Role.type == "institute" &&
+            ur.Role.name != "Student"
+          ) {
+            console.log("herereferfrdfevtvetvdtv")
+            queryOptions.include = [Institute];
+          } else if (ur.Role.type == "service") {
+            queryOptions.include = [Service];
           }
-        })
+
+          console.log("qurtyoprions", queryOptions)
+          let cio_ur = await EntityUser.findOne(queryOptions);
+        
+          let cio_name_ur =
+            ur.Role.type == "dept"
+              ? cio_ur.Department.name
+              : ur.Role.type == "company"
+              ? cio_ur.Company.name
+              : ur.Role.type == "institute" && ur.Role.name != "Student"
+              ? cio_ur.Institute.name
+              : ur.Role.type == "service"
+              ? cio_ur.Service.name
+              : null;
+          let userPersonal = await UserPersonalDetails.findOne({
+            where: {
+              user_id: ur.user_id
+            },
+          });     
+          // companies.push({
+          //   id: userPersonal,
+          //   user: userPersonal.firstname,
+          //   // user_l: userPersonal.lastname,
+          //   ur:ur
+          // });
+          companies.push({
+            company: d,          
+            verified_by: {
+              role_type: ur.Role.type,
+              cio_name: cio_name_ur,
+              first_name: userPersonal.firstname,
+              last_name: userPersonal.lastname,
+            }
+          })
+        }//close if
+        else{
+          companies.push({
+            company: null,          
+            verified_by: {
+              role_type: "",
+              cio_name: "",
+              first_name: "",
+              last_name: "",
+            }
+          })
+        }
       }
       res
         .status(200)
