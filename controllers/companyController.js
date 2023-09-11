@@ -561,10 +561,10 @@ exports.listCompanies = (req, res) => {
     ],
   })
     .then(async (data) => {   
-      res
-        .status(200)
-        .json(success("Company Details fetched successfully!", data));
+      
       for (d of data){
+        console.log("here it is: ", req.params.type)
+        console.log("here it is: ", d.User.verified_by)
         if(d.User.verified_by){
           let ur = await UserRole.findOne({
             where: {
@@ -592,7 +592,6 @@ exports.listCompanies = (req, res) => {
             ur.Role.type == "institute" &&
             ur.Role.name != "Student"
           ) {
-            console.log("herereferfrdfevtvetvdtv")
             queryOptions.include = [Institute];
           } else if (ur.Role.type == "service") {
             queryOptions.include = [Service];
@@ -616,12 +615,7 @@ exports.listCompanies = (req, res) => {
               user_id: ur.user_id
             },
           });     
-          // companies.push({
-          //   id: userPersonal,
-          //   user: userPersonal.firstname,
-          //   // user_l: userPersonal.lastname,
-          //   ur:ur
-          // });
+       
           companies.push({
             company: d,          
             verified_by: {
@@ -634,7 +628,7 @@ exports.listCompanies = (req, res) => {
         }//close if
         else{
           companies.push({
-            company: null,          
+            company: d,          
             verified_by: {
               role_type: "",
               cio_name: "",
