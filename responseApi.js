@@ -1,6 +1,6 @@
 const axios = require("axios");
 var path = require('path');
-const Notification = require( path.resolve( __dirname, "./Models/notification.js" ) );
+// const Notification = require( path.resolve( __dirname, "./Models/notification.js" ) );
 // const { Curl } = require("node-libcurl");
 /**
  * @desc    Send any success response

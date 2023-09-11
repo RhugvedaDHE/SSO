@@ -561,7 +561,9 @@ exports.listCompanies = (req, res) => {
     ],
   })
     .then(async (data) => {   
-     
+      res
+        .status(200)
+        .json(success("Company Details fetched successfully!", data));
       for (d of data){
         if(d.User.verified_by){
           let ur = await UserRole.findOne({
