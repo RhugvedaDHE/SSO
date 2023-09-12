@@ -1133,13 +1133,13 @@ exports.verifyStudent = async (req, res) => {
       if (num == 1) {
         return res
           .status(200)
-          .json(success("Students status updated successfully!"));
+          .json(success("Status updated successfully!"));
       } else {
         return res
           .status(400)
           .json(
             errorResponse(
-              `Cannot update Student with id=${id}. Maybe Student was not found`,
+              `Cannot update Status!`,
               400
             )
           );
@@ -1150,7 +1150,7 @@ exports.verifyStudent = async (req, res) => {
         .status(400)
         .json(
           errorResponse(
-            `Cannot update Student with id=${id}. Maybe Server error`,
+            `Cannot update Status!`,
             400
           )
         );

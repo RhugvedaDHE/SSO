@@ -148,6 +148,10 @@ exports.getStaffDetails = async function (req, res) {
     },
   });
 
+  let entityUser = await EntityUser.findOne({
+    user_id: userId
+  })
+
   let userPersonalDetails = await UserPersonalDetails.findOne({
     where: {
       user_id: userId,
@@ -272,6 +276,7 @@ exports.getStaffDetails = async function (req, res) {
   });
   jsondata.push({
     user_id: userId,
+    entity_user_id: entityUser.id,
     instituteStaff: instituteStaff,
     declaration: instituteStaff.Staff.User.is_signed, //.Staff.User.is_signed,
     userPersonalDetails: userPersonalDetails,

@@ -64,6 +64,7 @@ exports.create = async (req, res) => {
 
 // Retrieve all StudentMarks from the database.
 exports.findAll = async (req, res) => {
+  console.log("hVFHVHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHzsdgfyugfgfsyugf")
   const studentEnrollmentId = req.params.id;
   console.log(req.params.id);
   var condition = studentEnrollmentId ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } } : null;
@@ -112,7 +113,8 @@ exports.findAll = async (req, res) => {
           doc_type_id: programmeDetails.doc_type_id
         }
       })
-     
+      const userdocId = userdocs ? userdocs.id : null; 
+      
       const filePath = userdocs ? req.protocol + "://" + req.get("host") + "/static/user/" + userdocs.filename : null;
 
       finalData.push({
@@ -136,7 +138,7 @@ exports.findAll = async (req, res) => {
           "updatedAt": d.updatedAt,
           "deletedAt": d.deletedAt,
           "programme_details":programmeDetails,
-          "file_id": userdocs.id,
+          "file_id": userdocId,
           "file_path": filePath,
       });
     }//end for

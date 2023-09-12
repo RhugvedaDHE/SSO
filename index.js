@@ -74,6 +74,7 @@ var userPermissionRouter = require('./routes/userPermission');
 var userMenuItemRouter = require('./routes/userMenuItem');
 var menuItemRouter = require('./routes/menuItem');
 var notificationRouter = require('./routes/notification');
+var staffRemarksRouter = require('./routes/staffRemarks');
 
 //APIs by Paresh A.
 var companyRouter = require('./routes/company');
@@ -140,6 +141,7 @@ application.use('/api/v1/user-permission', userPermissionRouter);
 application.use('/api/v1/user-menuitem', userMenuItemRouter);
 application.use('/api/v1/menuitem', menuItemRouter);
 application.use('/api/v1/notification', notificationRouter);
+application.use('/api/v1/staff-remarks', staffRemarksRouter);
 
 //APIs by Paresh A.
 application.use('/api/v1/company', companyRouter);
