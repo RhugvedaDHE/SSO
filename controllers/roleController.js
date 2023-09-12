@@ -30,9 +30,17 @@ exports.get = async function (req, res) {
   // }
   console.log(where);
   
-  if(req.body.type.includes("register") && req.body.type.length == 1){
+  if(req.body.type.includes("register-institute") && req.body.type.length == 1){
     where = {
       display: true,
+      type: "institute",
+      is_active: true,
+    };
+  }  
+  else if(req.body.type.includes("register-company") && req.body.type.length == 1){
+    where = {
+      display: true,
+      type: "company",
       is_active: true,
     };
   }  
