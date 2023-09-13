@@ -35,6 +35,7 @@ exports.get = async function (req, res) {
       display: true,
       type: "institute",
       is_active: true,
+      is_admin: req.body.admin
     };
   }  
   else if(req.body.type.includes("register-company") && req.body.type.length == 1){
@@ -42,6 +43,7 @@ exports.get = async function (req, res) {
       display: true,
       type: "company",
       is_active: true,
+      is_admin: req.body.admin
     };
   }  
   await Role.findAll({

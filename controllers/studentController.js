@@ -197,22 +197,31 @@ exports.getInstituteStudentList = async function (req, res) {
   const jsondata = await db.sequelize.query(query, {
     type: db.Sequelize.QueryTypes.SELECT,
   });
-  //student academic details---------------------------------------
+  return res
+    .status(200)
+    .json(success("Students fetched successfully!", jsondata));
+};
 
-  // academic = {
-  //   student_enrollemnt_id: d.id,
-  //   academic_year: d.academic_year,
-  //   institute_id: instituteProgramme.institute_id,
-  //   institute_name: institute.name,
-  //   program_id: instituteProgramme.programme_id,
-  //   program_name: program.name,
-  //   subject_id: subjectDetails.id,
-  //   subject_name: subjectDetails.name,
-  //   board_univ: instituteProgramme.board_univ,
-  //   // qualification: qualificationData,
-  // };
-  //END student academic details-----------------------------------
+//Function to get list of all institute's students: veda
+//We need to get list of all the students with INC, RESUB, REJ
+//param :id which is institute ID
+exports.getInstituteStudentOtherStatus = async function (req, res) {
+  const instituteId = req.params.id;
+  
+  var query = `SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed, s.id as student_enrollment_id, s.subject_id, subjects.id as sid, subjects.name as subject_name, progs.name as pname, class.id as current_class_id, class.name as current_class_name FROM public."StudentEnrollments" as s`;
+  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class" = "class"."id"`;
+  query += ` INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s."institute_programme_id"`;
+  query += ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
+  query += ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
+  query += ` INNER JOIN public."Users" as users ON up.user_id = users.id`;
+  query += ` LEFT JOIN public."Subjects" as subjects ON s.subject_id = subjects.id`;
+  query += ` INNER JOIN public."Programmes" as progs ON ip.programme_id = progs.id `;
+  query += ` WHERE i."id" = ${instituteId} AND users.status='INC' OR users.status='RESUB' OR users.status='REJ' AND users.is_verified=false`;
+  query += ` ORDER BY s."id" ASC`;
 
+  const jsondata = await db.sequelize.query(query, {
+    type: db.Sequelize.QueryTypes.SELECT,
+  });
   return res
     .status(200)
     .json(success("Students fetched successfully!", jsondata));

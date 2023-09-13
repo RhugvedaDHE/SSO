@@ -56,6 +56,8 @@ exports.getUserDetails = function (req, res) {
     ],
   })
     .then((userPersonalDetails) => {
+      
+
       UserRole.findAll({
         attributes: [],
         where: {
@@ -69,10 +71,12 @@ exports.getUserDetails = function (req, res) {
         ],
       })
         .then(async (userRole) => {
+          
           let user_roles = [];
           //if not student
           let cio_name_ur;
           for (ur of userRole) {
+            
             if (ur.Role.name == "Student") {
               let student = await StudentEnrollment.findOne({
                 where: {
@@ -100,23 +104,25 @@ exports.getUserDetails = function (req, res) {
                 },
                 attributes: ["cio_id"],
               };
-
+             
               if (ur.Role.type == "dept") {
-                queryOptions.include = [Department];
+                queryOptions.include = ["Department"];
               } else if (ur.Role.type == "company") {
-                queryOptions.include = [Company];
+                queryOptions.include = ["Company"];
               } else if (
                 ur.Role.type == "institute" &&
                 ur.Role.name != "Student"
               ) {
-                queryOptions.include = [Institute];
+                
+                queryOptions.include = ["Institute"];
+               
               } else if (ur.Role.type == "service") {
                 console.log("Service ut is oitsbhdbvjhbsd");
                 queryOptions.include = [Service];
               }
 
               let cio_ur = await EntityUser.findOne(queryOptions);
-
+             
               cio_name_ur =
                 ur.Role.type == "dept"
                   ? cio_ur.Department.name
@@ -135,7 +141,7 @@ exports.getUserDetails = function (req, res) {
               cio_name: cio_name_ur,
             });
           } //for userRole
-
+          
           UserContact.findOne({
             where: {
               user_id: req.user.id,
@@ -383,11 +389,23 @@ exports.register = async function (req, res) {
                               designation_id: req.body.designation_id,
                             })
                               .then((userDes) => {
-                                res
-                                  .status(200)
-                                  .json(
-                                    success("Staff-User created successfully")
-                                  );
+                                //put data in Entity User table
+                                const staffData = {
+                                  user_id: user.id,
+                                  entity_type_id: 1,
+                                  cio_id: req.body.institute_id,
+                                  active: req.body.active ? req.body.active : true,
+                                };
+      
+                                //console.log(companyHRData);
+                                EntityUser.create(staffData)
+                                  .then((staff) => {
+                                    res
+                                    .status(200)
+                                    .json(
+                                      success("Staff-User created successfully")
+                                    );
+                                  });                               
                               })
                               .catch((error) => {
                                 res

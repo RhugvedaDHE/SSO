@@ -10,10 +10,11 @@ const authenticate = require('../middlewares/authenticate');
 console.log("In student routes");
 
 
-// Retrieve all student
-//router.get("/all", student.getStudentList);
-
+// Retrieve all submitted student
 router.get("/all/:id", student.getInstituteStudentList);
+
+// Retrieve all INC, RESUB, REJ student
+router.get("/all-status/:id", student.getInstituteStudentOtherStatus);
 
 //list of all the students
 router.get("/list/all/:offset", student.getStudentList);

@@ -26,7 +26,7 @@ const Religion = require("../models").religion;
 const BloodGroup = require("../models").BloodGroup;
 const EmploymentType = require("../models").EmploymentType;
 const Designation = require("../models").Designation;
-const qualificationTypes = require("../models").QualificationTypes;
+const StaffRemarks = require("../models").StaffRemarks;
 const evalTypes = require("../models").EvalTypes;
 const subject = require("../models/").Subject;
 const Gender = require("../models/").Gender;
@@ -274,6 +274,23 @@ exports.getStaffDetails = async function (req, res) {
       },
     ],
   });
+
+  //Get staff's Remarks --------------------------------------
+  let staffRemarksResult = await StaffRemarks.findAll({
+    where: {
+      entity_user_id: entityUser.id,
+    },
+  });
+
+  if (staffRemarksResult) {
+    var remarksData = [];
+    for (const rm of staffRemarksResult) {
+      //take owner details and add to array below
+
+      remarksData.push(rm);
+    }
+  }
+  // ---------------------------------------------------------------------------------------------------------------
   jsondata.push({
     user_id: userId,
     entity_user_id: entityUser.id,
@@ -296,7 +313,7 @@ exports.getStaffDetails = async function (req, res) {
     userContact: userContact,
     // nationality_title: nationality,
     userDesignation: userDesignation,
-    // remarks: remarksData,
+    remarks: remarksData,
     // contact_data: contactData,
   });
 
