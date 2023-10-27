@@ -75,7 +75,19 @@ exports.uploadDoc = async (req, res) => {
                               return callback(new Error('Only images are allowed'))
                           }
                           callback(null, true);*/
+      
+      //validations to be done here
+      if(req.body.doc_id == 22){
 
+      }else if(req.body.doc_id == 20){
+
+      }else if(req.body.doc_id == 23){
+
+      }else{
+        res
+        .status(400)
+        .json(errorResponse(`Please enter a valid Document id!`, 400));
+      }
       if (
         file.mimetype === "application/pdf" ||
         file.mimetype === "image/png" ||
@@ -411,11 +423,7 @@ exports.createUndertakingPdf = async function (req, res) {
   );
   pdfDoc.end();
 
-  const query = `
-          INSERT INTO public."UserDocs" ("user_id", "doc_type_id", "filename", "createdAt", "updatedAt")
-          VALUES ($1, $2, $3, $4, $5)
-          ON CONFLICT ("user_id", "doc_type_id")
-          DO UPDATE SET "filename" = $3,"updatedAt" = $5;`;
+  const query = `INSERT INTO public."UserDocs" ("user_id", "doc_type_id", "filename", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5) ON CONFLICT ("user_id", "doc_type_id") DO UPDATE SET "filename" = $3,"updatedAt" = $5;`;
 
   // Execute the raw query
   const response = await db.sequelize.query(query, {
@@ -504,62 +512,65 @@ exports.createUndertakingPdf = async function (req, res) {
 //     });
 //   });
 
-//     }
+//     };
 
 //download undertaking signedoc (called from PHP)
 exports.downloadSignedUndertakingPdf = async function (req, res) {
+  const filename = req.params.filename;
+  const userid = req.user.id;
   const axios = require("axios");
   const fs = require("fs");
   const path = require("path");
   const rootPath = "C:/Users/admin/new-sequelize";
-  const url = req.body.fileUrl;
+  const url = "http://localhost/E-sign/esign/temp/" + filename ;
   const staticLocation = path.join(
     rootPath,
     "/uploads/user",
-    req.body.filename
+    req.params.filename
   ); // Change 'downloaded_file.ext' to desired file name and extension
   axios
-    .get(req.body.fileUrl, { responseType: "stream" })
+    .get(url, { responseType: "stream" })
     .then(async (response) => {
       // Saving file to working directory
-      const writer = response.data.pipe(fs.createWriteStream(staticLocation));
+      const writer = await response.data.pipe(fs.createWriteStream(staticLocation));
       console.log("File downloaded and saved successfully.");
-      let undertaking_doc_id = userDocs.findOne({
+      let undertaking_doc_id = await userDocs.findOne({
         where: {
-          user_id: req.user.id,
+          user_id: userid,
           doc_type_id: 22,
         },
       });
+     
       const userDoc = {
-        user_id: req.user.id,
+        user_id: userid,
         doc_type_id: 22,
-        filename: req.body.filename,
+        filename: req.params.filename,
         createdAt: new Date(),
         updateAt: null,
       };
-
+      
       await userDocs
         .update(userDoc, {
           where: { id: undertaking_doc_id.id },
         })
         .then(async (response) => {
           // Execute the raw query
-          let jsondata = db.sequelize.query(query, {
-            bind: [req.user.id, 22, req.body.filename, new Date(), new Date()],
-            type: db.Sequelize.QueryTypes.UPSERT,
-          });
+          // let jsondata = await db.sequelize.query(query, {
+          //   bind: [userid, 22, req.params.filename, new Date(), new Date()],
+          //   type: db.Sequelize.QueryTypes.UPSERT,
+          // });
 
-          if (jsondata) {
+          if (response) {
             let userDoc = UserDocs.findOne({
               where: {
-                user_id: req.user.id,
+                user_id: userid,
                 doc_type_id: 22,
               },
             });
 
             //update is_signed in users to true
             await User.update({is_signed: true}, {
-              where: { id: req.user.id },
+              where: { id: userid },
             })            
             res
               .status(200)
@@ -570,7 +581,7 @@ exports.downloadSignedUndertakingPdf = async function (req, res) {
                     "://" +
                     req.get("host") +
                     "/static/user/" +
-                    fileName
+                    filename
                 )
               );
           }
@@ -581,7 +592,7 @@ exports.downloadSignedUndertakingPdf = async function (req, res) {
         .status(400)
         .json(
           errorResponse(
-            err + ` Cannot upload Student's signed undertaking!`,
+            error.stack + ` Cannot upload Student's signed undertaking!`,
             400
           )
         );

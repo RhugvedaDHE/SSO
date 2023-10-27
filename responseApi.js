@@ -117,7 +117,8 @@ exports.EmailNotification = (
   template,
   otp,
   username,
-  password
+  password, 
+  name
 ) => {
   console.log("email microservice", subject);
   try {
@@ -129,6 +130,7 @@ exports.EmailNotification = (
       otp: otp,
       username: username,
       password: password,
+      name: name
     });
     return response;
   } catch (error) {

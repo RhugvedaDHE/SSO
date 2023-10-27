@@ -36,6 +36,7 @@ const {
   validation,
   userCredentials,
   EmailNotification,
+  SMSNotification,
   CreateNotification,
 } = require("../responseApi");
 const { response } = require("express");
@@ -273,7 +274,7 @@ exports.getUserDetails = function (req, res) {
     });
 };
 
-exports.register = async function (req, res) {
+exports.register = async function (req, res) {  
   // const result = await sequelize.transaction(async (t) => {
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(req.body.password, salt);
@@ -336,6 +337,12 @@ exports.register = async function (req, res) {
                             subject_id: req.body.subject_id,
                           })
                             .then((studentEnrollment) => {
+                              const template =
+                              "Hello " + req.body.firstname +  "! Your application has been successfully submitted on SUGAM Portal! " + 
+                              "Your profile is pending for verification.-Directorate of Higher Education.";
+
+                              var responseSMS = SMSNotification(req.body.phone, template);
+
                               var response =
                                 notificationController.createNotification(
                                   49,
@@ -396,10 +403,24 @@ exports.register = async function (req, res) {
                                   cio_id: req.body.institute_id,
                                   active: req.body.active ? req.body.active : true,
                                 };
-      
+
                                 //console.log(companyHRData);
                                 EntityUser.create(staffData)
                                   .then((staff) => {
+                                    const template =
+                                    "Hello " + req.body.firstname +  "! Your application has been successfully submitted on SUGAM Portal! " + 
+                                    "Your profile is pending for verification.-Directorate of Higher Education.";
+
+                                    var responseSMS = SMSNotification(req.body.phone, template);
+
+                                    var response =
+                                      notificationController.createNotification(
+                                        49,
+                                        userRole.id,
+                                        "Registration",
+                                        "Your Resgistration has been created Successfully! "
+                                      );
+
                                     res
                                     .status(200)
                                     .json(
@@ -466,7 +487,19 @@ exports.register = async function (req, res) {
                           EntityUser.create(companyHRData)
                             .then((HR) => {
                               //send mobile OTP
+                              const template =
+                              "Hello " + req.body.name +  "! Your application has been successfully submitted on SUGAM Portal! " + 
+                              "Your profile is pending for verification.-Directorate of Higher Education.";
 
+                              var responseSMS = SMSNotification(req.body.phone, template);
+
+                              var response =
+                                notificationController.createNotification(
+                                  49,
+                                  userRole.id,
+                                  "Registration",
+                                  "Your Resgistration has been created Successfully! "
+                                );
                               //send Email OTP
 
                               res
@@ -587,21 +620,22 @@ exports.registerAdmins = function (req, res) {
                   entity_type_id: req.body.entity_type_id,
                   cio_id: req.body.cio_id,
                 })
-                  .then((EntityUser) => {
+                  .then(async (EntityUser) => {
                     console.log("call email Notification function");
                     var from = process.env.EMAIL_FROM;
                     var subject = "User Credentials";
                     var template = "welcome";
                     var response;
 
-                    response = EmailNotification(
+                    response = await EmailNotification(
                       from,
                       req.body.email,
                       subject,
                       template,
                       req.body.firstname,
                       userCredentialsdata.username,
-                      userCredentialsdata.password
+                      userCredentialsdata.password,
+                      ""
                     );
                     if (response) {
                       res
@@ -688,7 +722,7 @@ exports.registerSuperadmin = function (req, res) {
             phone: req.body.phone,
             email: req.body.email,
           })
-            .then((SuperAdminCreation) => {
+            .then(async (SuperAdminCreation) => {
               //Send Email
               console.log("call email Notification function");
               var from = process.env.EMAIL_FROM;
@@ -696,14 +730,15 @@ exports.registerSuperadmin = function (req, res) {
               var template = "welcome";
               var response;
 
-              response = EmailNotification(
+              response = await EmailNotification(
                 from,
                 req.body.email,
                 subject,
                 template,
                 req.body.firstname,
                 userCredentialsdata.username,
-                userCredentialsdata.password
+                userCredentialsdata.password,
+                ""
               );
               if (response) {
                 res
@@ -1057,11 +1092,32 @@ exports.signUndertaking = async function (req, res) {
       id: req.user.id,
     },
   })
-    .then((user) => {
+    .then(async (user) => {
+      let userRole = await UserRole.findOne({
+        where: {
+          user_id: req.user.id,
+          role_id: req.user.role_id,
+        },
+      });
+
       console.log(req.body);
       user.is_signed = req.body.undertaking;
       user.status = "SUB";
       user.save();
+
+      const template = "Hello " + req.body.firstname +  "! Your application has been reverted back! " + 
+      "Please make the appropriate changes and re-submit the application - Directorate of Higher Education";
+
+      var responseSMS = SMSNotification(req.body.phone, template);
+
+      var response =
+        notificationController.createNotification(
+          49,
+          userRole.id,
+          "Registration",
+          "Your Resgistration has been created Successfully! "
+        );
+
       res.status(200).json(success("User Status updated successfully!", user));
     })
     .catch((error) => {
@@ -1137,7 +1193,31 @@ exports.verifyStudent = async (req, res) => {
   req.body.status == "VER"
     ? (is_verified = true)
     : (is_verified = false);
+  const template = message = "";
+  if(req.body.status == "VER"){
+      template = "Hello " + req.body.firstname +  "! Your account has been successfully verified on SUGAM Portal!" +
+    " You can log in and access the services at our website https://www.sugam.gshec.edu.in - Directorate of Higher Education";
+    
+      message = "Your account has been successfully Verified!";
+  }else if(req.body.status == "REJ"){
+      template = "Hello " + req.body.firstname +  "! Your application has been declined! Please contact the appropriate authority for any queries - Directorate of Higher Education";
+      message = "Your application has been declined!";
+  }else if(req.body.status == "INC"){
+      template = "Hello " + req.body.firstname +  "! Your application has been marked as incomplete! " + 
+    "Please make the appropriate changes and re-submit the application - Directorate of Higher Education";
+      message = "Your application has been reverted back!";
+  }
 
+  var responseSMS = SMSNotification(req.body.phone, template);
+
+  var response =
+    notificationController.createNotification(
+      49,
+      ur.id,
+      "Profile status",
+      message
+    );
+    
   const updatefields = {
     is_verified: is_verified,
     status: req.body.status,

@@ -10,10 +10,20 @@ const authenticate = require('../middlewares/authenticate');
 
 console.log("In userDocs routes");
 
+// router.post('/create', [
+//     check('role_id').not().isEmpty().withMessage('Role is required'),
+//     check('menuitem_id').not().isEmpty().withMessage('Menu Item is required'),
+// ], validate, UserMenuItem.create);
+// req.checkBody('rest_logo', 'Restaurant Logo - Please upload an image Jpeg, Png or Gif').isImage(restLogo);
 
-
-router.post("/uploaddoc", authenticate, userDocs.uploadDoc);
-router.post("/download-signed-undertaking", authenticate, userDocs.downloadSignedUndertakingPdf);
+router.post("/uploaddoc", [
+        // check('doc_type_id').not().isEmpty().withMessage('Document type is required'),
+        // check('file').isImage(file).withMessage('Menu Item is required'),
+    ],
+    //  validate, 
+    authenticate, userDocs.uploadDoc);
+    
+router.get("/download-signed-undertaking/:filename", authenticate, userDocs.downloadSignedUndertakingPdf);
 
 // Retrieve all user docs
 router.get("/all/:id", userDocs.findAll);

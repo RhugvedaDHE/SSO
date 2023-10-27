@@ -54,6 +54,7 @@ exports.generate = async function (req, res) {
           template,
           otp,
           "",
+          "",
           ""
         );
         if (response) {
@@ -110,6 +111,7 @@ exports.generate = async function (req, res) {
               subject,
               template,
               otp,
+              "",
               "",
               ""
             );

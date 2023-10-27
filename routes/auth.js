@@ -34,7 +34,7 @@ router.post('/register', [
     check('role_id').not().isEmpty().withMessage('Your role is required').isNumeric().withMessage("Please select a valid Role"),
     check('institute_type_id').not().isEmpty().withMessage('Institute type id is required').isNumeric().withMessage("Please select a valid Institute type"),
     check('institute_id').not().isEmpty().withMessage('Institute id is required').isNumeric().withMessage("Please select a valid Institute"),
-    check('firstname').not().isEmpty().withMessage('Your First name is required').isAlpha().withMessage('First name must have only alphabets'),
+    check('firstname').not().isEmpty().withMessage('Your First name is required'),
     check('lastname').not().isEmpty().withMessage('Your Last name is required').isAlpha().withMessage('Last name must have only alphabets'),
    
 ], validate, Auth.register);
@@ -132,8 +132,8 @@ router.post('/register/company', [
   check('username').not().isEmpty().withMessage('Your Username is required'),
   check('role_id').not().isEmpty().withMessage('Your role is required').isNumeric().withMessage("Please select a valid Role"),
   check('phone').not().isEmpty().withMessage('Your phone is required').isNumeric().withMessage("Please enter a valid Phone"),
-  check('firstname').not().isEmpty().withMessage('Your role is required'),
-  check('lastname').not().isEmpty().withMessage('Your role is required'),
+  check('firstname').not().isEmpty().withMessage('Your firstname is required'),
+  check('lastname').not().isEmpty().withMessage('Your lastname is required'),
   check('password').isStrongPassword({
     minLength: 8,
     minLowercase: 1,
@@ -175,8 +175,18 @@ router.post('/verify-student', authenticate, Auth.verifyStudent);
 
 //profile
 router.post('/update-profile', [ 
-  check('nationality').not().isEmpty().withMessage('Nationality field is required'),
-  check('gender').not().isEmpty().withMessage('Your gender is required'),], authenticate, validate, Auth.updateProfile);
+  check('firstname').not().isEmpty().withMessage('First name field is required').isAlpha().withMessage("Please enter a valid First name"),
+  check('lastname').not().isEmpty().withMessage('Last name field is required').isAlpha().withMessage("Please enter a valid First name"),
+  check('email').not().isEmpty().withMessage('Email field is required'),
+  check('phone').not().isEmpty().withMessage('Phone field is required').isNumeric().withMessage("Please enter a valid Phone"),
+  check('dob').not().isEmpty().withMessage('Date of birth field is required'),
+  check('physically_disabled').not().isEmpty().withMessage('Please specify if the person is specially abled or not'),
+  check('castcategory_id').not().isEmpty().withMessage('Cast-category field is required').isNumeric().withMessage("Please enter a valid Cast-category"),
+  check('religion_id').not().isEmpty().withMessage('Religion field is required').isNumeric().withMessage("Please enter a valid Religion"),
+  check('nationality').not().isEmpty().withMessage('Nationality field is required').isNumeric().withMessage("Please enter a valid Nationality"),
+  check('blood_group').not().isEmpty().withMessage('Blood group field is required').isNumeric().withMessage("Please enter a valid Blood group"),
+  check('gender').not().isEmpty().withMessage('Your gender is required').isNumeric().withMessage("Please enter a valid Gender"),
+], authenticate, validate, Auth.updateProfile);
   
 router.post('/update-academics', authenticate, Auth.updateAcademics);
 

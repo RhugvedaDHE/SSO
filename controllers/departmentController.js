@@ -131,7 +131,8 @@ exports.registerDepartmentUser = function (req, res) {
                       template,
                       req.body.firstname,
                       userCredentialsdata.username,
-                      userCredentialsdata.password
+                      userCredentialsdata.password,
+                      ""
                     );
                     if (response) {
                       res
