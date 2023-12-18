@@ -77,11 +77,11 @@ exports.uploadDoc = async (req, res) => {
                           callback(null, true);*/
       
       //validations to be done here
-      if(req.body.doc_id == 22){
+      if(req.body.doc_type_id == 22){
 
-      }else if(req.body.doc_id == 20){
+      }else if(req.body.doc_type_id == 20){
 
-      }else if(req.body.doc_id == 23){
+      }else if(req.body.doc_type_id == 23){
 
       }else{
         res

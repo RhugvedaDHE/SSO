@@ -856,7 +856,7 @@ exports.login = function (req, res) {
         "hhheeeaaarrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrr",
         error
       );
-      res.status(400).json(errorResponse(error, 400));
+      res.status(400).json(errorResponse("User Not Found! Please check your username!", 400));
     });
 };
 
