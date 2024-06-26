@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
       UserContact.belongsTo(models.District, {
         foreignKey: 'district_id'
       }),
-      UserContact.belongsTo(models.City, {
+      UserContact.belongsTo(models.Taluka, {
         foreignKey: 'taluka_id'
       })
     }

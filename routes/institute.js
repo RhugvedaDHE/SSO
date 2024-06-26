@@ -13,7 +13,7 @@ router.post('/create', [
     check('name').not().isEmpty().withMessage('Institute name is required'),
     check('type').not().isEmpty().withMessage('Institute type is required'),
     check('address').not().isEmpty().withMessage('Institute address is required'),
-    check('city_id').not().isEmpty().withMessage('City is required'),
+    check('taluka_id').not().isEmpty().withMessage('Taluka is required'),
     check('state_id').not().isEmpty().withMessage('State is required'),
     check('district_id').not().isEmpty().withMessage('District is required'),
     check('village').not().isEmpty().withMessage('Village is required'),

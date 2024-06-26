@@ -23,6 +23,7 @@ let PORT = process.env.PORT;
 const path = require("path");
 const url = require("url");
 const fs = require("fs");
+const { type } = require("os");
 
 const Op = require("sequelize").Op;
 
@@ -41,8 +42,9 @@ exports.uploadDoc = async (req, res) => {
       var temp_file_name = temp_file_arr[0];
 
       var temp_file_extension = temp_file_arr[1];
+      let docTypeId = Number(req.body.doc_type_id);
 
-      if (req.body.doc_type_id == 21) {
+      if (docTypeId == 21) {
         callback(
           null,
           "offer_" +
@@ -66,7 +68,8 @@ exports.uploadDoc = async (req, res) => {
     },
   });
 
-  const maxSize = 30720; //30kb
+  const maxSize = 50720; //30kb
+
   var upload = multer({
     storage: storage,
     fileFilter: function (req, file, callback) {
@@ -75,18 +78,24 @@ exports.uploadDoc = async (req, res) => {
                               return callback(new Error('Only images are allowed'))
                           }
                           callback(null, true);*/
-      
+
+      let docTypeId = Number(req.body.doc_type_id);
+      console.log("BLA BLA:" + typeof docTypeId);
       //validations to be done here
-      if(req.body.doc_type_id == 22){
-
-      }else if(req.body.doc_type_id == 20){
-
-      }else if(req.body.doc_type_id == 23){
-
-      }else{
+      if (docTypeId == 22) {
+      } else if (docTypeId == 20) {
+      } else if (docTypeId == 23) {
+      } else if (
+        docTypeId == 25 ||
+        docTypeId == 26 ||
+        docTypeId == 27
+        // docTypeId == 28 ||
+        // docTypeId == 29
+      ) {
+      } else {
         res
-        .status(400)
-        .json(errorResponse(`Please enter a valid Document id!`, 400));
+          .status(400)
+          .json(errorResponse(`Please enter a valid Document ID!`, 400));
       }
       if (
         file.mimetype === "application/pdf" ||
@@ -103,6 +112,38 @@ exports.uploadDoc = async (req, res) => {
     limits: { fileSize: maxSize },
   }).single("document");
 
+  /* const upload = multer({
+    storage: storage,
+    fileFilter: function (req, file, callback) {
+      // Ensure doc_type_id is available
+      if (!req.body.doc_type_id) {
+        return callback(new Error('doc_type_id is required'), false);
+      }
+  
+      // Convert to integer for comparison
+      const docTypeId = Number(req.body.doc_type_id, 10);
+  
+      // Check for valid document ID
+      const validDocTypeIds = [20, 22, 23, 25, 26, 27];
+      if (!validDocTypeIds.includes(docTypeId)) {
+        return callback(new Error('Please enter a valid Document ID!'), false);
+      }
+  
+      // Check for valid file type
+      if (
+        file.mimetype === "application/pdf" ||
+        file.mimetype === "image/png" ||
+        file.mimetype === "image/jpg" ||
+        file.mimetype === "image/jpeg"
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error('Only images and PDFs are allowed'), false);
+      }
+    },
+    limits: { fileSize: maxSize },
+  }).single("document");*/
+
   upload(req, res, async function (error) {
     if (error) {
       console.log(error);
@@ -118,7 +159,7 @@ exports.uploadDoc = async (req, res) => {
       // };
       // console.log(userDocsData);
       // Save UserDocs in the database
-      docId = req.body.doc_id;
+      docId = Number(req.body.doc_id);
 
       if (docId) {
         //find the file details and unlink the existing file
@@ -441,15 +482,13 @@ exports.createUndertakingPdf = async function (req, res) {
 
     jsondata.push({
       filename: fileName,
-      fileurl: req.protocol + "://" + req.get("host") + "/static/user/" + fileName,
-    })
+      fileurl:
+        req.protocol + "://" + req.get("host") + "/static/user/" + fileName,
+    });
     res
       .status(200)
       .json(
-        success(
-          "Student Undertaking document created successfully!",
-          jsondata
-        )
+        success("Student Undertaking document created successfully!", jsondata)
       );
   }
 };
@@ -522,7 +561,7 @@ exports.downloadSignedUndertakingPdf = async function (req, res) {
   const fs = require("fs");
   const path = require("path");
   const rootPath = "C:/Users/admin/new-sequelize";
-  const url = "http://localhost/E-sign/esign/temp/" + filename ;
+  const url = "http://localhost/E-sign/esign/temp/" + filename;
   const staticLocation = path.join(
     rootPath,
     "/uploads/user",
@@ -532,7 +571,9 @@ exports.downloadSignedUndertakingPdf = async function (req, res) {
     .get(url, { responseType: "stream" })
     .then(async (response) => {
       // Saving file to working directory
-      const writer = await response.data.pipe(fs.createWriteStream(staticLocation));
+      const writer = await response.data.pipe(
+        fs.createWriteStream(staticLocation)
+      );
       console.log("File downloaded and saved successfully.");
       let undertaking_doc_id = await userDocs.findOne({
         where: {
@@ -540,7 +581,7 @@ exports.downloadSignedUndertakingPdf = async function (req, res) {
           doc_type_id: 22,
         },
       });
-     
+
       const userDoc = {
         user_id: userid,
         doc_type_id: 22,
@@ -548,7 +589,7 @@ exports.downloadSignedUndertakingPdf = async function (req, res) {
         createdAt: new Date(),
         updateAt: null,
       };
-      
+
       await userDocs
         .update(userDoc, {
           where: { id: undertaking_doc_id.id },
@@ -569,9 +610,12 @@ exports.downloadSignedUndertakingPdf = async function (req, res) {
             });
 
             //update is_signed in users to true
-            await User.update({is_signed: true}, {
-              where: { id: userid },
-            })            
+            await User.update(
+              { is_signed: true },
+              {
+                where: { id: userid },
+              }
+            );
             res
               .status(200)
               .json(

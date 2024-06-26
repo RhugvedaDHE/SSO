@@ -7,6 +7,7 @@ const { success, errorResponse, validation } = require("../responseApi");
 
 // Create and Save a new Skill
 exports.create = async (req, res) => {
+  console.log("HETEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
   AdditionalSkill.create({
     name: req.body.name,
     doc_type_id: req.body.doc_type_id,

@@ -8,7 +8,7 @@ const UserRole = require("../models").UserRole;
 const UserContact = require("../models").UserContact;
 const Staff = require("../models").Staff;
 const Role = require("../models").Role;
-const City = require("../models").City;
+const Taluka = require("../models").Taluka;
 const State = require("../models").State;
 const Country = require("../models").Country;
 const District = require("../models").District;
@@ -149,7 +149,7 @@ exports.getUserDetails = function (req, res) {
             },
             include: [
               {
-                model: City,
+                model: Taluka,
                 attributes: ["name"],
               },
               {
@@ -275,6 +275,10 @@ exports.getUserDetails = function (req, res) {
 };
 
 exports.register = async function (req, res) {  
+  res
+              .status(200)
+              .json(success("User Details fetched successfully", req.body));
+
   // const result = await sequelize.transaction(async (t) => {
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(req.body.password, salt);
@@ -468,7 +472,6 @@ exports.register = async function (req, res) {
                         reg_certificate: "", //req.certificate.originalname,
                         verified: req.body.verified ? req.body.verified : false,
                         active: req.body.active ? req.body.active : true,
-                        description: req.body.description,
                         createdAt: "",
                         updateAt: null,
                         deletedAt: null,
@@ -862,7 +865,6 @@ exports.login = function (req, res) {
 
 //update profile
 exports.updateProfile = async function (req, res) {
-  console.log("hey there", req.body);
 
   await User.update(
     { status: "RESUB", is_verified: false },
@@ -987,7 +989,7 @@ exports.addStatus = async function (req, res) {
       //update remarks table
       let studentEntrollmentData = await StudentEnrollment.findOne({
         where: {
-          user_id: req.body.user_id,
+          user_id: req.user.id,
         },
       });
 
@@ -1176,13 +1178,6 @@ exports.verifyStudent = async (req, res) => {
   let is_verified = false;
   let status = "";
 
-  // if (JSON.stringify(data).includes(req.body.is_verified)) {
-  //   for (key in data.statuses) {
-  //     if (req.body.is_verified == key) {
-  //       status = data.statuses[key];
-  //     }
-  //   }
-  // }
   let ur = await UserRole.findOne({
     where: {
       user_id: req.user.id,
@@ -1195,15 +1190,15 @@ exports.verifyStudent = async (req, res) => {
     : (is_verified = false);
   const template = message = "";
   if(req.body.status == "VER"){
-      template = "Hello " + req.body.firstname +  "! Your account has been successfully verified on SUGAM Portal!" +
+      template = "Hello User " + req.body.firstname +  "! Your account has been successfully verified on SUGAM Portal!" +
     " You can log in and access the services at our website https://www.sugam.gshec.edu.in - Directorate of Higher Education";
     
       message = "Your account has been successfully Verified!";
   }else if(req.body.status == "REJ"){
-      template = "Hello " + req.body.firstname +  "! Your application has been declined! Please contact the appropriate authority for any queries - Directorate of Higher Education";
+      template = "Hello User " + req.body.firstname +  "! Your application has been declined! Please contact the appropriate authority for any queries - Directorate of Higher Education";
       message = "Your application has been declined!";
   }else if(req.body.status == "INC"){
-      template = "Hello " + req.body.firstname +  "! Your application has been marked as incomplete! " + 
+      template = "Hello User " + req.body.firstname +  "! Your application has been marked as incomplete! " + 
     "Please make the appropriate changes and re-submit the application - Directorate of Higher Education";
       message = "Your application has been reverted back!";
   }

@@ -62,7 +62,7 @@ var countryRouter = require("./routes/country");
 var roleRouter = require("./routes/role");
 var stateRouter = require("./routes/state");
 var districtRouter = require("./routes/district");
-var cityRouter = require("./routes/city");
+var talukaRouter = require("./routes/taluka");
 var instituteTypeRouter = require("./routes/instituteType");
 var employmentTypeRouter = require("./routes/employmentType");
 var serviceRouter = require("./routes/service");
@@ -100,6 +100,7 @@ var menuItemRouter = require("./routes/menuItem");
 var notificationRouter = require("./routes/notification");
 var staffRemarksRouter = require("./routes/staffRemarks");
 var companyRemarksRouter = require("./routes/companyRemarks");
+var bankRouter = require("./routes/bank");
 
 //APIs by Paresh A.
 var companyRouter = require("./routes/company");
@@ -130,7 +131,7 @@ application.use("/api/v1/country", countryRouter);
 application.use("/api/v1/role", roleRouter);
 application.use("/api/v1/state", stateRouter);
 application.use("/api/v1/district", districtRouter);
-application.use("/api/v1/city", cityRouter);
+application.use("/api/v1/taluka", talukaRouter);
 application.use("/api/v1/insttype", instituteTypeRouter);
 application.use("/api/v1/emptype", employmentTypeRouter);
 application.use("/api/v1/service", serviceRouter);
@@ -171,6 +172,7 @@ application.use("/api/v1/menuitem", menuItemRouter);
 application.use("/api/v1/notification", notificationRouter);
 application.use("/api/v1/staff-remarks", staffRemarksRouter);
 application.use("/api/v1/company-remarks", companyRemarksRouter);
+application.use("/api/v1/bank", bankRouter);
 
 //APIs by Paresh A.
 application.use("/api/v1/company", companyRouter);

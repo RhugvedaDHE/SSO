@@ -46,6 +46,8 @@ module.exports = (sequelize, DataTypes) => {
     physically_disabled: DataTypes.BOOLEAN,
     castcategory_id: DataTypes.INTEGER,
     religion_id: DataTypes.INTEGER,
+    reg_no: DataTypes.INTEGER,
+    phone_sec: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: 1

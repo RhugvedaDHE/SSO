@@ -2,7 +2,7 @@ const express = require("express");
 const Sequelize = require("sequelize");
 const db = require("../models");
 const InstituteType = require("../models").InstituteType;
-const City = require("../models").City;
+const Taluka = require("../models").Taluka;
 const State = require("../models").State;
 const District = require("../models").District;
 const Country = require("../models").Country;
@@ -23,7 +23,7 @@ exports.create = function (req, res) {
     name: req.body.name,
     type: req.body.type,
     address: req.body.address,
-    city_id: req.body.city_id,
+    taluka_id: req.body.taluka_id,
     state_id: req.body.state_id,
     district_id: req.body.district_id,
     village: req.body.village,
@@ -52,7 +52,7 @@ exports.get = async function (req, res) {
         attributes: ["name", "is_active"],
       },
       {
-        model: City,
+        model: Taluka,
         attributes: ["name", "is_active"],
       },
       {
@@ -91,7 +91,7 @@ exports.gettype = async function (req, res) {
         attributes: ["name", "is_active"],
       },
       {
-        model: City,
+        model: Taluka,
         attributes: ["name", "is_active"],
       },
       {
