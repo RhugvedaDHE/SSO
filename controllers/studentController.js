@@ -303,7 +303,7 @@ exports.getStudentDetails = async function (req, res) {
         "physically_disabled",
         "reg_no",
         "phone_sec",
-        "castcategory_id",
+        "castecategory_id",
         "religion_id",
         "createdAt",
       ],
@@ -652,8 +652,8 @@ exports.getStudentDetails = async function (req, res) {
       lastname: userdetails.lastname,
       gender: userdetails.gender,
       gender_title: genderDetails ? genderDetails.name : null,
-      castcategory: userdetails.castcategory_id,
-      castcategory_title: userdetails.CasteCategory
+      castecategory: userdetails.castecategory_id,
+      castecategory_title: userdetails.CasteCategory
         ? userdetails.CasteCategory.name
         : null,
       religion: userdetails.religion_id,

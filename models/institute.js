@@ -47,6 +47,7 @@ module.exports = (sequelize, DataTypes) => {
     hoi_id: DataTypes.INTEGER,
     contact_person_name: DataTypes.STRING,
     contact_person_email: DataTypes.STRING,
+    mobile: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true

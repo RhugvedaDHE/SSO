@@ -117,6 +117,75 @@ router.post(
   Auth.login
 );
 
+
+router.post(
+  "/register-epramaan",
+  [
+    check("username").not().isEmpty().withMessage("Your username is required"),
+    check("role_id")
+      .not()
+      .isEmpty()
+      .withMessage("Your role is required")
+      .isNumeric()
+      .withMessage("Please select a valid Role"),
+    check("institute_type_id")
+      .not()
+      .isEmpty()
+      .withMessage("Institute type id is required")
+      .isNumeric()
+      .withMessage("Please select a valid Institute type"),
+    check("institute_id")
+      .not()
+      .isEmpty()
+      .withMessage("Institute id is required")
+      .isNumeric()
+      .withMessage("Please select a valid Institute"),
+    check("programme_id")
+      .not()
+      .isEmpty()
+      .withMessage("Your Programme is required")
+      .isNumeric()
+      .withMessage("Please select a valid Programme"),
+    check("class")
+      .not()
+      .isEmpty()
+      .withMessage("Your class is required")
+      .isNumeric()
+      .withMessage("Please select a valid Class"),
+    check("current_semester")
+      .not()
+      .isEmpty()
+      .withMessage("Your Current Semester is required")
+      .isNumeric()
+      .withMessage("Please select a valid Current Semester"),
+    check("firstname")
+      .not()
+      .isEmpty()
+      .withMessage("Your First name is required")
+      .isAlpha()
+      .withMessage("First name must have only alphabets"),
+    check("lastname")
+      .not()
+      .isEmpty()
+      .withMessage("Your Last name is required")
+      .isAlpha()
+      .withMessage("Last name must have only alphabets"),
+    check("email")
+      .isEmail()
+      .withMessage("Please provide a valid email address"),
+    check("phone")
+      .not()
+      .isEmpty()
+      .withMessage("Phone number is required")
+      .matches(/^[0-9]{10}$/)
+      .withMessage("Phone number must be 10 digits")
+      .isNumeric()
+      .withMessage("Phone number must contain only numeric digits"),
+  ],
+  validate,
+  Auth.createStudentDetailsForEpramaan
+);
+
 router.post("/refresh-token", Auth.refreshToken);
 
 router.post(
@@ -455,38 +524,37 @@ router.post(
   [
     check("firstname").isAlpha().withMessage("Please enter a valid First name"),
     check("lastname").isAlpha().withMessage("Please enter a valid First name"),
-    check("email").not().isEmail().withMessage("Please enter a valid Email"),
+    check("email").isEmail().withMessage("Please enter a valid Email"),
     check("phone")
       .matches(/^[0-9]{10}$/)
       .withMessage("Phone number must be 10 digits")
       .isNumeric()
       .withMessage("Phone number must contain only numeric digits"),
-    check("dob")
-      .isDate()
-      .withMessage("Please select a valid Date of birth")
-      .custom((value) => {
-        const dob = new Date(value);
-        const today = new Date();
-        const age = today.getFullYear() - dob.getFullYear();
-        const monthDifference = today.getMonth() - dob.getMonth();
-        const dayDifference = today.getDate() - dob.getDate();
+      check('dob')
+        .isDate().withMessage('Please select a valid Date of birth')
+        .custom((value) => {
+            const dob = new Date(value);
+            console.log(dob)
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDifference = today.getMonth() - dob.getMonth();
+            const dayDifference = today.getDate() - dob.getDate();
 
-        if (
-          age > 15 ||
-          (age === 15 && monthDifference > 0) ||
-          (age === 15 && monthDifference === 0 && dayDifference > 0)
-        ) {
-          throw new Error("Age must not exceed 15 years");
-        }
+            if (
+                age > 15 ||
+                (age === 15 && (monthDifference > 0 || (monthDifference === 0 && dayDifference >= 0)))
+            ) {
+                throw new Error('Age must not exceed 15 years');
+            }
 
-        return true;
-      }),
+            return true;
+        }),
     check("physically_disabled")
       .isBoolean()
       .withMessage("Please specify if the person is specially abled or not"),
-    check("castcategory_id")
+    check("castecategory_id")
       .isNumeric()
-      .withMessage("Please enter a valid Cast-category"),
+      .withMessage("Please enter a valid Caste-category"),
     check("religion_id")
       .not()
       .isEmpty()
@@ -511,10 +579,10 @@ router.post(
       .withMessage("Your gender is required")
       .isNumeric()
       .withMessage("Please enter a valid Gender"),
-    check("state").isNumeric().withMessage("Please select a valid State"),
-    check("district").isNumeric().withMessage("Please select a valid District"),
-    check("taluka").isNumeric().withMessage("Please select a valid Taluka"),
-    check("country").isNumeric().withMessage("Please select a valid Country"),
+    check("state_id").isNumeric().withMessage("Please select a valid State"),
+    check("district_id").isNumeric().withMessage("Please select a valid District"),
+    check("taluka_id").isNumeric().withMessage("Please select a valid Taluka"),
+    check("country_id").isNumeric().withMessage("Please select a valid Country"),
     check("village").isAlpha().withMessage("Please select a valid Village"),
     check("pincode")
       .matches(/^[0-9]{6}$/)

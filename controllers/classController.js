@@ -20,6 +20,7 @@ exports.get = async function (req, res) {
   await Class.findAll({
     where: {
       is_active: true,
+      institute_type_id: req.params.institute_type_id
     },
     include: [
       {

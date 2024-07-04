@@ -32,6 +32,7 @@ exports.create = function (req, res) {
     hoi_id: req.body.hoi_id,
     contact_person_name: req.body.contact_person_name,
     contact_person_email: req.body.contact_person_email,
+    mobile: req.body.mobile,
   })
     .then((institutes) => {
       res.status(200).json(success("Institute created successfully!"));

@@ -11,7 +11,8 @@ console.log("In bloodGroup routes");
 
 // Create a new BloodGroup
 router.post("/",[
-    check('name').not().isEmpty().withMessage('BloodGroup name is required'),
+    check('name').not().isEmpty().withMessage('BloodGroup name is required')
+    .matches(/^(A|B|AB|O)[+-]$/).withMessage('Invalid blood group format'),
 ], validate, bloodGroup.create);
 
 // Retrieve all bloodGroup
@@ -24,7 +25,10 @@ router.get("/active", bloodGroup.findAllActive);
 router.post("/:id", bloodGroup.findOne);
 
 // Update a BloodGroup with id
-router.put("/:id", bloodGroup.update);
+router.put("/:id",[
+    check('name').not().isEmpty().withMessage('BloodGroup name is required')
+    .matches(/^(A|B|AB|O)[+-]$/).withMessage('Invalid blood group format'),
+], bloodGroup.update);
 
 // Delete a BloodGroup with id
 router.delete("/:id", bloodGroup.delete);

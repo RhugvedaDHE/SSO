@@ -1,18 +1,27 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-require('dotenv').config();
-const {check} = require('express-validator');
-const validate = require('../middlewares/validate');
-const casteCategory = require('../controllers/castecategoryController');
+require("dotenv").config();
+const { check } = require("express-validator");
+const validate = require("../middlewares/validate");
+const casteCategory = require("../controllers/castecategoryController");
 //var multer = require('multer');
-
 
 console.log("In casteCategory routes");
 
 // Create a new CasteCategory
-router.post("/",[
-    check('name').not().isEmpty().withMessage('CasteCategory name is required'),
-], validate, casteCategory.create);
+router.post(
+  "/",
+  [
+    check("name")
+      .not()
+      .isEmpty()
+      .withMessage("CasteCategory name is required")
+      .isAlpha()
+      .withMessage("Cast Category name should contain only alphabets"),
+  ],
+  validate,
+  casteCategory.create
+);
 
 // Retrieve all casteCategory
 router.get("/all", casteCategory.findAll);
@@ -24,7 +33,18 @@ router.get("/active", casteCategory.findAllActive);
 router.post("/:id", casteCategory.findOne);
 
 // Update a CasteCategory with id
-router.put("/:id", casteCategory.update);
+router.put(
+  "/:id",
+  [
+    check("name")
+      .not()
+      .isEmpty()
+      .withMessage("CasteCategory name is required")
+      .isAlpha()
+      .withMessage("Cast Category name should contain only alphabets"),
+  ],
+  casteCategory.update
+);
 
 // Delete a CasteCategory with id
 router.delete("/:id", casteCategory.delete);

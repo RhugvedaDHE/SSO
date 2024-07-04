@@ -101,6 +101,7 @@ var notificationRouter = require("./routes/notification");
 var staffRemarksRouter = require("./routes/staffRemarks");
 var companyRemarksRouter = require("./routes/companyRemarks");
 var bankRouter = require("./routes/bank");
+var studentEnrollmentRouter = require("./routes/studentEnrollment");
 
 //APIs by Paresh A.
 var companyRouter = require("./routes/company");
@@ -173,6 +174,7 @@ application.use("/api/v1/notification", notificationRouter);
 application.use("/api/v1/staff-remarks", staffRemarksRouter);
 application.use("/api/v1/company-remarks", companyRemarksRouter);
 application.use("/api/v1/bank", bankRouter);
+application.use("/api/v1/student-enrollment", studentEnrollmentRouter);
 
 //APIs by Paresh A.
 application.use("/api/v1/company", companyRouter);
