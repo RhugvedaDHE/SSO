@@ -11,9 +11,9 @@ router.post(
     check("name")
       .not()
       .isEmpty()
-      .withMessage("Class name is required")
-      .isAlpha()
-      .withMessage("Class name should contain only alphabets"),    
+      .withMessage("Class name is required"),
+      // .isAlpha()
+      // .withMessage("Class name should contain only alphabets"),    
     check("institute_type_id")
       .not()
       .isEmpty()
