@@ -17,7 +17,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: { model: 'InstituteProgrammes', key: 'id' },
       },
-      current_class: {
+      current_class_id: {
         type: Sequelize.INTEGER,
         allowNull: true
       },

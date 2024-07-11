@@ -88,7 +88,7 @@ exports.findAll = async (req, res) => {
   var condition = studentEnrollmentId
     ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } }
     : null;
-    res.status(200).json(success("Select only one last qualifying semester!", last_qual_year));
+    
   let data = await StudentMarks.findAll({
     order: [["createdAt", "DESC"]],
     where: condition,
@@ -104,9 +104,6 @@ exports.findAll = async (req, res) => {
     ],
   });
 
-  res
-        .status(200)
-        .json(success("Student Marks fetched successfully!", data));
   if (data) {
     let finalData = [];
 

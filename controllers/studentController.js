@@ -51,7 +51,7 @@ exports.getStudentList = async function (req, res) {
     attributes: [
       "user_id",
       "id",
-      "current_class",
+      "current_class_id",
       "academic_year",
       "institute_programme_id",
       "current_semester",
@@ -141,7 +141,7 @@ exports.getStudentList = async function (req, res) {
         subject_name: subjectDetails.name,
         board_univ: instituteProgramme.board_univ,
         current_semester: d.current_semester,
-        current_class: d.Class,
+        current_class_id: d.Class,
       };
       //END student academic details-----------------------------------
 
@@ -184,7 +184,7 @@ exports.getInstituteStudentList = async function (req, res) {
   const instituteId = req.params.id;
 
   var query = `SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed, s.id as student_enrollment_id, s.subject_id, subjects.id as sid, subjects.name as subject_name, progs.name as pname, class.id as current_class_id, class.name as current_class_name FROM public."StudentEnrollments" as s`;
-  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class" = "class"."id"`;
+  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class_id" = "class"."id"`;
   query += ` INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s."institute_programme_id"`;
   query += ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
   query += ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
@@ -209,7 +209,7 @@ exports.getInstituteStudentOtherStatus = async function (req, res) {
   const instituteId = req.params.id;
 
   var query = `SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed, s.id as student_enrollment_id, s.subject_id, subjects.id as sid, subjects.name as subject_name, progs.name as pname, class.id as current_class_id, class.name as current_class_name FROM public."StudentEnrollments" as s`;
-  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class" = "class"."id"`;
+  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class_id" = "class"."id"`;
   query += ` INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s."institute_programme_id"`;
   query += ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
   query += ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
@@ -234,7 +234,7 @@ exports.getVerifiedInstituteStudentList = async function (req, res) {
   const instituteId = req.params.id;
   var jsondata = [];
   var query = ` SELECT DISTINCT(s.user_id),up.*,s.*,s.id as student_enrollment_id, ur.user_id as userrole, userpersonal.firstname as verifiedby_fname,userpersonal.lastname as verifiedby_lname, users.is_verified, users.verified_by as verifiedby, users.status, users.is_signed, progs.name as pname, s.subject_id, subjects.id as sid, subjects.name as subject_name, class.id as current_class_id, class.name as current_class_name FROM public."StudentEnrollments" as s INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s.institute_programme_id`;
-  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class" = "class"."id"`;
+  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class_id" = "class"."id"`;
   query += ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
   query += ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
   query += ` INNER JOIN public."Users" as users ON up.user_id = users.id`;

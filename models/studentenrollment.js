@@ -18,16 +18,16 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'institute_programme_id'
       }),
       StudentEnrollment.belongsTo(models.Class, {
-        foreignKey: 'current_class'
+        foreignKey: 'current_class_id'
       })
     }
   }
   StudentEnrollment.init({
     user_id: DataTypes.INTEGER,
     institute_programme_id: DataTypes.INTEGER,
-    current_class: DataTypes.INTEGER,
+    current_class_id: DataTypes.INTEGER,
     academic_year: DataTypes.STRING,
-    current_semester: DataTypes.STRING,
+    current_semester_id: DataTypes.INTEGER,
     section: DataTypes.STRING,
     subject_id: DataTypes.INTEGER,
     is_active: {

@@ -166,7 +166,7 @@ exports.getUserDetails = function (req, res) {
                 id: req.user.role_id,
               },
             });
-            console.log("USERDETAILS", userPersonalDetails)
+            console.log("USERDETAILS", userPersonalDetails);
             const response = {
               User: userPersonalDetails,
               physically_disabled_title: userPersonalDetails.physically_disabled
@@ -328,7 +328,7 @@ exports.register = async function (req, res) {
                           StudentEnrollment.create({
                             user_id: user.id,
                             institute_programme_id: instprog.id,
-                            current_class: req.body.class,
+                            current_class_id: req.body.class,
                             current_semester: req.body.current_semester,
                             subject_id: req.body.subject_id,
                           })
@@ -1314,7 +1314,7 @@ exports.createStudentDetailsForEpramaan = async function (req, res) {
                           StudentEnrollment.create({
                             user_id: user.id,
                             institute_programme_id: instprog.id,
-                            current_class: req.body.class,
+                            current_class_id: req.body.class,
                             current_semester: req.body.current_semester,
                             subject_id: req.body.subject_id,
                           })
@@ -1330,6 +1330,21 @@ exports.createStudentDetailsForEpramaan = async function (req, res) {
                                 template
                               );
 
+                              console.log(response);
+                              tokendata = {
+                                username: user.username,
+                                userId: user.id,
+                                userRole: role.role_id,
+                              };
+
+                              var token = jwt.sign(
+                                JSON.parse(JSON.stringify(tokendata)),
+                                process.env.JWT_SECRET,
+                                {
+                                  expiresIn: 120000,
+                                }
+                              );
+
                               var response =
                                 notificationController.createNotification(
                                   49,
@@ -1337,11 +1352,11 @@ exports.createStudentDetailsForEpramaan = async function (req, res) {
                                   "Registration",
                                   "Your Resgistration has been created Successfully! "
                                 );
-                              console.log(response);
+
                               res
                                 .status(200)
                                 .json(
-                                  success("Student-User created successfully")
+                                  success("Student-User created successfully", token)
                                 );
                             })
                             .catch((error) => {

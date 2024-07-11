@@ -40,4 +40,43 @@ router.post("/", [
       .withMessage("Please enter a valid Subject"),
 ], validate, authenticate, studentEnrollment.update);
 
+router.post("/create", [
+  // check("institute_id")
+  //   .not()
+  //   .isEmpty()
+  //   .withMessage("Your Institute is required")
+  //   .isNumeric()
+  //   .withMessage("Please enter a valid Institute"),
+  //   check("programme_id")
+  //   .not()
+  //   .isEmpty()
+  //   .withMessage("Your Programme is required")
+  //   .isNumeric()
+  //   .withMessage("Please enter a valid Programme"),
+  check("user_id")
+    .not()
+    .isEmpty()
+    .withMessage("User is required")
+    .isNumeric()
+    .withMessage("Please enter a valid User"),
+  check("inst_prog_id")
+    .not()
+    .isEmpty()
+    .withMessage("Your Institute-Programme is required")
+    .isNumeric()
+    .withMessage("Please enter a valid Institute-Programme"),
+    check("current_class_id")
+    .not()
+    .isEmpty()
+    .withMessage("Your Class is required")
+    .isNumeric()
+    .withMessage("Please enter a valid Class"),
+    check("subject_id")
+    .not()
+    .isEmpty()
+    .withMessage("Your Subject is required")
+    .isNumeric()
+    .withMessage("Please enter a valid Subject"),
+], validate, studentEnrollment.create);
+
 module.exports = router;

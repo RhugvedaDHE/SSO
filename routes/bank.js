@@ -3,7 +3,7 @@ const router = express.Router();
 require("dotenv").config();
 const { check } = require("express-validator");
 const validate = require("../middlewares/validate");
-const Bank = require("../controllers/bankController");
+const UserBank = require("../controllers/bankController");
 const authenticate = require("../middlewares/authenticate");
 
 router.post(
@@ -35,13 +35,17 @@ router.post(
       .withMessage("Branch name is required")
       .isAlpha()
       .withMessage("Branch name should contain only alphabets"),
+    check("bank_address")
+      .not()
+      .isEmpty()
+      .withMessage("Bank Address is required")
   ],
   validate,
   authenticate,
-  Bank.create
+  UserBank.create
 );
 
-router.get("/get", authenticate, Bank.get);
+router.get("/get", authenticate, UserBank.get);
 
 router.post(
   "/update",
@@ -72,9 +76,15 @@ router.post(
       .withMessage("Branch name is required")
       .isAlpha()
       .withMessage("Branch name should contain only alphabets"),
+    check("bank_address")
+      .not()
+      .isEmpty()
+      .withMessage("Bank Address is required")
   ],
   validate,
   authenticate,
-  Bank.update
+  UserBank.update
 );
+
+router.get("/validateIFSC", authenticate, UserBank.validateIFSC);
 module.exports = router;
