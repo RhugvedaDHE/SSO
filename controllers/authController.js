@@ -8,7 +8,7 @@ const UserRole = require("../models").UserRole;
 const UserContact = require("../models").UserContact;
 const Staff = require("../models").Staff;
 const Role = require("../models").Role;
-const City = require("../models").City;
+const Taluka = require("../models").Taluka;
 const State = require("../models").State;
 const Country = require("../models").Country;
 const District = require("../models").District;
@@ -44,6 +44,7 @@ const { response } = require("express");
 //change the function. make generic. if the type is institute, fetch institute details. if user belongs to dept, fetch dept details. if the user belongs to service,
 //fetch his
 exports.getUserDetails = function (req, res) {
+  let queryOptions = {};
   // var studentDetails =[];
   UserPersonalDetails.findOne({
     where: {
@@ -57,8 +58,6 @@ exports.getUserDetails = function (req, res) {
     ],
   })
     .then((userPersonalDetails) => {
-      
-
       UserRole.findAll({
         attributes: [],
         where: {
@@ -71,13 +70,11 @@ exports.getUserDetails = function (req, res) {
           },
         ],
       })
-        .then(async (userRole) => {
-          
+        .then(async (userRole) => {          
           let user_roles = [];
           //if not student
           let cio_name_ur;
           for (ur of userRole) {
-            
             if (ur.Role.name == "Student") {
               let student = await StudentEnrollment.findOne({
                 where: {
@@ -105,7 +102,7 @@ exports.getUserDetails = function (req, res) {
                 },
                 attributes: ["cio_id"],
               };
-             
+              
               if (ur.Role.type == "dept") {
                 queryOptions.include = ["Department"];
               } else if (ur.Role.type == "company") {
@@ -114,11 +111,10 @@ exports.getUserDetails = function (req, res) {
                 ur.Role.type == "institute" &&
                 ur.Role.name != "Student"
               ) {
-                
                 queryOptions.include = ["Institute"];
-               
-              } else if (ur.Role.type == "service") {
-                console.log("Service ut is oitsbhdbvjhbsd");
+              } 
+            
+              else if (ur.Role.type == "service") {
                 queryOptions.include = [Service];
               }
 
@@ -149,7 +145,7 @@ exports.getUserDetails = function (req, res) {
             },
             include: [
               {
-                model: City,
+                model: Taluka,
                 attributes: ["name"],
               },
               {
@@ -165,13 +161,14 @@ exports.getUserDetails = function (req, res) {
                 attributes: ["name"],
               },
             ],
-          }).then(async (userContact) => {
+          }).then(async (userContact) => {           
             let selectedRole = await Role.findOne({
               attributes: ["id", "name", "type"],
               where: {
                 id: req.user.role_id,
               },
             });
+            console.log("USERDETAILS", userPersonalDetails);
             const response = {
               User: userPersonalDetails,
               physically_disabled_title: userPersonalDetails.physically_disabled
@@ -237,7 +234,7 @@ exports.getUserDetails = function (req, res) {
                 queryOptions.include = [Service];
               }
 
-              cio = await EntityUser.findOne(queryOptions);
+              cio = await EntityUser.findOne(queryOptions);             
 
               cio_name =
                 selectedRole.type == "dept"
@@ -252,7 +249,6 @@ exports.getUserDetails = function (req, res) {
                   : null;
               response.type = cio;
             }
-
             response.selected_role = {
               id: selectedRole.id,
               name: selectedRole.name,
@@ -274,7 +270,7 @@ exports.getUserDetails = function (req, res) {
     });
 };
 
-exports.register = async function (req, res) {  
+exports.register = async function (req, res) {
   // const result = await sequelize.transaction(async (t) => {
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(req.body.password, salt);
@@ -333,15 +329,21 @@ exports.register = async function (req, res) {
                           StudentEnrollment.create({
                             user_id: user.id,
                             institute_programme_id: instprog.id,
-                            current_class: req.body.class,
+                            current_class_id: req.body.class,
+                            current_semester_id: req.body.current_semester,
                             subject_id: req.body.subject_id,
                           })
                             .then((studentEnrollment) => {
                               const template =
-                              "Hello " + req.body.firstname +  "! Your application has been successfully submitted on SUGAM Portal! " + 
-                              "Your profile is pending for verification.-Directorate of Higher Education.";
+                                "Hello " +
+                                req.body.firstname +
+                                "! Your application has been successfully submitted on SUGAM Portal! " +
+                                "Your profile is pending for verification.-Directorate of Higher Education.";
 
-                              var responseSMS = SMSNotification(req.body.phone, template);
+                              var responseSMS = SMSNotification(
+                                req.body.phone,
+                                template
+                              );
 
                               var response =
                                 notificationController.createNotification(
@@ -401,32 +403,38 @@ exports.register = async function (req, res) {
                                   user_id: user.id,
                                   entity_type_id: 1,
                                   cio_id: req.body.institute_id,
-                                  active: req.body.active ? req.body.active : true,
+                                  active: req.body.active
+                                    ? req.body.active
+                                    : true,
                                 };
 
                                 //console.log(companyHRData);
-                                EntityUser.create(staffData)
-                                  .then((staff) => {
-                                    const template =
-                                    "Hello " + req.body.firstname +  "! Your application has been successfully submitted on SUGAM Portal! " + 
+                                EntityUser.create(staffData).then((staff) => {
+                                  const template =
+                                    "Hello " +
+                                    req.body.firstname +
+                                    "! Your application has been successfully submitted on SUGAM Portal! " +
                                     "Your profile is pending for verification.-Directorate of Higher Education.";
 
-                                    var responseSMS = SMSNotification(req.body.phone, template);
+                                  var responseSMS = SMSNotification(
+                                    req.body.phone,
+                                    template
+                                  );
 
-                                    var response =
-                                      notificationController.createNotification(
-                                        49,
-                                        userRole.id,
-                                        "Registration",
-                                        "Your Resgistration has been created Successfully! "
-                                      );
+                                  var response =
+                                    notificationController.createNotification(
+                                      49,
+                                      userRole.id,
+                                      "Registration",
+                                      "Your Resgistration has been created Successfully! "
+                                    );
 
-                                    res
+                                  res
                                     .status(200)
                                     .json(
                                       success("Staff-User created successfully")
                                     );
-                                  });                               
+                                });
                               })
                               .catch((error) => {
                                 res
@@ -468,7 +476,6 @@ exports.register = async function (req, res) {
                         reg_certificate: "", //req.certificate.originalname,
                         verified: req.body.verified ? req.body.verified : false,
                         active: req.body.active ? req.body.active : true,
-                        description: req.body.description,
                         createdAt: "",
                         updateAt: null,
                         deletedAt: null,
@@ -488,10 +495,15 @@ exports.register = async function (req, res) {
                             .then((HR) => {
                               //send mobile OTP
                               const template =
-                              "Hello " + req.body.name +  "! Your application has been successfully submitted on SUGAM Portal! " + 
-                              "Your profile is pending for verification.-Directorate of Higher Education.";
+                                "Hello " +
+                                req.body.name +
+                                "! Your application has been successfully submitted on SUGAM Portal! " +
+                                "Your profile is pending for verification.-Directorate of Higher Education.";
 
-                              var responseSMS = SMSNotification(req.body.phone, template);
+                              var responseSMS = SMSNotification(
+                                req.body.phone,
+                                template
+                              );
 
                               var response =
                                 notificationController.createNotification(
@@ -856,14 +868,16 @@ exports.login = function (req, res) {
         "hhheeeaaarrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrr",
         error
       );
-      res.status(400).json(errorResponse("User Not Found! Please check your username!", 400));
+      res
+        .status(400)
+        .json(
+          errorResponse("User Not Found! Please check your username!", 400)
+        );
     });
 };
 
 //update profile
 exports.updateProfile = async function (req, res) {
-  console.log("hey there", req.body);
-
   await User.update(
     { status: "RESUB", is_verified: false },
     { where: { id: req.user.id } }
@@ -987,7 +1001,7 @@ exports.addStatus = async function (req, res) {
       //update remarks table
       let studentEntrollmentData = await StudentEnrollment.findOne({
         where: {
-          user_id: req.body.user_id,
+          user_id: req.user.id,
         },
       });
 
@@ -1105,18 +1119,20 @@ exports.signUndertaking = async function (req, res) {
       user.status = "SUB";
       user.save();
 
-      const template = "Hello " + req.body.firstname +  "! Your application has been reverted back! " + 
-      "Please make the appropriate changes and re-submit the application - Directorate of Higher Education";
+      const template =
+        "Hello " +
+        req.body.firstname +
+        "! Your application has been reverted back! " +
+        "Please make the appropriate changes and re-submit the application - Directorate of Higher Education";
 
       var responseSMS = SMSNotification(req.body.phone, template);
 
-      var response =
-        notificationController.createNotification(
-          49,
-          userRole.id,
-          "Registration",
-          "Your Resgistration has been created Successfully! "
-        );
+      var response = notificationController.createNotification(
+        49,
+        userRole.id,
+        "Registration",
+        "Your Resgistration has been created Successfully! "
+      );
 
       res.status(200).json(success("User Status updated successfully!", user));
     })
@@ -1169,20 +1185,12 @@ exports.checkIfUndertakingSigned = async function (req, res) {
     });
 };
 
-
 // verfify/rejected or student profile mark incomplete
 exports.verifyStudent = async (req, res) => {
   const id = req.body.user_id;
   let is_verified = false;
   let status = "";
 
-  // if (JSON.stringify(data).includes(req.body.is_verified)) {
-  //   for (key in data.statuses) {
-  //     if (req.body.is_verified == key) {
-  //       status = data.statuses[key];
-  //     }
-  //   }
-  // }
   let ur = await UserRole.findOne({
     where: {
       user_id: req.user.id,
@@ -1190,38 +1198,44 @@ exports.verifyStudent = async (req, res) => {
     },
   });
 
-  req.body.status == "VER"
-    ? (is_verified = true)
-    : (is_verified = false);
-  const template = message = "";
-  if(req.body.status == "VER"){
-      template = "Hello " + req.body.firstname +  "! Your account has been successfully verified on SUGAM Portal!" +
-    " You can log in and access the services at our website https://www.sugam.gshec.edu.in - Directorate of Higher Education";
-    
-      message = "Your account has been successfully Verified!";
-  }else if(req.body.status == "REJ"){
-      template = "Hello " + req.body.firstname +  "! Your application has been declined! Please contact the appropriate authority for any queries - Directorate of Higher Education";
-      message = "Your application has been declined!";
-  }else if(req.body.status == "INC"){
-      template = "Hello " + req.body.firstname +  "! Your application has been marked as incomplete! " + 
-    "Please make the appropriate changes and re-submit the application - Directorate of Higher Education";
-      message = "Your application has been reverted back!";
+  req.body.status == "VER" ? (is_verified = true) : (is_verified = false);
+  const template = (message = "");
+  if (req.body.status == "VER") {
+    template =
+      "Hello User " +
+      req.body.firstname +
+      "! Your account has been successfully verified on SUGAM Portal!" +
+      " You can log in and access the services at our website https://www.sugam.gshec.edu.in - Directorate of Higher Education";
+
+    message = "Your account has been successfully Verified!";
+  } else if (req.body.status == "REJ") {
+    template =
+      "Hello User " +
+      req.body.firstname +
+      "! Your application has been declined! Please contact the appropriate authority for any queries - Directorate of Higher Education";
+    message = "Your application has been declined!";
+  } else if (req.body.status == "INC") {
+    template =
+      "Hello User " +
+      req.body.firstname +
+      "! Your application has been marked as incomplete! " +
+      "Please make the appropriate changes and re-submit the application - Directorate of Higher Education";
+    message = "Your application has been reverted back!";
   }
 
   var responseSMS = SMSNotification(req.body.phone, template);
 
-  var response =
-    notificationController.createNotification(
-      49,
-      ur.id,
-      "Profile status",
-      message
-    );
-    
+  var response = notificationController.createNotification(
+    49,
+    ur.id,
+    "Profile status",
+    message
+  );
+
   const updatefields = {
     is_verified: is_verified,
     status: req.body.status,
-    verified_by: ur.id
+    verified_by: ur.id,
   };
 
   User.update(updatefields, {
@@ -1229,28 +1243,151 @@ exports.verifyStudent = async (req, res) => {
   })
     .then((num) => {
       if (num == 1) {
-        return res
-          .status(200)
-          .json(success("Status updated successfully!"));
+        return res.status(200).json(success("Status updated successfully!"));
       } else {
         return res
           .status(400)
-          .json(
-            errorResponse(
-              `Cannot update Status!`,
-              400
-            )
-          );
+          .json(errorResponse(`Cannot update Status!`, 400));
       }
     })
     .catch((err) => {
-      return res
-        .status(400)
-        .json(
-          errorResponse(
-            `Cannot update Status!`,
-            400
-          )
-        );
+      return res.status(400).json(errorResponse(`Cannot update Status!`, 400));
+    });
+};
+
+//requirement for students who log in using e-pramaan
+exports.createStudentDetailsForEpramaan = async function (req, res) {
+  // const result = await sequelize.transaction(async (t) => {
+  // var salt = bcrypt.genSaltSync(10);
+  // var hash = bcrypt.hashSync(req.body.password, salt);
+
+  Role.findOne(
+    { attributes: ["id", "name"] },
+    {
+      where: {
+        id: req.body.role_id,
+      },
+    }
+  )
+    .then((role) => {
+      console.log(role);
+      User.create({
+        username: req.body.username,
+        password: "",
+        phone: req.body.phone,
+        email: req.body.email,
+        status: "REG",
+      })
+        .then((user) => {
+          //save user id and college id in students and staff table
+          UserRole.create({
+            user_id: user.id,
+            role_id: req.body.role_id,
+            preferred_role: true,
+          })
+            .then((userRole) => {
+              UserPersonalDetails.create({
+                user_id: userRole.user_id,
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                phone: req.body.phone,
+                email: req.body.email,
+              })
+                .then((userpersonaldetails) => {
+                  UserContact.create({
+                    user_id: user.id,
+                  }).then((userContact) => {
+                    //check if student
+                    if (req.body.role_id == 7) {
+                      console.log(
+                        "inside studenntttttttttttttttttttttttttttttt"
+                      );
+                      InstituteProgramme.findOne({
+                        attributes: ["id"],
+                        where: {
+                          institute_id: req.body.institute_id,
+                          programme_id: req.body.programme_id,
+                        },
+                      })
+                        .then((instprog) => {
+                          console.log("instprog", instprog);
+                          console.log("instprog", instprog.id);
+                          StudentEnrollment.create({
+                            user_id: user.id,
+                            institute_programme_id: instprog.id,
+                            current_class_id: req.body.class,
+                            current_semester_id: req.body.current_semester,
+                            subject_id: req.body.subject_id,
+                          })
+                            .then((studentEnrollment) => {
+                              const template =
+                                "Hello " +
+                                req.body.firstname +
+                                "! Your application has been successfully submitted on SUGAM Portal! " +
+                                "Your profile is pending for verification.-Directorate of Higher Education.";
+
+                              var responseSMS = SMSNotification(
+                                req.body.phone,
+                                template
+                              );
+
+                              console.log(response);
+                              tokendata = {
+                                username: user.username,
+                                userId: user.id,
+                                userRole: role.role_id,
+                              };
+
+                              var token = jwt.sign(
+                                JSON.parse(JSON.stringify(tokendata)),
+                                process.env.JWT_SECRET,
+                                {
+                                  expiresIn: 120000,
+                                }
+                              );
+
+                              var response =
+                                notificationController.createNotification(
+                                  49,
+                                  userRole.id,
+                                  "Registration",
+                                  "Your Resgistration has been created Successfully! "
+                                );
+
+                              res
+                                .status(200)
+                                .json(
+                                  success("Student-User created successfully", token)
+                                );
+                            })
+                            .catch((error) => {
+                              res.status(400).json(errorResponse(error, 400));
+                            });
+                        })
+                        .catch((error) => {
+                          res.status(400).json(errorResponse("InstProg", 400));
+                        });
+                    } else {
+                      res
+                        .status(400)
+                        .json(errorResponse("Select a valid role!", 400));
+                    }
+                  });
+                })
+                // }) //transaction close
+                .catch((error) => {
+                  res.status(400).json(errorResponse("here", 400));
+                });
+            })
+            .catch((error) => {
+              res.status(400).json(errorResponse(error, 400));
+            });
+        })
+        .catch((error) => {
+          res.status(400).json(errorResponse(error, 400));
+        });
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
     });
 };

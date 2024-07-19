@@ -16,9 +16,9 @@ module.exports = (sequelize, DataTypes) => {
         as: "guardianTypeId",
       });
 
-      StudentGuardian.belongsTo(models.StudentEnrollment, {
-        foreignKey: "student_enrollment_id",
-        as: "studentEnrollmentId",
+      StudentGuardian.belongsTo(models.User, {
+        foreignKey: "user_id",
+        as: "userId",
       });
 
       StudentGuardian.belongsTo(models.Gender, {
@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
       relation_with_user: {
         type: DataTypes.STRING
       },
-      student_enrollment_id: {
+      user_id: {
         type: DataTypes.INTEGER
       },
       first_name: {

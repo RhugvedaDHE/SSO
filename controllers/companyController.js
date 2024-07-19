@@ -13,7 +13,7 @@ const User = require("../models").User;
 const State = require("../models").State;
 const District = require("../models").District;
 const Country = require("../models").Country;
-const City = require("../models").City;
+const Taluka = require("../models").Taluka;
 const UserRole = require("../models").UserRole;
 const Role = require("../models").Role;
 const EntityUser = require("../models").EntityUser;
@@ -213,7 +213,7 @@ exports.create = async (req, res) => {
       district_id: req.body.district_id,
       taluka_id: req.body.taluka_id,
       village_id: req.body.village_id,
-      city_id: req.body.city_id,
+      taluka_id: req.body.taluka_id,
       landmark: req.body.landmark,
       street: req.body.street,
       pincode: req.body.pincode,
@@ -341,7 +341,7 @@ exports.findOne = async function (req, res) {
     },
     include: [
       {
-        model: City,
+        model: Taluka,
         attributes: ["name"],
       },
       {
@@ -465,7 +465,7 @@ exports.userCompanies = async (req, res) => {
   //const ownerTypeId = req.body.ownerTypeId;
   const userId = req.params.id;
 
-  let query = `SELECT c.*,s.name as state_name, d.name as district_name, o.name as country_name, y.name as city_name`;
+  let query = `SELECT c.*,s.name as state_name, d.name as district_name, o.name as country_name, y.name as taluka_name`;
   query += ` FROM public."Companies" as c `;
   query += ` LEFT JOIN public."States" as s ON s."id" = c.state_id`;
   query += ` LEFT JOIN public."Districts" as d ON d."id" = c.district_id`;
@@ -511,7 +511,7 @@ exports.userCompanies = async (req, res) => {
         state_name: c.state_name,
         district_name: c.district_name,
         country_name: c.country_name,
-        city_name: c.city_name,
+        taluka_name: c.taluka_name,
       });
     }
 
@@ -678,7 +678,7 @@ exports.getCompanyDetailsById = async function (req, res) {
     },
     include: [
       {
-        model: City,
+        model: Taluka,
         attributes: ["name"],
       },
       {
@@ -730,12 +730,12 @@ exports.findAllActive = (req, res) => {
 
 /*
  * Get company details for DHE admin
- * Note: As per Rhugveda taluka is considered as city
+ * Note: As per Rhugveda taluka is considered as taluka
  */
 exports.getCompanyDetails = async function (req, res) {
   const companyId = req.params.id;
 
-  let query = `SELECT c.*,s.name as state_name, d.name as district_name, o.name as country_name, y.name as city_name`;
+  let query = `SELECT c.*,s.name as state_name, d.name as district_name, o.name as country_name, y.name as taluka_name`;
   query += ` FROM public."Companies" as c `;
   query += ` LEFT JOIN public."States" as s ON s."id" = c.state_id`;
   query += ` LEFT JOIN public."Districts" as d ON d."id" = c.district_id`;
@@ -781,7 +781,7 @@ exports.getCompanyDetails = async function (req, res) {
         state_name: c.state_name,
         district_name: c.district_name,
         country_name: c.country_name,
-        city_name: c.city_name,
+        taluka_name: c.taluka_name,
       });
     }
 

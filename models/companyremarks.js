@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     userrole_id: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
-      defaultValue: 1
+      defaultValue: true
     }
   }, {
     sequelize,

@@ -10,7 +10,7 @@ const InstituteType = require("../models").InstituteType;
 const Role = require("../models").Role;
 const Department = require("../models").Department;
 const Country = require("../models").Country;
-const City = require("../models").City;
+const Taluka = require("../models").Taluka;
 const State = require("../models").State;
 const District = require("../models").District;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
@@ -186,7 +186,7 @@ exports.getStaffDetails = async function (req, res) {
     },
     include: [
       {
-        model: City,
+        model: Taluka,
         attributes: ["id", "name"],
       },
       {
@@ -214,7 +214,7 @@ exports.getStaffDetails = async function (req, res) {
         model: Institutes,
         include: [
           {
-            model: City,
+            model: Taluka,
             attributes: ["id", "name"],
           },
           {

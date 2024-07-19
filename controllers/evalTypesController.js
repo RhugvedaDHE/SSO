@@ -5,6 +5,7 @@ const { success, errorResponse, validation } = require("../responseApi");
 exports.create = function (req, res) {
   EvalTypes.create({
     name: req.body.name,
+    is_active: true
   })
     .then((evaltypes) => {
       res.status(200).json(success("Evaluation Type created successfully!"));

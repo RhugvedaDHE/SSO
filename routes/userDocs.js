@@ -1,12 +1,12 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-require('dotenv').config();
-const {check} = require('express-validator');
-const validate = require('../middlewares/validate');
-const userDocs = require('../controllers/userdocsController');
-const authenticate = require('../middlewares/authenticate');
+require("dotenv").config();
+const { check } = require("express-validator");
+const validate = require("../middlewares/validate");
+const userDocs = require("../controllers/userdocsController");
+// const userDocs = require("../controllers/userdocsController_new");
+const authenticate = require("../middlewares/authenticate");
 //var multer = require('multer');
-
 
 console.log("In userDocs routes");
 
@@ -16,14 +16,28 @@ console.log("In userDocs routes");
 // ], validate, UserMenuItem.create);
 // req.checkBody('rest_logo', 'Restaurant Logo - Please upload an image Jpeg, Png or Gif').isImage(restLogo);
 
-router.post("/uploaddoc", [
-        // check('doc_type_id').not().isEmpty().withMessage('Document type is required'),
-        // check('file').isImage(file).withMessage('Menu Item is required'),
-    ],
-    //  validate, 
-    authenticate, userDocs.uploadDoc);
-    
-router.get("/download-signed-undertaking/:filename", authenticate, userDocs.downloadSignedUndertakingPdf);
+router.post(
+  "/uploaddoc",
+  [
+    // check("doc_type_id")
+    // .isNumeric().withMessage((value, { req }) => {
+    //     return `The value '${req.body.doc_type_id}' is not a valid document type ID. Please enter a valid numeric ID.`;
+    //   }),   
+    // check('file').isImage(file).withMessage('Menu Item is required'),
+  ],
+  validate,
+  authenticate,
+  userDocs.uploadDoc
+);
+
+// Retrieve all user docs By DocTypeId
+router.get("/by-doc-type/:doc_type_id", authenticate, userDocs.findByDocTypeId);
+
+router.get(
+  "/download-signed-undertaking/:filename",
+  authenticate,
+  userDocs.downloadSignedUndertakingPdf
+);
 
 // Retrieve all user docs
 router.get("/all/:id", userDocs.findAll);
@@ -39,6 +53,6 @@ router.post("/get/:id", userDocs.findOne);
 // Delete a  with id
 router.post("/delete/docs", authenticate, userDocs.delete);
 
-// Create a new 
+// Create a new
 router.delete("/", userDocs.deleteAll);
 module.exports = router;

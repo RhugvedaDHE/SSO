@@ -17,7 +17,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: { model: 'InstituteProgrammes', key: 'id' },
       },
-      current_class: {
+      current_class_id: {
         type: Sequelize.INTEGER,
         allowNull: true
       },
@@ -25,7 +25,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
-      current_semester: {
+      current_semester_id: {
         type: Sequelize.STRING,
         allowNull: true
       },

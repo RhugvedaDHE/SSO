@@ -7,7 +7,7 @@ const Dummy = require('../controllers/dummyController');
 
 
 router.post('/create', [
-    check('name').not().isEmpty().withMessage('City name is required'),
+    check('name').not().isEmpty().withMessage('name is required'),
 ], validate, Dummy.create);
 
 router.get('/get/',  Dummy.get);

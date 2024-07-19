@@ -8,7 +8,7 @@ const UserDocs = require("../models").UserDocs;
 const DocumentType = require("../models").DocumentType;
 const religion = require("../models").religion;
 const Country = require("../models").Country;
-const City = require("../models").City;
+const Taluka = require("../models").Taluka;
 const State = require("../models").State;
 const District = require("../models").District;
 const Gender = require("../models").Gender;
@@ -51,10 +51,10 @@ exports.getStudentList = async function (req, res) {
     attributes: [
       "user_id",
       "id",
-      "current_class",
+      "current_class_id",
       "academic_year",
       "institute_programme_id",
-      "current_semester",
+      "current_semester_id",
     ],
     include: [
       {
@@ -72,8 +72,8 @@ exports.getStudentList = async function (req, res) {
   if (data) {
     var jsondata = [];
     jsondata.push({
-      count: data.length
-    })
+      count: data.length,
+    });
     for (const d of data) {
       let userdetails = await UserPersonalDetails.findOne({
         attributes: ["firstname", "lastname", "email", "phone"],
@@ -140,8 +140,8 @@ exports.getStudentList = async function (req, res) {
         subject_id: subjectDetails.id,
         subject_name: subjectDetails.name,
         board_univ: instituteProgramme.board_univ,
-        current_semester: d.current_semester,
-        current_class: d.Class,        
+        current_semester_id: d.current_semester_id,
+        current_class_id: d.Class,
       };
       //END student academic details-----------------------------------
 
@@ -149,7 +149,7 @@ exports.getStudentList = async function (req, res) {
         user_id: d.user_id,
         student_enrollemnt_id: d.id,
         academic_year: d.academic_year,
-        current_semester: d.current_semester,
+        current_semester_id: d.current_semester_id,
         firstname: userdetails.firstname,
         lastname: userdetails.lastname,
         email: userdetails.email,
@@ -161,7 +161,7 @@ exports.getStudentList = async function (req, res) {
             "/static/user/" +
             userdocs.filename
           : null,
-          status: d.User.status,
+        status: d.User.status,
         institute_id: instituteProgramme.institute_id,
         institute_name: institute.name,
         program_id: instituteProgramme.programme_id,
@@ -182,9 +182,9 @@ exports.getStudentList = async function (req, res) {
 //param :id which is institute ID
 exports.getInstituteStudentList = async function (req, res) {
   const instituteId = req.params.id;
-  
+
   var query = `SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed, s.id as student_enrollment_id, s.subject_id, subjects.id as sid, subjects.name as subject_name, progs.name as pname, class.id as current_class_id, class.name as current_class_name FROM public."StudentEnrollments" as s`;
-  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class" = "class"."id"`;
+  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class_id" = "class"."id"`;
   query += ` INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s."institute_programme_id"`;
   query += ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
   query += ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
@@ -207,9 +207,9 @@ exports.getInstituteStudentList = async function (req, res) {
 //param :id which is institute ID
 exports.getInstituteStudentOtherStatus = async function (req, res) {
   const instituteId = req.params.id;
-  
+
   var query = `SELECT DISTINCT(s.user_id),up.*,s.*, users.is_verified, users.status, users.is_signed, s.id as student_enrollment_id, s.subject_id, subjects.id as sid, subjects.name as subject_name, progs.name as pname, class.id as current_class_id, class.name as current_class_name FROM public."StudentEnrollments" as s`;
-  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class" = "class"."id"`;
+  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class_id" = "class"."id"`;
   query += ` INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s."institute_programme_id"`;
   query += ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
   query += ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
@@ -234,7 +234,7 @@ exports.getVerifiedInstituteStudentList = async function (req, res) {
   const instituteId = req.params.id;
   var jsondata = [];
   var query = ` SELECT DISTINCT(s.user_id),up.*,s.*,s.id as student_enrollment_id, ur.user_id as userrole, userpersonal.firstname as verifiedby_fname,userpersonal.lastname as verifiedby_lname, users.is_verified, users.verified_by as verifiedby, users.status, users.is_signed, progs.name as pname, s.subject_id, subjects.id as sid, subjects.name as subject_name, class.id as current_class_id, class.name as current_class_name FROM public."StudentEnrollments" as s INNER JOIN public."InstituteProgrammes" as ip ON ip.id = s.institute_programme_id`;
-  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class" = "class"."id"`;
+  query += ` LEFT OUTER JOIN "Classes" AS "class" ON "s"."current_class_id" = "class"."id"`;
   query += ` INNER JOIN public."Institutes" as i ON i.id = ip.institute_id`;
   query += ` INNER JOIN public."UserPersonalDetails" as up ON up.user_id = s.user_id`;
   query += ` INNER JOIN public."Users" as users ON up.user_id = users.id`;
@@ -249,11 +249,10 @@ exports.getVerifiedInstituteStudentList = async function (req, res) {
     type: db.Sequelize.QueryTypes.SELECT,
   });
 
-  
-    jsondata.push({
-      count: studentData.length,
-      studentData: studentData
-    })
+  jsondata.push({
+    count: studentData.length,
+    studentData: studentData,
+  });
   return res
     .status(200)
     .json(success("Students fetched successfully!", jsondata));
@@ -275,7 +274,7 @@ exports.getStudentDetails = async function (req, res) {
       "institute_programme_id",
     ],
     where: {
-      is_active: true,
+      is_active: 1,
       user_id: userId,
     },
   });
@@ -302,7 +301,9 @@ exports.getStudentDetails = async function (req, res) {
         "blood_group",
         "nationality",
         "physically_disabled",
-        "castcategory_id",
+        "reg_no",
+        "phone_sec",
+        "castecategory_id",
         "religion_id",
         "createdAt",
       ],
@@ -345,7 +346,7 @@ exports.getStudentDetails = async function (req, res) {
     let studentGuardianResult = await studentGuardian.findAll({
       where: {
         is_active: true,
-        student_enrollment_id: studentEntrollmentData.id,
+        user_id: userId,
       },
       include: [
         {
@@ -482,7 +483,7 @@ exports.getStudentDetails = async function (req, res) {
       program_name: program.name,
       subject_id: subjectDetails.id,
       subject_name: subjectDetails.name,
-      board_univ: instituteProgramme.board_univ,
+      board_university: instituteProgramme.board_university,
       qualification: qualificationData,
     };
     //END student academic details-----------------------------------
@@ -514,7 +515,7 @@ exports.getStudentDetails = async function (req, res) {
     let contactCountryDetails =
       (contactStateDetails =
       contactDistrictDetails =
-      cityAsTalukaDetails =
+      talukaDetails =
         {});
     let genderDetails = {};
     let bloodDetails = {};
@@ -576,13 +577,14 @@ exports.getStudentDetails = async function (req, res) {
       }
 
       if (c.taluka_id) {
-        //city as taluka login by rhug-veda
-        cityAsTalukaDetails = await City.findOne({
+        //taluka as taluka login by rhug-veda
+        talukaDetails = await Taluka.findOne({
           where: {
             id: c.taluka_id,
           },
         });
       }
+
       if (genderDetails === null) {
         genderDetails = {
           name: "",
@@ -609,8 +611,8 @@ exports.getStudentDetails = async function (req, res) {
       if (contactDistrictDetails === null) {
         contactDistrictDetails.name = "";
       }
-      if (cityAsTalukaDetails === null) {
-        cityAsTalukaDetails.name = "";
+      if (talukaDetails === null) {
+        talukaDetails.name = "";
       }
 
       contactData.push({
@@ -623,7 +625,7 @@ exports.getStudentDetails = async function (req, res) {
         district_id: c.district_id,
         district_title: contactDistrictDetails.name,
         taluka_id: c.taluka_id,
-        taluka_title: cityAsTalukaDetails.name,
+        taluka_title: talukaDetails.name,
         village: c.village,
         pincode: c.pincode,
         created_at: c.createdAt,
@@ -650,14 +652,16 @@ exports.getStudentDetails = async function (req, res) {
       lastname: userdetails.lastname,
       gender: userdetails.gender,
       gender_title: genderDetails ? genderDetails.name : null,
-      castcategory: userdetails.castcategory_id,
-      castcategory_title: userdetails.CasteCategory
+      castecategory: userdetails.castecategory_id,
+      castecategory_title: userdetails.CasteCategory
         ? userdetails.CasteCategory.name
         : null,
       religion: userdetails.religion_id,
       religion_title: userdetails.religion ? userdetails.religion.name : null,
       email: userdetails.email,
       phone: userdetails.phone,
+      phone_sec: userdetails.phone_sec,
+      reg_no: userdetails.reg_no,
       dob: userdetails.dob
         ? userdetails.dob.toLocaleDateString("en-ZA").replaceAll("/", "-")
         : null,

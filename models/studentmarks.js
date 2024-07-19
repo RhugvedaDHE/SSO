@@ -39,25 +39,13 @@ module.exports = (sequelize, DataTypes) => {
     student_enrollment_id: {
         type: DataTypes.INTEGER
       },
-      program_id: {
-        type: DataTypes.INTEGER
-      },
       board_university: {
         type: DataTypes.STRING
       },
-      institute_name: {
-        type: DataTypes.STRING
+      semester_id: {
+        type: DataTypes.INTEGER
       },
-      programme_semester: {
-        type: DataTypes.STRING
-      },
-      course: {
-        type: DataTypes.STRING
-      },
-      subject: {
-        type: DataTypes.STRING
-      },
-      year_of_passing: {
+      month_year: {
         type: DataTypes.STRING
       },
       eval_type_id: {
@@ -71,6 +59,12 @@ module.exports = (sequelize, DataTypes) => {
       },
       grade_obtained: {
         type: DataTypes.STRING
+      },
+      last_qual_year: {
+        type: DataTypes.BOOLEAN
+      },
+      userdoc_id: {
+        type: DataTypes.INTEGER
       },
       active: {
         type: DataTypes.BOOLEAN

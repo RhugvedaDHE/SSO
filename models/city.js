@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class City extends Model {
+  class Taluka extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -11,12 +11,12 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      City.belongsTo(models.District, {
+      Taluka.belongsTo(models.District, {
         foreignKey: 'district_id'
     })
     }
   }
-  City.init({
+  Taluka.init({
     name: DataTypes.STRING,
     district_id: DataTypes.INTEGER,
     is_active: {
@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     sequelize,
-    modelName: 'City',
+    modelName: 'Taluka',
   });
-  return City;
+  return Taluka;
 };

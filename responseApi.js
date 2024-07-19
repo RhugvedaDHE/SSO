@@ -122,7 +122,7 @@ exports.EmailNotification = (
 ) => {
   console.log("email microservice", subject);
   try {
-    const response = axios.post("http://192.168.0.109:3002/otp/send-email", {
+    const response = axios.post("http://localhost:3002/otp/send-email", {
       from: from,
       to: to,
       subject: subject,

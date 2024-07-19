@@ -25,7 +25,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
-      castcategory_id: {
+      castecategory_id: {
         type: Sequelize.STRING,
         allowNull: true
       },

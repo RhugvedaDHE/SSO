@@ -45,7 +45,7 @@ exports.create = async (req, res) => {
         .json(success("Company Remarks created successfully!", jsondata));
     })
     .catch((error) => {
-      console.log("errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr", error)
+      console.log("errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr", error);
       res.status(400).json(errorResponse(error, 400));
     });
 };
@@ -54,10 +54,10 @@ exports.create = async (req, res) => {
 exports.findAll = (req, res) => {
   //console.log(req.params.id);
 
-  const entity_user_id = req.body.entity_user_id
+  const entity_user_id = req.body.entity_user_id;
   var condition = entity_user_id
     ? {
-      entity_user_id: { [Op.eq]: entity_user_id },
+        entity_user_id: { [Op.eq]: entity_user_id },
         is_active: true,
       }
     : null;
@@ -79,19 +79,18 @@ exports.findAll = (req, res) => {
     });
 };
 
-
 // Retrieve all CompanyRemarks from the database.
-exports.findByToken = async(req, res) => {
+exports.findByToken = async (req, res) => {
   //console.log(req.params.id);
   let entityUserId = await EntityUser.findOne({
     where: {
       user_id: req.user.id,
     },
   });
- 
+
   var condition = entityUserId.id
     ? {
-      entity_user_id: { [Op.eq]: entityUserId.id },
+        entity_user_id: { [Op.eq]: entityUserId.id },
         is_active: true,
       }
     : null;
@@ -115,7 +114,6 @@ exports.findByToken = async(req, res) => {
 
 // Delete a CompanyRemarks with the specified id in the request
 exports.delete = (req, res) => {
-  
   CompanyRemarks.destroy({
     where: {
       id: req.body.id,
@@ -181,10 +179,6 @@ exports.findOne = async (req, res) => {
         );
     });
 };
-
-
-
-
 
 // Delete all CompanyRemarks from the database.
 exports.deleteAll = (req, res) => {

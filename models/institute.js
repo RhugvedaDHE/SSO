@@ -14,8 +14,8 @@ module.exports = (sequelize, DataTypes) => {
       Institute.belongsTo(models.InstituteType, {
         foreignKey: 'institute_type_id'
       }),
-      Institute.belongsTo(models.City, {
-        foreignKey: 'city_id'
+      Institute.belongsTo(models.Taluka, {
+        foreignKey: 'taluka_id'
       }),
       Institute.belongsTo(models.District, {
         foreignKey: 'district_id'
@@ -39,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     type: DataTypes.STRING,
     address: DataTypes.STRING,
-    city_id: DataTypes.INTEGER,
+    taluka_id: DataTypes.INTEGER,
     district_id: DataTypes.INTEGER,
     state_id: DataTypes.INTEGER,
     country_id: DataTypes.INTEGER,
@@ -47,6 +47,7 @@ module.exports = (sequelize, DataTypes) => {
     hoi_id: DataTypes.INTEGER,
     contact_person_name: DataTypes.STRING,
     contact_person_email: DataTypes.STRING,
+    mobile: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
