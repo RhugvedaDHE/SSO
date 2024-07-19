@@ -12,9 +12,9 @@ router.post(
     check("name")
       .not()
       .isEmpty()
-      .withMessage("Bank name is required")
-      .isAlpha()
-      .withMessage("Bank name should contain only alphabets"),
+      .withMessage("Bank name is required"),
+      // .isAlpha()
+      // .withMessage("Bank name should contain only alphabets"),
     check("account_number")
       .not()
       .isEmpty()

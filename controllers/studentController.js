@@ -54,7 +54,7 @@ exports.getStudentList = async function (req, res) {
       "current_class_id",
       "academic_year",
       "institute_programme_id",
-      "current_semester",
+      "current_semester_id",
     ],
     include: [
       {
@@ -140,7 +140,7 @@ exports.getStudentList = async function (req, res) {
         subject_id: subjectDetails.id,
         subject_name: subjectDetails.name,
         board_univ: instituteProgramme.board_univ,
-        current_semester: d.current_semester,
+        current_semester_id: d.current_semester_id,
         current_class_id: d.Class,
       };
       //END student academic details-----------------------------------
@@ -149,7 +149,7 @@ exports.getStudentList = async function (req, res) {
         user_id: d.user_id,
         student_enrollemnt_id: d.id,
         academic_year: d.academic_year,
-        current_semester: d.current_semester,
+        current_semester_id: d.current_semester_id,
         firstname: userdetails.firstname,
         lastname: userdetails.lastname,
         email: userdetails.email,
@@ -274,7 +274,7 @@ exports.getStudentDetails = async function (req, res) {
       "institute_programme_id",
     ],
     where: {
-      is_active: true,
+      is_active: 1,
       user_id: userId,
     },
   });
@@ -346,7 +346,7 @@ exports.getStudentDetails = async function (req, res) {
     let studentGuardianResult = await studentGuardian.findAll({
       where: {
         is_active: true,
-        student_enrollment_id: studentEntrollmentData.id,
+        user_id: userId,
       },
       include: [
         {
@@ -483,7 +483,7 @@ exports.getStudentDetails = async function (req, res) {
       program_name: program.name,
       subject_id: subjectDetails.id,
       subject_name: subjectDetails.name,
-      board_univ: instituteProgramme.board_univ,
+      board_university: instituteProgramme.board_university,
       qualification: qualificationData,
     };
     //END student academic details-----------------------------------

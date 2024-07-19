@@ -44,6 +44,7 @@ const { response } = require("express");
 //change the function. make generic. if the type is institute, fetch institute details. if user belongs to dept, fetch dept details. if the user belongs to service,
 //fetch his
 exports.getUserDetails = function (req, res) {
+  let queryOptions = {};
   // var studentDetails =[];
   UserPersonalDetails.findOne({
     where: {
@@ -69,7 +70,7 @@ exports.getUserDetails = function (req, res) {
           },
         ],
       })
-        .then(async (userRole) => {
+        .then(async (userRole) => {          
           let user_roles = [];
           //if not student
           let cio_name_ur;
@@ -101,7 +102,7 @@ exports.getUserDetails = function (req, res) {
                 },
                 attributes: ["cio_id"],
               };
-
+              
               if (ur.Role.type == "dept") {
                 queryOptions.include = ["Department"];
               } else if (ur.Role.type == "company") {
@@ -111,13 +112,14 @@ exports.getUserDetails = function (req, res) {
                 ur.Role.name != "Student"
               ) {
                 queryOptions.include = ["Institute"];
-              } else if (ur.Role.type == "service") {
-                console.log("Service ut is oitsbhdbvjhbsd");
+              } 
+            
+              else if (ur.Role.type == "service") {
                 queryOptions.include = [Service];
               }
 
               let cio_ur = await EntityUser.findOne(queryOptions);
-
+             
               cio_name_ur =
                 ur.Role.type == "dept"
                   ? cio_ur.Department.name
@@ -136,7 +138,7 @@ exports.getUserDetails = function (req, res) {
               cio_name: cio_name_ur,
             });
           } //for userRole
-
+          
           UserContact.findOne({
             where: {
               user_id: req.user.id,
@@ -159,7 +161,7 @@ exports.getUserDetails = function (req, res) {
                 attributes: ["name"],
               },
             ],
-          }).then(async (userContact) => {
+          }).then(async (userContact) => {           
             let selectedRole = await Role.findOne({
               attributes: ["id", "name", "type"],
               where: {
@@ -232,7 +234,7 @@ exports.getUserDetails = function (req, res) {
                 queryOptions.include = [Service];
               }
 
-              cio = await EntityUser.findOne(queryOptions);
+              cio = await EntityUser.findOne(queryOptions);             
 
               cio_name =
                 selectedRole.type == "dept"
@@ -247,7 +249,6 @@ exports.getUserDetails = function (req, res) {
                   : null;
               response.type = cio;
             }
-
             response.selected_role = {
               id: selectedRole.id,
               name: selectedRole.name,
@@ -329,7 +330,7 @@ exports.register = async function (req, res) {
                             user_id: user.id,
                             institute_programme_id: instprog.id,
                             current_class_id: req.body.class,
-                            current_semester: req.body.current_semester,
+                            current_semester_id: req.body.current_semester,
                             subject_id: req.body.subject_id,
                           })
                             .then((studentEnrollment) => {
@@ -1315,7 +1316,7 @@ exports.createStudentDetailsForEpramaan = async function (req, res) {
                             user_id: user.id,
                             institute_programme_id: instprog.id,
                             current_class_id: req.body.class,
-                            current_semester: req.body.current_semester,
+                            current_semester_id: req.body.current_semester,
                             subject_id: req.body.subject_id,
                           })
                             .then((studentEnrollment) => {

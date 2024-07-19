@@ -6,10 +6,10 @@ const validate = require('../middlewares/validate');
 const Semester = require('../controllers/semesterController');
 
 
-// router.post('/create', [
-//     check('name').not().isEmpty().withMessage('Semester name is required'),
-// ], validate, Semester.create);
+router.post('/create', [
+    check('name').not().isEmpty().withMessage('Semester name is required'),
+], validate, Semester.create);
 
-// router.get('/get/:programme_id',  Semester.get);
+router.get('/get',  Semester.get);
 
 module.exports = router;

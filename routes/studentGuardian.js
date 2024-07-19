@@ -16,7 +16,7 @@ router.post("/",[
 ], authenticate, studentGuardian.create);
 
 // Retrieve all student's Guardian
-router.get("/all/:id", authenticate, studentGuardian.findAll);
+router.get("/all", authenticate, studentGuardian.findAll);
 
 // Retrieve all published studentGuardian
 router.get("/active", studentGuardian.findAllActive);
@@ -25,7 +25,7 @@ router.get("/active", studentGuardian.findAllActive);
 router.post("/:id", studentGuardian.findOne);
 
 // Update a StudentGuardian with id
-router.put("/:id", studentGuardian.update);
+router.put("/update", authenticate, studentGuardian.update);
 
 // Delete a StudentGuardian with id
 router.delete("/:id", studentGuardian.delete);

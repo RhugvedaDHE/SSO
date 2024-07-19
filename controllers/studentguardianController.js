@@ -16,86 +16,90 @@ const Op = require("sequelize").Op;
 
 // Create and Save a new StudentGuardian
 exports.create = async (req, res) => {
+  // await StudentEnrollment.findOne({
+  //   attributes: ["id"],
+  //   where: { user_id: req.user.id },
+  // })
+    // .then((studentEnrollment) => {
+      // console.log("SE", studentEnrollment);
+      const parentDetails = {
+        guardian_type_id: req.body.guardian_type_id,
+        user_id: req.user.id,
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        phone: req.body.phone,
+        email: req.body.email,
+        occupation: req.body.occupation,
+        designation: req.body.designation,
+        work_address: req.body.work_address,
+        annual_income: req.body.annual_income,        
+        is_deceased: req.body.is_deceased,
+        is_employed: req.body.is_employed,
+      };
 
-  await StudentEnrollment.findOne({
-    attributes: ["id"],
-    where: { user_id: req.user.id },
-  }).then((studentEnrollment) => {
-   
-    console.log("SE", studentEnrollment)
-    const parentDetails = {
-      guardian_type_id: req.body.type,
-      student_enrollment_id: studentEnrollment.id,
-      first_name: req.body.firstName,
-      last_name: req.body.lastName,
-      phone: req.body.phone,
-      email: req.body.email,
-      gender: req.body.gender_id,
-      occupation: req.body.occupation,
-      designation: req.body.designation,
-      work_address: req.body.work_address,
-      annual_income: req.body.annualIncome,
-      is_deceased: req.body.isDeceased,
-      is_employed: req.body.isEmployed,
-    };
-    
-    // Save mother details in the database   
-      StudentGuardian.findOne({      
+      // Save mother details in the database
+      StudentGuardian.findOne({
         where: {
-          student_enrollment_id: studentEnrollment.id,
-          guardian_type_id: req.body.type 
+          user_id: req.user.id,
+          guardian_type_id: req.body.guardian_type_id,
         },
-      }
-    ).then((parent) =>{
-      if(parent){
-        StudentGuardian.update(parentDetails,{
-          where: {
-            guardian_type_id: req.body.type,
-            student_enrollment_id: studentEnrollment.id
-          }
-        })
-        .then((data) => {
-          res.status(200).json(success("Parent details updated successfully!", data));
-        })
-      }
-      else{
-        StudentGuardian.create(parentDetails)
-        .then((data) => {
-          res.status(200).json(success("Parent details created successfully!", data));
-        })
-      }    
-    })    
-  }).catch((err) => {
-    res.status(400).json(errorResponse(err, 400));
-  });
+      }).then((parent) => {
+        if (parent) {
+          StudentGuardian.update(parentDetails, {
+            where: {
+              guardian_type_id: req.body.guardian_type_id,
+              user_id: req.user.id,
+            },
+          }).then((data) => {
+            res
+              .status(200)
+              .json(success("Parent details updated successfully!", data));
+          });
+        } else {
+          StudentGuardian.create(parentDetails).then((data) => {
+            res
+              .status(200)
+              .json(success("Parent details created successfully!", data));
+          });
+        }
+      });
+    // })
+    // .catch((err) => {
+    //   res.status(400).json(errorResponse(err, 400));
+    // });
 };
 
 // Retrieve all StudentGuardian from the database.
 exports.findAll = async (req, res) => {
-  await StudentEnrollment.findOne({
-    attributes: ["id"],
-    where: { user_id: req.user.id },
-  }).then((studentEnrollment) => {
+  // await StudentEnrollment.findOne({
+  //   attributes: ["id"],
+  //   where: { user_id: req.user.id },
+  // }).then((studentEnrollment) => {
+    // const studentEnrollmentId = studentEnrollment.id;
+    // var condition = studentEnrollmentId
+    //   ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } }
+    //   : null;
 
-    const studentEnrollmentId = studentEnrollment.id;
-    var condition = studentEnrollmentId
-      ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } }
-      : null;
-
-    StudentGuardian.findAll({ where: condition, include:[
-      {
-        model: Gender,
-        attributes: ["id", "name"],
+    StudentGuardian.findAll({
+      where: {
+        user_id: req.user.id
       },
-    ], },
-      )
+      include: [
+        {
+          model: Gender,
+          attributes: ["id", "name"],
+        },
+      ],
+    })
       .then((data) => {
         //res.status(200).json(success("Guardians fetched successfully!", data));
 
         //console.log(data);
 
         if (data) {
-          res.status(200).json(success("Guardians fetched successfully!", data));
+          res
+            .status(200)
+            .json(success("Guardians fetched successfully!", data));
         } else {
           res
             .status(400)
@@ -105,7 +109,7 @@ exports.findAll = async (req, res) => {
       .catch((err) => {
         res.status(400).json(errorResponse(err, 400));
       });
-    });
+  // });
 };
 
 // Find a single StudentGuardian with an id
@@ -137,27 +141,38 @@ exports.findOne = (req, res) => {
 };
 
 // Update a StudentGuardian by the id in the request
-exports.update = (req, res) => {
-  const id = req.params.id;
+exports.update = async (req, res) => {
+  const id = req.user.id;
+
+  //update remarks table
+  // let studentEntrollmentData = await StudentEnrollment.findOne({
+  //   where: {
+  //     user_id: req.user.id,
+  //   },
+  // });
 
   const studentGuardian = {
-    student_enrollment_id: req.body.student_enrollment_id,
+    user_id: req.user.id,
     guardian_type_id: req.body.guardian_type_id,
     first_name: req.body.first_name,
     last_name: req.body.last_name,
     phone: req.body.phone,
     email: req.body.email,
-    gender: req.body.gender_id,
     aadhar_card_no: req.body.aadhar_card_number,
     occupation: req.body.occupation,
     designation: req.body.designation,
     work_address: req.body.work_address,
     annual_income: req.body.annual_income,
+    is_deceased: req.body.is_deceased,
+    is_employed: req.body.is_employed,
     active: req.body.active,
   };
 
   StudentGuardian.update(studentGuardian, {
-    where: { id: id },
+    where: {
+      user_id: req.user.id,
+      guardian_type_id: req.body.guardian_type_id,
+    },
   })
     .then((num) => {
       if (num == 1) {

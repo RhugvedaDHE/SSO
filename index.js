@@ -4,29 +4,9 @@ const bodyParser = require("body-parser");
 const application = express(); // initialize our express app
 const passport = require("passport");
 const cron = require("node-cron");
+const fs = require('fs');
 var path = require("path");
-//requiring the validator
-// var expressValidator = require("express-validator");
-//the app use part
-// application.use(
-//   expressValidator({
-//     customValidators: {
-//       isImage: function (value, filename) {
-//         var extension = path.extname(filename).toLowerCase();
-//         switch (extension) {
-//           case ".jpg":
-//             return ".jpg";
-//           case ".jpeg":
-//             return ".jpeg";
-//           case ".png":
-//             return ".png";
-//           default:
-//             return false;
-//         }
-//       },
-//     },
-//   })
-// );
+const morgan = require('morgan');
 
 const cors = require("cors");
 application.use(
@@ -35,8 +15,42 @@ application.use(
   })
 );
 
+// Create a write stream (in append mode)
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
+
+// Setup the logger to use the stream
+application.use(morgan('combined', { stream: accessLogStream }));
+
+
+// Create a write stream (in append mode) for error logs
+const errorLogStream = fs.createWriteStream(path.join(__dirname, 'error.log'), { flags: 'a' });
+
+// Define a custom token to capture error messages
+morgan.token('error', (req, res) => res.locals.errorMessage || '');
+
+// Custom error log format
+const errorFormat = ':method :url :status :response-time ms - :error';
+
+// Setup morgan to use the error format and stream
+application.use(morgan(errorFormat, {
+  skip: (req, res) => res.statusCode < 400, // Only log error responses
+  stream: errorLogStream
+}));
+
+// Middleware to simulate an error for demonstration
+application.get('/error', (req, res, next) => {
+  const err = new Error('Something went wrong!');
+  res.locals.errorMessage = err.message;
+  next(err);
+});
+
+// Error-handling middleware
+application.use((err, req, res, next) => {
+  res.status(500).send('Internal Server Error');
+});
+
+
 // Setting up port
-// const connUri = process.env.MONGO_LOCAL_CONN_URL;
 let PORT = process.env.PORT || 3000;
 application.use(bodyParser.urlencoded({ extended: true })); // parse requests of content-type - application/x-www-form-urlencoded
 application.use(bodyParser.json()); // parse requests of content-type - application/json
@@ -205,52 +219,6 @@ application.use("/api/v1/doctype", doctypeRouter);
 
 //=== 5 - START SERVER
 application.listen(PORT, () => console.log("hello:" + PORT + "/"));
-application.get("/", function (req, res) {
-  console.log("on route /");
-});
-
-application.post("/q", function (req, res) {
-  console.log("hey ", req.body.name);
-  res.send(req.body.name);
-});
-
-// return res.status(400).send({
-//     ^
-
-// TypeError: Cannot read properties of undefined (reading 'status')
-// at process.<anonymous> (C:\Users\admin\new-sequelize\index.js:172:16)
-// at process.emit (node:events:513:28)
-// at process._fatalException (node:internal/process/execution:149:25)
-// at processPromiseRejections (node:internal/process/promises:288:13)
-// at process.processTicksAndRejections (node:internal/process/task_queues:96:32)
-
-// Node.js v18.12.1
-// [nodemon] app crashed - waiting for file changes before starting...
-
-//Error Handler
-process.on("uncaughtException", function (error, result, res, next) {
-  console.log("Caught exception: " + error + " bfbvuj  " + next);
-  console.log("Caught exception: " + error.stack + " stacckk  " + next);
-  // res.status(400).json(errorResponse(error, 400));
-  // return res.status(400).send({
-  //     message: "Content can not be empty!"
-  //  });
-  // next(createError(400));
-  return 0;
-});
-
-var createError = require("http-errors");
-// catch 404 and forward to error handler
-application.use(function (req, res, next) {
-  next(createError(400));
-});
-
-// error handler
-application.use(function (err, req, res, next) {
-  // set locals, only providing error in development
-  console.log("inside Error Handler, ", err);
-  res.sendStatus(400);
-});
 
 //cron job
 var task = cron.schedule(
@@ -266,3 +234,37 @@ var task = cron.schedule(
 );
 
 task.start();
+
+// Error Handler
+process.on("uncaughtException", function (error, result, res, next) {
+  console.log("Caught exception: " + error + " bfbvuj  " + next);
+  console.log("Caught exception: " + error.stack + " stacckk  " + next);
+  // res.sendStatus(400);
+  // res.status(400).json(errorResponse(error, 400));
+  // return res.status(400).send({
+  //     message: "Content can not be empty!"
+  //  });
+  // next(createError(400));
+  // return 0;
+  // res.status(err.statusCode || 500).json({
+  //       success: false,
+  //       message: err.message || "Internal Server Error",
+  //       error: process.env.NODE_ENV === "development" ? err.stack : {},
+  //     });
+});
+
+// // Catch 404 and forward to error handler
+// application.use(function (req, res, next) {
+//   next(createError(400));
+// });
+
+// General error handling middleware
+application.use(function (err, req, res, next) {
+  console.error("Error handler:", err);
+
+  res.status(err.statusCode || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+    error: process.env.NODE_ENV === "development" ? err.stack : {},
+  });
+});

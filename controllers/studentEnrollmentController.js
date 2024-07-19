@@ -29,7 +29,7 @@ exports.findOne = (req, res) => {
     ],
     where: {
       user_id: req.user.id,
-      is_active: true,
+      is_active: 1,
     },
   })
     .then(async (data) => {
@@ -77,7 +77,7 @@ exports.findOne = (req, res) => {
           subject_id: subjectDetails.id,
           subject_name: subjectDetails.name,
           board_univ: instituteProgramme.board_univ,
-          current_semester: data.current_semester,
+          current_semester_id: data.current_semester_id,
           current_class: data.Class,
         };
 
