@@ -22,11 +22,15 @@ module.exports = (sequelize, DataTypes) => {
       }),
       StudentEnrollment.belongsTo(models.Semester, {
         foreignKey: 'current_semester_id'
+      }),
+      StudentEnrollment.belongsTo(models.Subject, {
+        foreignKey: 'subject_id'
       })
     }
   }
   StudentEnrollment.init({
     user_id: DataTypes.INTEGER,
+    qual_type_id: DataTypes.INTEGER,
     institute_programme_id: DataTypes.INTEGER,
     current_class_id: DataTypes.INTEGER,
     academic_year: DataTypes.STRING,
@@ -40,6 +44,7 @@ module.exports = (sequelize, DataTypes) => {
     consolidated_grade_obtained: DataTypes.STRING,
     board_university: DataTypes.STRING,
     month_year: DataTypes.STRING,
+    userdoc_id: DataTypes.INTEGER,
     is_active: {
       type: DataTypes.INTEGER,
       defaultValue: 1

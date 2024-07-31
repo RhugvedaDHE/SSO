@@ -28,9 +28,13 @@ module.exports = (sequelize, DataTypes) => {
       })
       Institute.belongsToMany(models.Programme,{
         through: "InstituteProgramme",
-        as: "instituteId",
+        as: "institute_id",
         foreignKey: "institute_id"
       })
+      Institute.hasMany(models.InstituteProgrammeSubject, {
+        foreignKey: "institute_id",
+        as: "programmeSubjects", // Alias for association
+      });
     }
   }
   Institute.init({

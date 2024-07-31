@@ -397,7 +397,7 @@ exports.getStudentDetails = async function (req, res) {
         marksData.push({
           program_semester_id: m.program_semester_id,
           institute_programme_course_subject_id:
-            m.institute_programme_course_subject_id,
+          m.institute_programme_course_subject_id,
           eval_type_id: m.eval_type_id,
           eval_type_name: evalTypeDetails.name,
           total_marks: m.total_marks,
@@ -483,7 +483,7 @@ exports.getStudentDetails = async function (req, res) {
       program_name: program.name,
       subject_id: subjectDetails.id,
       subject_name: subjectDetails.name,
-      board_university: instituteProgramme.board_university,
+      // board_university: instituteProgramme.board_university,
       qualification: qualificationData,
     };
     //END student academic details-----------------------------------

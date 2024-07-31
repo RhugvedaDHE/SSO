@@ -117,6 +117,8 @@ var companyRemarksRouter = require("./routes/companyRemarks");
 var bankRouter = require("./routes/bank");
 var studentEnrollmentRouter = require("./routes/studentEnrollment");
 var ePramaanRouter = require("./routes/e-pramaan");
+var instProgSubRouter = require("./routes/instprogsub");
+
 //APIs by Paresh A.
 var companyRouter = require("./routes/company");
 var guardianTypeRouter = require("./routes/guardianType");
@@ -190,6 +192,8 @@ application.use("/api/v1/company-remarks", companyRemarksRouter);
 application.use("/api/v1/bank", bankRouter);
 application.use("/api/v1/student-enrollment", studentEnrollmentRouter);
 application.use("/api/v1/e-pramaan", ePramaanRouter);
+application.use("/api/v1/fee-structure", instProgSubRouter);
+
 //APIs by Paresh A.
 application.use("/api/v1/company", companyRouter);
 application.use("/api/v1/guardiantype", guardianTypeRouter);

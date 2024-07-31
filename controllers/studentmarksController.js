@@ -7,9 +7,12 @@ const db = require("../models");
 const StudentMarks = require("../models").StudentMarks;
 const StudentEnrollment = require("../models").StudentEnrollment;
 const Programme = require("../models").Programme;
-const User = require("../models").User;
+const Class = require("../models").Class;
+const Subject = require("../models").Subject;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const UserDocs = require("../models").UserDocs;
+const Institute = require("../models").Institute;
+const Semester = require("../models").Semester;
 const DocumentType = require("../models").DocumentType;
 const EvalTypes = require("../models").EvalTypes;
 const { success, errorResponse, validation } = require("../responseApi");
@@ -23,83 +26,266 @@ const Op = require("sequelize").Op;
 // Create and Save a new StudentMarks
 exports.create = async (req, res) => {
   console.log("in controller studentMarks");
-
-  if (!req.body.student_enrollment_id) {
-    res
-      .status(400)
-      .json(errorResponse("Student enrollment ID cannot be empty!", 400));
-    return;
-  }
-
-  // Create a StudentMarks
-
-  let studentEnrollment = StudentEnrollment.findOne({
+  // Create a check if student has more than one pursuing
+  let pursuing = StudentEnrollment.findAll({
     attributes: ["id"],
     where: {
       user_id: req.user.id,
-      active: true
+      is_active: 1,
     },
   });
-
-  //check if student has already selected last qualifying exam
-  let last_qual_year = StudentMarks.findAll({
+  let last_qual_year = {};
+  let count_last_qual_year = 0;
+  // if (pursuing.length <= 1) {
+  // //check if student has already selected last qualifying exam
+  // count_last_qual_year = StudentMarks.findAll({
+  //   where: {
+  //     student_enrollment_id: pursuing.id,
+  //     last_qual_year: true,
+  //   },
+  // });
+  // res
+  //   .status(200)
+  //   .json(
+  //     success(
+  //       "A student cannot be enrolled in more than one degree program at a time!"
+  //     )
+  //   );
+  // }
+  // if (count_last_qual_year.length) {
+  //   res
+  //     .status(200)
+  //     .json(success("A student can only complete one semester at a time!"));
+  // } else {
+  let instituteProgramme = await InstituteProgramme.findOne({
+    attributes: ["id", "institute_id", "programme_id"],
     where: {
-      student_enrollment_id: studentEnrollment.id,
-      last_qual_year: true,
+      institute_id: req.body.institute_id,
+      programme_id: req.body.programme_id,
     },
   });
-  
-  if (last_qual_year.length) {
-    res.status(200).json(success("Select only one last qualifying semester create!"));
-  } else {
 
-    let instituteProgramme = await InstituteProgramme.findOne({
-      attributes: ["id", "institute_id", "programme_id"],
+  const studentEnrollment = {
+    user_id: req.user.id,
+    institute_programme_id: instituteProgramme.id,
+    subject_id: req.body.subject_id,
+    academic_year: req.body.academic_year,
+    current_semester_id: req.body.current_semester_id,
+    current_class_id: req.body.current_class_id,
+    other_institute_name: req.body.other_institute_name,
+    other_programme_name: req.body.other_programme_name,
+    other_subject_name: req.body.other_subject_name,
+    consolidated_total_marks: req.body.consolidated_total_marks,
+    consolidated_marks_obtained: req.body.consolidated_marks_obtained,
+    consolidated_grade_obtained: req.body.consolidated_grade_obtained,
+    board_university: req.body.board_university,
+    month_year: req.body.month_year,
+    userdoc_id: req.body.userdoc_id,
+    is_active: req.body.pursuing,
+  };
+
+  if (pursuing.length == 1) {
+    await StudentEnrollment.update(studentEnrollment, {
       where: {
-        institute_id: req.body.institute_id,
-        programme_id: req.body.programme_id
+        user_id: req.user.id,
+        institute_programme_id: instituteProgramme.id,
+        subject_id: req.body.subject_id,
       },
-    });
+    })
+      .then(async (dataEnroll) => {
+        if (req.body.pursuing != 0 && req.body.hasmarks) {
+          const studentMarks = {
+            student_enrollment_id: data.id,
+            semester_id: req.body.semester_id,
+            eval_type_id: req.body.eval_type_id,
+            total_marks: req.body.total_marks,
+            marks_obtained: req.body.marks_obtained,
+            grade_obtained: req.body.grade_obtained,
+            last_qual_year: req.body.last_qual_year,
+            month_year: req.body.month_year,
+            userdoc_id: req.body.userdoc_id,
+            active: req.body.active ? req.body.active : true,
+            updateAt: null,
+          };
 
-    const studentEnrollment = {
-      user_id: req.user.id,
-      institute_programme_id: instituteProgramme.id,
-      subject_id: req.body.subject_id,
-      academic_year: req.body.academic_year,
-      current_semester_id: req.body.current_semester_id,
-      current_class_id: req.body.current_class_id,
-      other_institute_name: req.body.other_institute_name,
-      other_programme_name: req.body.other_programme_name,
-      other_subject_name: req.body.other_subject_name,
-      consolidated_total_marks: req.body.consolidated_total_marks,
-      consolidated_marks_obtained: req.body.consolidated_marks_obtained,
-      consolidated_grade_obtained: req.body.consolidated_grade_obtained,
-      board_university: req.body.board_university,
-      month_year: req.body.month_year,
-      is_active: req.body.persuing
-    }
-    await StudentEnrollment.create(studentEnrollment).then(async (data) =>{
-      const studentMarks = {
-        board_university: req.body.board_university,
-        student_enrollment_id: data.id,
-        semester_id: req.body.semester_id,
-        eval_type_id: req.body.eval_type_id,
-        total_marks: req.body.total_marks,
-        marks_obtained: req.body.marks_obtained,
-        grade_obtained: req.body.grade_obtained,
-        last_qual_year: req.body.last_qual_year,
-        month_year: req.body.month_year,
-        active: req.body.active ? req.body.active : true,
-        updateAt: null,
-      };
-      await StudentMarks.create(studentMarks)
+          await StudentMarks.update(studentMarks, {
+            where: {
+              student_enrollment_id: dataEnroll.id,
+              semester_id: req.body.semester_id,
+            },
+          }).then((data) => {
+            res
+              .status(200)
+              .json(success("Student-Enrollment+Marks created successfully!"));
+          });
+        }
+        res
+          .status(200)
+          .json(
+            success(
+              "nlebbvb Student-Enrollment+Marks created successfully!",
+              dataEnroll
+            )
+          );
+        if (dataEnroll) {
+          res
+            .status(200)
+            .json(success("Student-Enrollment created successfully!"));
+        }
+      })
+      .catch((err) => {
+        res.status(400).json(errorResponse(err, 400));
+      });
+  } else {
+    //create a new one
+    await StudentEnrollment.create(studentEnrollment)
+      .then(async (dataEnroll) => {
+        res
+          .status(200)
+          .json(
+            success(
+              "before nlebbvb Student-Enrollment+Marks created successfully!",
+              typeof req.body.pursuing
+            )
+          );
+        if (Number(req.body.pursuing) != 0 && Boolean(req.body.hasmarks)) {
+          const studentMarks = {
+            student_enrollment_id: data.id,
+            semester_id: req.body.semester_id,
+            eval_type_id: req.body.eval_type_id,
+            total_marks: req.body.total_marks,
+            marks_obtained: req.body.marks_obtained,
+            grade_obtained: req.body.grade_obtained,
+            last_qual_year: req.body.last_qual_year,
+            month_year: req.body.month_year,
+            userdoc_id: req.body.userdoc_id,
+            active: req.body.active ? req.body.active : true,
+            updateAt: null,
+          };
+
+          await StudentMarks.create(studentMarks).then((data) => {
+            res
+              .status(200)
+              .json(success("Student-Enrollment+Marks created successfully!"));
+          });
+        } else if (dataEnroll) {
+          res
+            .status(200)
+            .json(success("Student-Enrollment created successfully!"));
+        }
+      })
+      .catch((err) => {
+        res.status(400).json(errorResponse(err, 400));
+      });
+  }
+
+  // }
+};
+
+// Create and Save a new StudentMarks
+exports.createEnrollment = async (req, res) => {
+  console.log("in controller studentMarks");
+
+  let instituteProgramme = await InstituteProgramme.findOne({
+    attributes: ["id", "institute_id", "programme_id"],
+    where: {
+      institute_id: req.body.institute_id,
+      programme_id: req.body.programme_id,
+    },
+  });
+
+  const studentEnrollment = {
+    user_id: req.user.id,
+    qual_type_id: req.body.qual_type_id,
+    institute_programme_id: instituteProgramme.id,
+    subject_id: req.body.subject_id,
+    academic_year: req.body.academic_year,
+    current_semester_id: req.body.current_semester_id,
+    current_class_id: req.body.current_class_id,
+    other_institute_name: req.body.other_institute_name,
+    other_programme_name: req.body.other_programme_name,
+    other_subject_name: req.body.other_subject_name,
+    consolidated_total_marks: req.body.consolidated_total_marks,
+    consolidated_marks_obtained: req.body.consolidated_marks_obtained,
+    consolidated_grade_obtained: req.body.consolidated_grade_obtained,
+    board_university: req.body.board_university,
+    month_year: req.body.month_year,
+    userdoc_id: req.body.userdoc_id,
+    is_active: req.body.pursuing,
+  };
+
+  if (req.body.enrollment_id) {
+    await StudentEnrollment.update(studentEnrollment, {
+      where: {
+        id: req.body.enrollment_id,
+      },
+    })
+      .then(async (dataEnroll) => {
+        res
+          .status(200)
+          .json(success("Student-Enrollment updated successfully!"));
+      })
+      .catch((err) => {
+        res.status(400).json(errorResponse(err, 400));
+      });
+  } else {
+    //create a new one
+    await StudentEnrollment.create(studentEnrollment)
+      .then(async (dataEnroll) => {
+        res
+          .status(200)
+          .json(
+            success("Student-Enrollment created successfully!", dataEnroll)
+          );
+      })
+      .catch((err) => {
+        res.status(400).json(errorResponse(err, 400));
+      });
+  }
+};
+
+// Create and Save a new StudentMarks
+exports.createMarks = async (req, res) => {
+  console.log("in controller studentMarks");
+
+  const studentMarks = {
+    student_enrollment_id: req.body.enrollment_id,
+    semester_id: req.body.semester_id,
+    eval_type_id: req.body.eval_type_id,
+    total_marks: req.body.total_marks,
+    marks_obtained: req.body.marks_obtained,
+    grade_obtained: req.body.grade_obtained,
+    last_qual_year: req.body.last_qual_year,
+    month_year: req.body.month_year,
+    userdoc_id: req.body.userdoc_id,
+    active: req.body.active ? req.body.active : true,
+    updateAt: null,
+  };
+
+  if (req.body.marks_id) {
+    await StudentMarks.update(studentMarks, {
+      where: {
+        id: req.body.marks_id,
+      },
+    })
       .then((data) => {
         res
           .status(200)
-          .json(success("Student Marks created successfully!", data));
+          .json(success("Student-Marks updated successfully!", data));
       })
 
-    }).catch((err) => {
+      .catch((err) => {
+        res.status(400).json(errorResponse(err, 400));
+      });
+  } else {
+    //create a new one
+    await StudentMarks.create(studentMarks)
+      .then((data) => {
+        res
+          .status(200)
+          .json(success("Student-marks created successfully!", data));
+      })
+      .catch((err) => {
         res.status(400).json(errorResponse(err, 400));
       });
   }
@@ -107,92 +293,128 @@ exports.create = async (req, res) => {
 
 // Retrieve all StudentMarks from the database.
 exports.findAll = async (req, res) => {
-  
-  const studentEnrollmentId = req.params.id;
-  console.log(req.params.id);
-  var condition = studentEnrollmentId
-    ? { student_enrollment_id: { [Op.eq]: studentEnrollmentId } }
-    : null;
-    
-  let data = await StudentMarks.findAll({
-    order: [["createdAt", "DESC"]],
-    where: condition,
+  // const studentEnrollmentId = req.params.id;
+  let userId = req.user.id;
+
+  let studentEnrollments = await StudentEnrollment.findAll({
+    where: {
+      user_id: req.user.id,
+    },
     include: [
-      // {
-      //   model: Programme,
-      //   attributes: ["id", "name"],
-      // },
       {
-        model: EvalTypes,
-        attributes: ["id", "name"],
+        model: Subject,
+        attributes: ["name"],
+      },
+      {
+        model: Class,
+        attributes: ["name"],
+      },
+
+      {
+        model: Semester,
+        attributes: ["name"],
       },
     ],
   });
 
-  if (data) {
+  if (studentEnrollments) {
     let finalData = [];
-
-    for (const d of data) {
-      let programmeDetails = await Programme.findOne({
+    let userdocMark;
+    let filePathMark = (filePathEnrollment = null);
+    for (const studentEnrollment of studentEnrollments) {
+      let programmeDetails = await InstituteProgramme.findOne({
         where: {
-          id: d.program_id,
+          id: studentEnrollment.institute_programme_id,
         },
         include: [
           {
-            model: DocumentType,
-            attributes: ["id", "name"],
+            model: Programme,
+            attributes: ["name"],
+          },
+          {
+            model: Institute,
+            attributes: ["name"],
           },
         ],
       });
 
-      const user = await StudentEnrollment.findOne({
-        attributes: ["user_id"],
+      const studentMark = await StudentMarks.findOne({
         where: {
-          is_active: true,
-          id: d.student_enrollment_id,
+          active: true,
+          student_enrollment_id: studentEnrollment.id,
         },
       });
 
-      let userdocs = await UserDocs.findOne({
+      let userdocEnrollment = await UserDocs.findOne({
         where: {
-          user_id: user.user_id,
-          doc_type_id: programmeDetails.doc_type_id,
+          // user_id: req.user.id,
+          id: studentEnrollment.userdoc_id,
         },
+        include: [
+          {
+            model: DocumentType,
+            attributes: ["name"],
+          },
+        ],
       });
-      const userdocId = userdocs ? userdocs.id : null;
+      if (studentMark) {
+        userdocMark = await UserDocs.findOne({
+          where: {
+            // user_id: req.user.id,
+            id: studentMark.userdoc_id,
+          },
+          include: [
+            {
+              model: DocumentType,
+              attributes: ["name"],
+            },
+          ],
+        });
 
-      const filePath = userdocs
+        filePathMark = userdocMark
+          ? req.protocol +
+            "://" +
+            req.get("host") +
+            "/static/user/" +
+            userdocMark.filename
+          : null;
+      }
+
+      filePathEnrollment = userdocEnrollment
         ? req.protocol +
           "://" +
           req.get("host") +
           "/static/user/" +
-          userdocs.filename
+          userdocEnrollment.filename
         : null;
 
       finalData.push({
-        id: d.id,
-        student_enrollment_id: d.student_enrollment_id,
-        program_id: d.program_id,
-        program_title: d.Programme.name,
-        board_university: d.board_university,
-        institute_name: d.institute_name,
-        programme_semester_id: d.programme_semester_id,
-        course: d.course,
-        subject: d.subject,
-        year_of_passing: d.year_of_passing,
-        eval_type_id: d.eval_type_id,
-        eval_type_title: d.EvalType.name,
-        total_marks: d.total_marks,
-        marks_obtained: d.marks_obtained,
-        grade_obtained: d.grade_obtained,
-        last_qual_year: d.last_qual_year,
-        active: d.active,
-        createdAt: d.createdAt,
-        updatedAt: d.updatedAt,
-        deletedAt: d.deletedAt,
-        programme_details: programmeDetails,
-        file_id: userdocId,
-        file_path: filePath,
+        // id: d.id,
+
+        program_id: programmeDetails.Programme.id,
+        program_title: programmeDetails.Programme.name,
+        board_university: studentEnrollment.board_university,
+        institute_name: programmeDetails.Institute.name,
+        academic_year: studentEnrollment.board_university,
+        current_semester_id: studentEnrollment.Semester.name,
+        current_class_id: studentEnrollment.Class.name,
+        other_institute_name: studentEnrollment.other_institute_name,
+        other_programme_name: studentEnrollment.other_programme_name,
+        other_subject_name: studentEnrollment.other_subject_name,
+        consolidated_total_marks: studentEnrollment.consolidated_total_marks,
+        consolidated_marks_obtained:
+          studentEnrollment.consolidated_marks_obtained,
+        consolidated_grade_obtained:
+          studentEnrollment.consolidated_marks_obtained,
+        board_university: studentEnrollment.board_university,
+        month_year: studentEnrollment.month_year,
+        userdoc_id: studentEnrollment.userdoc_id,
+        userdoc_id: studentEnrollment.userdoc_id,
+        is_active: studentEnrollment.is_active,
+        userDoc_type: studentMark
+          ? userdocMark.DocumentType.name
+          : userdocEnrollment.DocumentType.name,
+        userDoc: studentMark ? filePathMark : filePathEnrollment,
       });
     } //end for
 
@@ -236,38 +458,46 @@ exports.findOne = (req, res) => {
 
 // Update a StudentMarks by the id in the request
 exports.updateMarks = async (req, res) => {
-  const id = req.user.id;
-  console.log(req.body.program_id);
-  // let studentEnrollment = await StudentEnrollment.findOne({
-  //   attributes: ["id"],
-  //   where: {
-  //     user_id: req.user.id,
-  //   },
-  // });
-  
-
-  //check if student has already selected last qualifying exam
-  let last_qual_year = await StudentMarks.findAll({
+  console.log("in controller studentMarks");
+  // Create a check if student has more than one pursuing
+  let pursuing = StudentEnrollment.findAll({
+    attributes: ["id"],
     where: {
-      student_enrollment_id: studentEnrollment.id,
+      user_id: req.user.id,
+      active: true,
+    },
+  });
+
+  // //check if student has already selected last qualifying exam
+  let last_qual_year = StudentMarks.findAll({
+    where: {
+      student_enrollment_id: pursuing.id,
       last_qual_year: true,
     },
   });
-  
-  const studentMarks = {};
-  const studentEnroll = {};
+
+  if (pursuing.length) {
+    res
+      .status(200)
+      .json(
+        success(
+          "A student cannot be enrolled in more than one degree program at a time!"
+        )
+      );
+  }
   if (last_qual_year.length) {
-    res.status(200).json(success("Select only one last qualifying semester!"));
+    res
+      .status(200)
+      .json(success("A student can only complete one semester at a time!"));
   } else {
     let instituteProgramme = await InstituteProgramme.findOne({
       attributes: ["id", "institute_id", "programme_id"],
       where: {
         institute_id: req.body.institute_id,
-        programme_id: req.body.programme_id
+        programme_id: req.body.programme_id,
       },
     });
 
-    //if completed
     const studentEnrollment = {
       user_id: req.user.id,
       institute_programme_id: instituteProgramme.id,
@@ -282,82 +512,48 @@ exports.updateMarks = async (req, res) => {
       consolidated_marks_obtained: req.body.consolidated_marks_obtained,
       consolidated_grade_obtained: req.body.consolidated_grade_obtained,
       board_university: req.body.board_university,
-      month_year: req.body.moth_year,
-      is_active: req.body.persuing
-    }
-    await StudentEnrollment.update(studentEnrollment, 
-      {
-        where: {
-          user_id: req.user.id,
-          institute_programme_id: instituteProgramme.id,
-        },
-      })
-    .then(async (data) =>{
-      const studentMarks = {
-        board_university: req.body.board_university,
-        student_enrollment_id: data.id,
-        semester_id: req.body.semester_id,
-        eval_type_id: req.body.eval_type_id,
-        total_marks: req.body.total_marks,
-        marks_obtained: req.body.marks_obtained,
-        grade_obtained: req.body.grade_obtained,
-        last_qual_year: req.body.last_qual_year,
-        month_year: req.body.month_year,
-        active: req.body.active ? req.body.active : true,
-      };
-      await StudentMarks.update(studentMarks, {
-        where:{
-          student_enrollment_id: data.id,
+      month_year: req.body.month_year,
+      userdoc_id: req.body.userdoc_id,
+      is_active: req.body.pursuing,
+    };
+    await StudentEnrollment.update(studentEnrollment, {
+      where: {
+        user_id: req.user.id,
+        id: req.body.student_enrollment_id,
+      },
+    })
+      .then(async (data) => {
+        if (req.body.pursuing) {
+          const studentMarks = {
+            student_enrollment_id: req.body.student_enrollment_id,
+            semester_id: req.body.semester_id,
+            eval_type_id: req.body.eval_type_id,
+            total_marks: req.body.total_marks,
+            marks_obtained: req.body.marks_obtained,
+            grade_obtained: req.body.grade_obtained,
+            last_qual_year: req.body.last_qual_year,
+            month_year: req.body.month_year,
+            userdoc_id: req.body.userdoc_id,
+            active: req.body.active ? req.body.active : true,
+            updateAt: null,
+          };
+
+          await StudentMarks.update(studentMarks, {
+            where: {
+              student_enrollment_id: req.body.student_enrollment_id,
+            },
+          }).then((data) => {
+            res
+              .status(200)
+              .json(success("Student Marks updated successfully!", data));
+          });
         }
       })
-      .then((data) => {
-        res
-          .status(200)
-          .json(success("Student Marks updated successfully!", data));
-      })
-
-    }).catch((err) => {
+      .catch((err) => {
         res.status(400).json(errorResponse(err, 400));
       });
-    }
-    
-       
-        
-      
-    
-    //    else {
-    //     StudentMarks.create(studentMarks, {
-    //       // where: { student_enrollment_id: studentEnrollment.id }
-    //     })
-    //       .then((num) => {
-    //         if (num) {
-    //           res
-    //             .status(200)
-    //             .json(success("Student Marks were created successfully!"));
-    //         } else {
-    //           res
-    //             .status(400)
-    //             .json(
-    //               errorResponse(
-    //                 ` Could not create Student Marks with id=${id}. Maybe Student Marks were not found or req.body is empty!`,
-    //                 400
-    //               )
-    //             );
-    //         }
-    //       })
-    //       .catch((err) => {
-    //         res
-    //           .status(400)
-    //           .json(
-    //             errorResponse(
-    //               err + " Error updating Student Marks with id=" + id,
-    //               400
-    //             )
-    //           );
-    //       });
-    //   }
-    // }
-  };
+  }
+};
 
 // Delete a StudentMarks with the specified id in the request
 exports.delete = (req, res) => {

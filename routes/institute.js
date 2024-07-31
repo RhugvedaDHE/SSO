@@ -47,10 +47,12 @@ router.post(
   Institute.create
 );
 
-router.get("/get/", authenticate, Institute.get);
+router.get("/get/", Institute.get);
 
 router.post("/get/type", Institute.gettype);
 
 router.post("/get/users", Institute.getusers);
+
+router.get("/get/institutes/:institute_id", Institute.getInstituteProgrammesSubjects);
 
 module.exports = router;

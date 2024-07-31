@@ -7,6 +7,10 @@ const State = require("../models").State;
 const District = require("../models").District;
 const Country = require("../models").Country;
 const Institute = require("../models").Institute;
+const InstituteProgrammeSubject = require("../models").InstituteProgrammeSubject;
+const Programme = require("../models").Programme;
+const Subject = require("../models").Subject;
+const UserDocs = require("../models").UserDocs;
 const InstituteStaff = require("../models").InstituteStaff;
 const Staff = require("../models").Staff;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
@@ -213,6 +217,87 @@ exports.getUniversityAdmins = async function (req, res) {
     return res
       .status(200)
       .json(success("University Admins fetched successfully!", jsondata));
+  } else {
+    return res.status(400).json(errorResponse(error, 400));
+  }
+};
+
+//get institute data- all programmes, subjects and documents
+exports.getInstituteProgrammesSubjects = async function (req, res) {
+  const institute = await Institute.findOne({
+    where: {
+      id: req.params.institute_id, // Replace with the actual institute ID
+    },
+    include: [
+      {
+        model: InstituteProgrammeSubject,
+        as: 'programmeSubjects', // Alias used in the Institute model
+        include: [
+          {
+            model: Programme,
+            as: 'Programme', // Alias used in the InstituteProgrammeSubject model
+            attributes: ["id", "name", "is_active"],
+          },
+          {
+            model: Subject,
+            as: 'Subject', // Alias used in the InstituteProgrammeSubject model
+            attributes: ["id", "name", "is_active"],
+          },
+          {
+            model: UserDocs,
+            as: 'UserDoc', // Alias used in the InstituteProgrammeSubject model
+            // attributes: ["id", "name", "is_active"],
+          },
+        ],
+      },
+    ],
+    attributes: ["id", "name", "is_active"], // Attributes to select from Institute
+  });
+
+  
+  
+  if (institute && institute.programmeSubjects) {
+    institute.programmeSubjects.forEach(ps => {
+      if (ps.UserDoc) {
+        ps.UserDoc.filename = req.protocol +
+        "://" +
+        req.get("host") +
+        "/static/user/" + ps.UserDoc.filename;
+      }
+    });
+  
+  
+    // var jsondata = [];
+    // for (const d of data) {
+    //   let userdetails = await UserPersonalDetails.findOne({
+    //     attributes: ["firstname", "lastname"],
+    //     where: {
+    //       user_id: d.user_id,
+    //     },
+    //   });
+
+    //   let EUser = await EntityUser.findOne({
+    //     attributes: ["cio_id"],
+    //     where: {
+    //       user_id: d.user_id,
+    //     },
+    //   });
+
+    //   let Institutename = await Institute.findOne({
+    //     attributes: ["name"],
+    //     where: {
+    //       id: EUser.cio_id,
+    //     },
+    //   });
+    //   jsondata.push({
+    //     firstname: userdetails.firstname,
+    //     lastname: userdetails.lastname,
+    //     Department_Name: Institutename.name,
+    //   });
+    // }
+    return res
+      .status(200)
+      .json(success("Institutes fetched successfully!", institute));
   } else {
     return res.status(400).json(errorResponse(error, 400));
   }

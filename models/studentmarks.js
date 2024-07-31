@@ -15,18 +15,17 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "student_enrollment_id",
       });
 
-      StudentMarks.belongsTo(models.Programme, {
-        foreignKey: "program_id",
-      });
-
       StudentMarks.belongsTo(models.EvalTypes, {
         foreignKey: "eval_type_id",
       });
 
-      // StudentMarks.belongsTo(models.organizationType, {
-      //   foreignKey: "organization_type_id",
-      //   as: "companyOrganizationType",
-      // });
+      StudentMarks.belongsTo(models.Semester, {
+        foreignKey: "semester_id",
+      });
+
+      StudentMarks.belongsTo(models.UserDocs, {
+        foreignKey: "userdoc_id",
+      });
     }
   }
 
@@ -38,9 +37,6 @@ module.exports = (sequelize, DataTypes) => {
   StudentMarks.init({
     student_enrollment_id: {
         type: DataTypes.INTEGER
-      },
-      board_university: {
-        type: DataTypes.STRING
       },
       semester_id: {
         type: DataTypes.INTEGER

@@ -24,6 +24,7 @@ exports.create = async (req, res) => {
       // console.log("SE", studentEnrollment);
       const parentDetails = {
         guardian_type_id: req.body.guardian_type_id,
+        relation_with_user: req.body.relation_with_user,
         user_id: req.user.id,
         first_name: req.body.first_name,
         last_name: req.body.last_name,
@@ -32,7 +33,9 @@ exports.create = async (req, res) => {
         occupation: req.body.occupation,
         designation: req.body.designation,
         work_address: req.body.work_address,
-        annual_income: req.body.annual_income,        
+        annual_income: req.body.annual_income,
+        gender: req.body.gender_id,
+        aadhar_card_no: req.body.aadhar_card_no,
         is_deceased: req.body.is_deceased,
         is_employed: req.body.is_employed,
       };
@@ -63,10 +66,6 @@ exports.create = async (req, res) => {
           });
         }
       });
-    // })
-    // .catch((err) => {
-    //   res.status(400).json(errorResponse(err, 400));
-    // });
 };
 
 // Retrieve all StudentGuardian from the database.
@@ -163,6 +162,8 @@ exports.update = async (req, res) => {
     designation: req.body.designation,
     work_address: req.body.work_address,
     annual_income: req.body.annual_income,
+    aadhar_card_no: req.body.aadhar_card_no,
+    gender: req.body.gender_id,
     is_deceased: req.body.is_deceased,
     is_employed: req.body.is_employed,
     active: req.body.active,
