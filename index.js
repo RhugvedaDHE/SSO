@@ -118,6 +118,8 @@ var bankRouter = require("./routes/bank");
 var studentEnrollmentRouter = require("./routes/studentEnrollment");
 var ePramaanRouter = require("./routes/e-pramaan");
 var instProgSubRouter = require("./routes/instprogsub");
+var academicYearRouter = require("./routes/academicYear");
+var userContactRouter = require("./routes/userContact");
 
 //APIs by Paresh A.
 var companyRouter = require("./routes/company");
@@ -193,6 +195,8 @@ application.use("/api/v1/bank", bankRouter);
 application.use("/api/v1/student-enrollment", studentEnrollmentRouter);
 application.use("/api/v1/e-pramaan", ePramaanRouter);
 application.use("/api/v1/fee-structure", instProgSubRouter);
+application.use("/api/v1/academicyear", academicYearRouter);
+application.use("/api/v1/usercontact", userContactRouter);
 
 //APIs by Paresh A.
 application.use("/api/v1/company", companyRouter);

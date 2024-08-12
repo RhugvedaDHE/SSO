@@ -52,7 +52,7 @@ exports.getStudentList = async function (req, res) {
       "user_id",
       "id",
       "current_class_id",
-      "academic_year",
+      "academic_year_id",
       "institute_programme_id",
       "current_semester_id",
     ],
@@ -132,7 +132,7 @@ exports.getStudentList = async function (req, res) {
       }
       academic = {
         student_enrollemnt_id: d.id,
-        academic_year: d.academic_year,
+        academic_year_id: d.academic_year.id,
         institute_id: instituteProgramme.institute_id,
         institute_name: institute.name,
         program_id: instituteProgramme.programme_id,
@@ -148,7 +148,7 @@ exports.getStudentList = async function (req, res) {
       jsondata.push({
         user_id: d.user_id,
         student_enrollemnt_id: d.id,
-        academic_year: d.academic_year,
+        academic_year_id: d.academic_year_id,
         current_semester_id: d.current_semester_id,
         firstname: userdetails.firstname,
         lastname: userdetails.lastname,
@@ -270,11 +270,11 @@ exports.getStudentDetails = async function (req, res) {
       "user_id",
       "id",
       "subject_id",
-      "academic_year",
-      "institute_programme_id",
+      "academic_year_id",
+      "institute_id",
+      "programme_id"
     ],
     where: {
-      is_active: 1,
       user_id: userId,
     },
   });
@@ -321,24 +321,24 @@ exports.getStudentDetails = async function (req, res) {
     });
 
     console.log("heyyyyyyyyyyyyyyyyyyyyyyyy", userdetails);
-    let instituteProgramme = await InstituteProgramme.findOne({
-      attributes: ["institute_id", "programme_id"],
-      where: {
-        id: studentEntrollmentData.institute_programme_id,
-      },
-    });
+    // let instituteProgramme = await InstituteProgramme.findOne({
+    //   attributes: ["institute_id", "programme_id"],
+    //   where: {
+    //     id: studentEntrollmentData.institute_programme_id,
+    //   },
+    // });
 
     let institute = await Institutes.findOne({
       attributes: ["name"],
       where: {
-        id: instituteProgramme.institute_id,
+        id: studentEntrollmentData.institute_id,
       },
     });
 
     let program = await Programmes.findOne({
       attributes: ["name"],
       where: {
-        id: instituteProgramme.programme_id,
+        id: studentEntrollmentData.programme_id,
       },
     });
 
@@ -476,10 +476,10 @@ exports.getStudentDetails = async function (req, res) {
     }
     academic = {
       student_enrollemnt_id: studentEntrollmentData.id,
-      academic_year: studentEntrollmentData.academic_year,
-      institute_id: instituteProgramme.institute_id,
+      academic_year_id: studentEntrollmentData.academic_year_id,
+      institute_id: studentEntrollmentData.institute_id,
       institute_name: institute.name,
-      program_id: instituteProgramme.programme_id,
+      program_id: studentEntrollmentData.programme_id,
       program_name: program.name,
       subject_id: subjectDetails.id,
       subject_name: subjectDetails.name,

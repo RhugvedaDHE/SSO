@@ -129,7 +129,7 @@ exports.uploadDoc = async (req, res) => {
                 .then((updated) => {
                   console.log("Delete File successfully.");
                   return res
-                    .status(400)
+                    .status(200)
                     .json({ message: "File updated successfully!" });
                 });
             });

@@ -69,7 +69,7 @@ exports.findOne = (req, res) => {
         }
         academic = {
           student_enrollemnt_id: data.id,
-          academic_year: data.academic_year,
+          academic_year_id: data.academic_year_id,
           institute_id: instituteProgramme.institute_id,
           institute_name: institute.name,
           program_id: instituteProgramme.programme_id,
@@ -169,7 +169,7 @@ exports.create = async (req, res) => {
           current_class_id: req.body.current_class_id,
           current_semester_id: req.body.current_semester_id,
           subject_id: req.body.subject_id,
-          academic_year: req.body.academic_year,
+          academic_year_id: req.body.academic_year_id,
           section: req.body.section,
         },
         // { where: { user_id: req.user.id } } //need token on priority

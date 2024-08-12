@@ -12,6 +12,7 @@ exports.create = function (req, res) {
     account_number: req.body.account_number,
     ifsc_code: req.body.ifsc_code,
     bank_address: req.body.bank_address,
+    is_active: req.body.is_active? req.body.is_active: true,
   })
     .then((bank) => {
       res.status(200).json(success("Bank details uploaded successfully!"));
@@ -31,6 +32,7 @@ exports.update = function (req, res) {
       account_number: req.body.name,
       ifsc_code: req.body.ifsc_code,
       bank_address: req.body.bank_address,
+      is_active: req.body.is_active? req.body.is_active: true,
     },
     {
       where: {
@@ -74,27 +76,4 @@ exports.validateIFSC = function (req, res) {
   else{
     res.status(400).json(errorResponse("Enter valid IFSC!", ifsc.validate(req.body.ifsc_code)));
   }
-  
-  // console.log(ifsc.bank.PUNB); // prints PUNB
-  // Prints the entire JSON from https://ifsc.razorpay.com/KKBK0000261
-  // res is an object, not string
-
-  // {
-      //   MICR: '560226263',
-      //   BRANCH: 'THE AGS EMPLOYEES COOP BANK LTD',
-      //   ADDRESS: 'SANGMESH BIRADAR BANGALORE',
-      //   STATE: 'KARNATAKA',
-      //   CONTACT: '+91802265658',
-      //   UPI: true,
-      //   RTGS: true,
-      //   CITY: 'BANGALORE',
-      //   CENTRE: 'BANGALORE URBAN',
-      //   DISTRICT: 'BANGALORE URBAN',
-      //   NEFT: true,
-      //   IMPS: true,
-      //   SWIFT: 'HDFCINBB',
-      //   BANK: 'HDFC Bank',
-      //   BANKCODE: 'HDFC',
-      //   IFSC: 'HDFC0CAGSBK'
-      // }
 };

@@ -14,8 +14,11 @@ module.exports = (sequelize, DataTypes) => {
       StudentEnrollment.belongsTo(models.User, {
         foreignKey: 'user_id'
       }),
-      StudentEnrollment.belongsTo(models.InstituteProgramme, {
-        foreignKey: 'institute_programme_id'
+      StudentEnrollment.belongsTo(models.Institute, {
+        foreignKey: 'institute_id'
+      }),
+      StudentEnrollment.belongsTo(models.Programme, {
+        foreignKey: 'programme_id'
       }),
       StudentEnrollment.belongsTo(models.Class, {
         foreignKey: 'current_class_id'
@@ -25,20 +28,29 @@ module.exports = (sequelize, DataTypes) => {
       }),
       StudentEnrollment.belongsTo(models.Subject, {
         foreignKey: 'subject_id'
+      }),
+      StudentEnrollment.belongsTo(models.EvalTypes, {
+        foreignKey: 'evaltype_id'
+      }),
+      StudentEnrollment.belongsTo(models.Stream, {
+        foreignKey: 'stream_id'
       })
     }
   }
   StudentEnrollment.init({
     user_id: DataTypes.INTEGER,
     qual_type_id: DataTypes.INTEGER,
-    institute_programme_id: DataTypes.INTEGER,
+    institute_id: DataTypes.INTEGER,
+    programme_id: DataTypes.INTEGER,
     current_class_id: DataTypes.INTEGER,
-    academic_year: DataTypes.STRING,
+    academic_year_id: DataTypes.INTEGER,
     current_semester_id: DataTypes.INTEGER,
     subject_id: DataTypes.INTEGER,
     other_institute_name: DataTypes.STRING,
     other_programme_name: DataTypes.STRING,
     other_subject_name: DataTypes.STRING,
+    evaltype_id: DataTypes.INTEGER,
+    stream_id: DataTypes.INTEGER,
     consolidated_total_marks: DataTypes.INTEGER,
     consolidated_marks_obtained: DataTypes.INTEGER,
     consolidated_grade_obtained: DataTypes.STRING,

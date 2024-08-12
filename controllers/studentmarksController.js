@@ -69,7 +69,7 @@ exports.create = async (req, res) => {
     user_id: req.user.id,
     institute_programme_id: instituteProgramme.id,
     subject_id: req.body.subject_id,
-    academic_year: req.body.academic_year,
+    academic_year_id: req.body.academic_year,
     current_semester_id: req.body.current_semester_id,
     current_class_id: req.body.current_class_id,
     other_institute_name: req.body.other_institute_name,
@@ -184,22 +184,26 @@ exports.create = async (req, res) => {
 
 // Create and Save a new StudentMarks
 exports.createEnrollment = async (req, res) => {
-  console.log("in controller studentMarks");
+  console.log("in controller studentMarks", req.body);
 
-  let instituteProgramme = await InstituteProgramme.findOne({
-    attributes: ["id", "institute_id", "programme_id"],
-    where: {
-      institute_id: req.body.institute_id,
-      programme_id: req.body.programme_id,
-    },
-  });
+  // let instituteProgramme = await InstituteProgramme.findOne({
+  //   attributes: ["id", "institute_id", "programme_id"],
+  //   where: {
+  //     institute_id: req.body.institute_id,
+  //     programme_id: req.body.programme_id,
+  //   },
+  // });
 
   const studentEnrollment = {
     user_id: req.user.id,
     qual_type_id: req.body.qual_type_id,
-    institute_programme_id: instituteProgramme.id,
+    evaltype_id: req.body.evaltype_id,
+    stream_id: req.body.stream_id,
+    institute_id: req.body.institute_id,
+    programme_id: req.body.programme_id,
     subject_id: req.body.subject_id,
-    academic_year: req.body.academic_year,
+    userdoc_id: req.body.userdoc_id,
+    academic_year_id: req.body.academic_year,
     current_semester_id: req.body.current_semester_id,
     current_class_id: req.body.current_class_id,
     other_institute_name: req.body.other_institute_name,
@@ -210,7 +214,6 @@ exports.createEnrollment = async (req, res) => {
     consolidated_grade_obtained: req.body.consolidated_grade_obtained,
     board_university: req.body.board_university,
     month_year: req.body.month_year,
-    userdoc_id: req.body.userdoc_id,
     is_active: req.body.pursuing,
   };
 
@@ -223,7 +226,9 @@ exports.createEnrollment = async (req, res) => {
       .then(async (dataEnroll) => {
         res
           .status(200)
-          .json(success("Student-Enrollment updated successfully!"));
+          .json(
+            success("Student-Enrollment updated successfully!", dataEnroll)
+          );
       })
       .catch((err) => {
         res.status(400).json(errorResponse(err, 400));
@@ -313,37 +318,52 @@ exports.findAll = async (req, res) => {
       {
         model: Semester,
         attributes: ["name"],
+        required: false, // This makes the join optional
+        where: {
+          id: {
+            [Op.ne]: 0, // Only include if semester_id is not zero
+          },
+        },
       },
     ],
   });
 
+  // res
+  // .status(200)
+  // .json(success("Student Marks fetched successfully!", studentEnrollments));
   if (studentEnrollments) {
     let finalData = [];
+    let userDocType;
+    let userDoctypeId;
     let userdocMark;
     let filePathMark = (filePathEnrollment = null);
     for (const studentEnrollment of studentEnrollments) {
-      let programmeDetails = await InstituteProgramme.findOne({
+
+      let evalType = null;
+      if(studentEnrollment.evaltype_id){
+        evalType = await EvalTypes.findOne({
+          where: {
+            id: studentEnrollment.evaltype_id
+          }
+        });
+      }
+      
+
+      let programmeDetails = await Programme.findOne({
         where: {
-          id: studentEnrollment.institute_programme_id,
+          id: studentEnrollment.programme_id,
         },
-        include: [
-          {
-            model: Programme,
-            attributes: ["name"],
-          },
-          {
-            model: Institute,
-            attributes: ["name"],
-          },
-        ],
       });
 
-      const studentMark = await StudentMarks.findOne({
+      let instituteDetails = await Institute.findOne({
         where: {
-          active: true,
-          student_enrollment_id: studentEnrollment.id,
+          id: studentEnrollment.institute_id,
         },
       });
+
+      // res
+      //   .status(200)
+      //   .json(success("Student Marks fetched successfully!", programmeDetails.id));
 
       let userdocEnrollment = await UserDocs.findOne({
         where: {
@@ -357,28 +377,6 @@ exports.findAll = async (req, res) => {
           },
         ],
       });
-      if (studentMark) {
-        userdocMark = await UserDocs.findOne({
-          where: {
-            // user_id: req.user.id,
-            id: studentMark.userdoc_id,
-          },
-          include: [
-            {
-              model: DocumentType,
-              attributes: ["name"],
-            },
-          ],
-        });
-
-        filePathMark = userdocMark
-          ? req.protocol +
-            "://" +
-            req.get("host") +
-            "/static/user/" +
-            userdocMark.filename
-          : null;
-      }
 
       filePathEnrollment = userdocEnrollment
         ? req.protocol +
@@ -387,20 +385,60 @@ exports.findAll = async (req, res) => {
           "/static/user/" +
           userdocEnrollment.filename
         : null;
+        userDocType = userdocEnrollment? userdocEnrollment.DocumentType.name: null;
+        userDoctypeId = userdocEnrollment? userdocEnrollment.doc_type_id : null;
+        
+      let studentMark = null;
+      if (!studentEnrollment.is_active) {
+        studentMark = await StudentMarks.findOne({
+          where: {
+            active: true,
+            student_enrollment_id: studentEnrollment.id,
+          },
+        });
+
+        if (studentMark) {
+          userdocMark = await UserDocs.findOne({
+            where: {
+              // user_id: req.user.id,
+              id: studentMark.userdoc_id,
+            },
+            include: [
+              {
+                model: DocumentType,
+                attributes: ["name"],
+              },
+            ],
+          });
+
+          filePathMark = userdocMark
+            ? req.protocol +
+              "://" +
+              req.get("host") +
+              "/static/user/" +
+              userdocMark.filename
+            : null;
+
+            userDocType = userdocMark.DocumentType.name;
+            userDoctypeId = userdocMark? userdocMark.doc_type_id: null;
+        }
+      }
 
       finalData.push({
         // id: d.id,
 
-        program_id: programmeDetails.Programme.id,
-        program_title: programmeDetails.Programme.name,
+        enrollment_id: studentEnrollment ? studentEnrollment.id : null,
+        program_id: programmeDetails ? programmeDetails.id : null,
+        program_title: programmeDetails ? programmeDetails.name : null,
         board_university: studentEnrollment.board_university,
-        institute_name: programmeDetails.Institute.name,
-        academic_year: studentEnrollment.board_university,
-        current_semester_id: studentEnrollment.Semester.name,
-        current_class_id: studentEnrollment.Class.name,
+        institute_name: instituteDetails ? instituteDetails.name: null,
+        academic_year_id: studentEnrollment.academic_year_id,
+        current_semester_id: studentEnrollment.Semester? studentEnrollment.Semester.name: null,
+        current_class_id: studentEnrollment.Class? studentEnrollment.Class.name : null,
         other_institute_name: studentEnrollment.other_institute_name,
         other_programme_name: studentEnrollment.other_programme_name,
         other_subject_name: studentEnrollment.other_subject_name,
+        eval_type: evalType? evalType.name : null,
         consolidated_total_marks: studentEnrollment.consolidated_total_marks,
         consolidated_marks_obtained:
           studentEnrollment.consolidated_marks_obtained,
@@ -409,12 +447,11 @@ exports.findAll = async (req, res) => {
         board_university: studentEnrollment.board_university,
         month_year: studentEnrollment.month_year,
         userdoc_id: studentEnrollment.userdoc_id,
-        userdoc_id: studentEnrollment.userdoc_id,
         is_active: studentEnrollment.is_active,
-        userDoc_type: studentMark
-          ? userdocMark.DocumentType.name
-          : userdocEnrollment.DocumentType.name,
+        doc_type_id: userDoctypeId ? userDoctypeId : null,
+        userDoc_type: userDocType,
         userDoc: studentMark ? filePathMark : filePathEnrollment,
+        last_qual_year: studentMark ? studentMark.last_qual_year : null,
       });
     } //end for
 
@@ -502,7 +539,7 @@ exports.updateMarks = async (req, res) => {
       user_id: req.user.id,
       institute_programme_id: instituteProgramme.id,
       subject_id: req.body.subject_id,
-      academic_year: req.body.academic_year,
+      academic_year_id: req.body.academic_year,
       current_semester_id: req.body.current_semester_id,
       current_class_id: req.body.current_class_id,
       other_institute_name: req.body.other_institute_name,

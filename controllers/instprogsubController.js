@@ -68,6 +68,7 @@ exports.get = async function (req, res) {
   LEFT OUTER JOIN "UserDocs" AS "UserDoc" ON "InstituteProgrammeSubject"."userdoc_id" = "UserDoc"."id"
   WHERE "InstituteProgrammeSubject"."institute_id" = :institute_id
     AND "InstituteProgrammeSubject"."programme_id" = :programme_id
+    AND "InstituteProgrammeSubject"."subject_id" = :subject_id
     AND "InstituteProgrammeSubject"."is_active" = true
   LIMIT 1;
 `;
@@ -75,14 +76,20 @@ exports.get = async function (req, res) {
   const replacements = {
     institute_id: req.body.institute_id,
     programme_id: req.body.programme_id,
+    subject_id: req.body.subject_id,
   };
 
   sequelize
     .query(query, { replacements, type: sequelize.QueryTypes.SELECT })
-    .then((results) => {
-      res
+    .then((data) => {
+      if(data.length){
+        res
         .status(200)
-        .json(success("Fee-Structure fetched successfully!", results));
+        .json(success("Fee-Structure fetched successfully!", data));
+      }else{
+        res.status(400).json(errorResponse("Records not found!", 400));
+      }
+      
     })
     .catch((error) => {
       res.status(400).json(errorResponse(error, 400));

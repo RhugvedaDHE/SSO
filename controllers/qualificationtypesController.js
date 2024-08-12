@@ -31,7 +31,7 @@ exports.create = async (req, res) => {
     // Save QualificationTypes in the database
     QualificationTypes.create(qualificationTypes)
       .then(data => {
-        res.status(200).json(success("Bloodgroup created successfully!", data));
+        res.status(200).json(success("Qualification type created successfully!", data));
       })
       .catch(error => {
         res.status(400).json(errorResponse(error, 400));

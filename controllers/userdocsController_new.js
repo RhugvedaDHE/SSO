@@ -109,13 +109,14 @@ exports.uploadDoc = async (req, res) => {
                   where: { id: docId },
                 })
                 .then((updated) => {
-                  console.log("Delete File successfully.");
                   return res
-                    .status(400)
+                    .status(200)
                     .json({ message: "File updated successfully!" });
                 });
             });
           }
+        }).catch((error) =>{
+          res.status(500).json({ message: "Failed to upload document." });
         });
       } else {
         // Create or update user document based on doc_type_id
@@ -133,7 +134,7 @@ exports.uploadDoc = async (req, res) => {
         const createdDoc = await userDocs.create(userDoc).then((created) => {
           res
             .status(200)
-            .json({ message: "File uploaded successfully!", data: created });
+            .json({ message: "File uploaded successfully!", created });
         });
       }
     } catch (error) {

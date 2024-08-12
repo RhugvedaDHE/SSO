@@ -86,5 +86,5 @@ router.post(
   UserBank.update
 );
 
-router.get("/validateIFSC", authenticate, UserBank.validateIFSC);
+router.post("/validateIFSC", authenticate, UserBank.validateIFSC);
 module.exports = router;

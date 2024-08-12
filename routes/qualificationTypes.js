@@ -11,7 +11,7 @@ console.log("In qualificationTypes routes");
 
 // Create a new QualificationTypes
 router.post("/",[
-    check('name').not().isEmpty().withMessage('QualificationTypes name is required'),
+    check('title').not().isEmpty().withMessage('QualificationTypes title is required'),
 ], validate, qualificationTypes.create);
 
 // Retrieve all qualificationTypes

@@ -70,7 +70,7 @@ exports.getUserDetails = function (req, res) {
           },
         ],
       })
-        .then(async (userRole) => {          
+        .then(async (userRole) => {
           let user_roles = [];
           //if not student
           let cio_name_ur;
@@ -82,19 +82,12 @@ exports.getUserDetails = function (req, res) {
                 },
               });
 
-              let institute = await InstituteProgramme.findOne({
-                attributes: ["institute_id"],
+              let institute = await Institute.findOne({
                 where: {
-                  id: student.institute_programme_id,
+                  id: student.institute_id,
                 },
-                include: [
-                  {
-                    model: Institute,
-                    attributes: ["name"],
-                  },
-                ],
               });
-              cio_name_ur = institute.Institute.name;
+              cio_name_ur = institute.name;
             } else {
               queryOptions = {
                 where: {
@@ -102,7 +95,7 @@ exports.getUserDetails = function (req, res) {
                 },
                 attributes: ["cio_id"],
               };
-              
+
               if (ur.Role.type == "dept") {
                 queryOptions.include = ["Department"];
               } else if (ur.Role.type == "company") {
@@ -112,14 +105,12 @@ exports.getUserDetails = function (req, res) {
                 ur.Role.name != "Student"
               ) {
                 queryOptions.include = ["Institute"];
-              } 
-            
-              else if (ur.Role.type == "service") {
+              } else if (ur.Role.type == "service") {
                 queryOptions.include = [Service];
               }
 
               let cio_ur = await EntityUser.findOne(queryOptions);
-             
+
               cio_name_ur =
                 ur.Role.type == "dept"
                   ? cio_ur.Department.name
@@ -138,7 +129,7 @@ exports.getUserDetails = function (req, res) {
               cio_name: cio_name_ur,
             });
           } //for userRole
-          
+
           UserContact.findOne({
             where: {
               user_id: req.user.id,
@@ -161,7 +152,7 @@ exports.getUserDetails = function (req, res) {
                 attributes: ["name"],
               },
             ],
-          }).then(async (userContact) => {           
+          }).then(async (userContact) => {
             let selectedRole = await Role.findOne({
               attributes: ["id", "name", "type"],
               where: {
@@ -177,6 +168,7 @@ exports.getUserDetails = function (req, res) {
               user_role: user_roles.length ? user_roles : userRole, /////////////////////////////////////
               user_Contact: userContact,
             };
+
             response.type = {};
             response.selected_role = {};
             let queryOptions = {};
@@ -191,21 +183,15 @@ exports.getUserDetails = function (req, res) {
                   user_id: req.user.id,
                 },
               });
-              let institute = await InstituteProgramme.findOne({
-                attributes: ["institute_id"],
+              let institute = await Institute.findOne({
+                attributes: ["id"],
                 where: {
-                  id: student.institute_programme_id,
+                  id: student.institute_id,
                 },
-                include: [
-                  {
-                    model: Institute,
-                    attributes: ["name"],
-                  },
-                ],
               });
               if (student) {
                 response.student_enrollment_id = student.id;
-                cio_name = institute.Institute.name;
+                cio_name = institute.name;
               }
               response.type = institute;
             } else if (
@@ -234,7 +220,7 @@ exports.getUserDetails = function (req, res) {
                 queryOptions.include = [Service];
               }
 
-              cio = await EntityUser.findOne(queryOptions);             
+              cio = await EntityUser.findOne(queryOptions);
 
               cio_name =
                 selectedRole.type == "dept"
@@ -1357,7 +1343,10 @@ exports.createStudentDetailsForEpramaan = async function (req, res) {
                               res
                                 .status(200)
                                 .json(
-                                  success("Student-User created successfully", token)
+                                  success(
+                                    "Student-User created successfully",
+                                    token
+                                  )
                                 );
                             })
                             .catch((error) => {
