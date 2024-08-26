@@ -63,18 +63,18 @@ router.post(
       .withMessage("Institute id is required")
       .isNumeric()
       .withMessage("Please select a valid Institute"),
-    check("programme_id")
-      .not()
-      .isEmpty()
-      .withMessage("Your Programme is required")
-      .isNumeric()
-      .withMessage("Please select a valid Programme"),
-    check("class")
-      .not()
-      .isEmpty()
-      .withMessage("Your class is required")
-      .isNumeric()
-      .withMessage("Please select a valid Class"),
+    // check("programme_id")
+    //   .not()
+    //   .isEmpty()
+    //   .withMessage("Your Programme is required")
+    //   .isNumeric()
+    //   .withMessage("Please select a valid Programme"),
+    // check("class")
+    //   .not()
+    //   .isEmpty()
+    //   .withMessage("Your class is required")
+    //   .isNumeric()
+    //   .withMessage("Please select a valid Class"),
     check("firstname")
       .not()
       .isEmpty()
@@ -128,36 +128,36 @@ router.post(
       .withMessage("Your role is required")
       .isNumeric()
       .withMessage("Please select a valid Role"),
-    check("institute_type_id")
-      .not()
-      .isEmpty()
-      .withMessage("Institute type id is required")
-      .isNumeric()
-      .withMessage("Please select a valid Institute type"),
-    check("institute_id")
-      .not()
-      .isEmpty()
-      .withMessage("Institute id is required")
-      .isNumeric()
-      .withMessage("Please select a valid Institute"),
-    check("programme_id")
-      .not()
-      .isEmpty()
-      .withMessage("Your Programme is required")
-      .isNumeric()
-      .withMessage("Please select a valid Programme"),
-    check("class")
-      .not()
-      .isEmpty()
-      .withMessage("Your class is required")
-      .isNumeric()
-      .withMessage("Please select a valid Class"),
-    check("current_semester")
-      .not()
-      .isEmpty()
-      .withMessage("Your Current Semester is required")
-      .isNumeric()
-      .withMessage("Please select a valid Current Semester"),
+    // check("institute_type_id")
+    //   .not()
+    //   .isEmpty()
+    //   .withMessage("Institute type id is required")
+    //   .isNumeric()
+    //   .withMessage("Please select a valid Institute type"),
+    // check("institute_id")
+    //   .not()
+    //   .isEmpty()
+    //   .withMessage("Institute id is required")
+    //   .isNumeric()
+    //   .withMessage("Please select a valid Institute"),
+    // check("programme_id")
+    //   .not()
+    //   .isEmpty()
+    //   .withMessage("Your Programme is required")
+    //   .isNumeric()
+    //   .withMessage("Please select a valid Programme"),
+    // check("class")
+    //   .not()
+    //   .isEmpty()
+    //   .withMessage("Your class is required")
+    //   .isNumeric()
+    //   .withMessage("Please select a valid Class"),
+    // check("current_semester")
+    //   .not()
+    //   .isEmpty()
+    //   .withMessage("Your Current Semester is required")
+    //   .isNumeric()
+    //   .withMessage("Please select a valid Current Semester"),
     check("firstname")
       .not()
       .isEmpty()
@@ -183,7 +183,7 @@ router.post(
       .withMessage("Phone number must contain only numeric digits"),
   ],
   validate,
-  Auth.createStudentDetailsForEpramaan
+  Auth.createUserDetailsForEpramaan
 );
 
 router.post("/refresh-token", Auth.refreshToken);
@@ -541,10 +541,10 @@ router.post(
             const dayDifference = today.getDate() - dob.getDate();
 
             if (
-                age > 15 ||
-                (age === 15 && (monthDifference > 0 || (monthDifference === 0 && dayDifference >= 0)))
+                age > 25 ||
+                (age === 25 && (monthDifference > 0 || (monthDifference === 0 && dayDifference >= 0)))
             ) {
-                throw new Error('Age must not exceed 15 years');
+                throw new Error('Age must not exceed 25 years');
             }
 
             return true;
@@ -622,6 +622,11 @@ router.post(
   "/check-undertaking-status",
   authenticate,
   Auth.checkIfUndertakingSigned
+);
+
+router.post(
+  "/register-GEDCadmin",
+  Auth.registerGEDCAdmin
 );
 
 module.exports = router;

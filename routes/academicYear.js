@@ -14,7 +14,7 @@ router.post(
   AcademicYear.create
 );
 
-router.post(
+router.get(
   "/get/",
   AcademicYear.get
 );

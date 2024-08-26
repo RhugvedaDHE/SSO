@@ -32,9 +32,9 @@ router.post(
     check("branch")
       .not()
       .isEmpty()
-      .withMessage("Branch name is required")
-      .isAlpha()
-      .withMessage("Branch name should contain only alphabets"),
+      .withMessage("Branch name is required"),
+      // .isAlpha()
+      // .withMessage("Branch name should contain only alphabets"),
     check("bank_address")
       .not()
       .isEmpty()
@@ -53,9 +53,7 @@ router.post(
     check("name")
       .not()
       .isEmpty()
-      .withMessage("Bank name is required")
-      .isAlpha()
-      .withMessage("Bank name should contain only alphabets"),
+      .withMessage("Bank name is required"),
     check("account_number")
       .not()
       .isEmpty()
@@ -73,9 +71,7 @@ router.post(
     check("branch")
       .not()
       .isEmpty()
-      .withMessage("Branch name is required")
-      .isAlpha()
-      .withMessage("Branch name should contain only alphabets"),
+      .withMessage("Branch name is required"),
     check("bank_address")
       .not()
       .isEmpty()

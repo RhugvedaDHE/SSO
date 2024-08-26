@@ -352,6 +352,11 @@ exports.getStudentDetails = async function (req, res) {
         {
           model: Gender,
           attributes: ["id", "name"],
+          where: {
+            id: {
+              [Op.ne]: null, // Only include if semester_id is not zero
+            },
+          },
         },
       ],
     });

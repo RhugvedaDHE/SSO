@@ -51,11 +51,11 @@ exports.generate = async function (req, res) {
           process.env.EMAIL_FROM,
           req.body.to,
           subject,
-          template,
-          otp,
+          template,          
           "",
           "",
-          ""
+          "",
+          otp
         );
         if (response) {
           res
@@ -75,7 +75,7 @@ exports.generate = async function (req, res) {
         if (response) {
           res
             .status(200)
-            .json(success("OTP generated successfully!", jsondata));
+            .json(success("OTP generated successfully!", response));
         } else {
           res.status(400).json(errorResponse("Failed to Forward OTP", 400));
         }

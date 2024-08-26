@@ -34,6 +34,9 @@ module.exports = (sequelize, DataTypes) => {
       }),
       StudentEnrollment.belongsTo(models.Stream, {
         foreignKey: 'stream_id'
+      }),
+      StudentEnrollment.belongsTo(models.AcademicYear, {
+        foreignKey: 'academic_year_id'
       })
     }
   }

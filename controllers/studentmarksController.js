@@ -12,6 +12,7 @@ const Subject = require("../models").Subject;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const UserDocs = require("../models").UserDocs;
 const Institute = require("../models").Institute;
+const InstituteType = require("../models").InstituteType;
 const Semester = require("../models").Semester;
 const DocumentType = require("../models").DocumentType;
 const EvalTypes = require("../models").EvalTypes;
@@ -335,6 +336,7 @@ exports.findAll = async (req, res) => {
     let finalData = [];
     let userDocType;
     let userDoctypeId;
+    let userDocName;
     let userdocMark;
     let filePathMark = (filePathEnrollment = null);
     for (const studentEnrollment of studentEnrollments) {
@@ -359,6 +361,12 @@ exports.findAll = async (req, res) => {
         where: {
           id: studentEnrollment.institute_id,
         },
+        include: [
+          {
+            model: InstituteType,
+            attributes: ["name"],
+          },
+        ]
       });
 
       // res
@@ -385,6 +393,7 @@ exports.findAll = async (req, res) => {
           "/static/user/" +
           userdocEnrollment.filename
         : null;
+        userDocName = userdocEnrollment? userdocEnrollment.filename : null;
         userDocType = userdocEnrollment? userdocEnrollment.DocumentType.name: null;
         userDoctypeId = userdocEnrollment? userdocEnrollment.doc_type_id : null;
         
@@ -418,7 +427,7 @@ exports.findAll = async (req, res) => {
               "/static/user/" +
               userdocMark.filename
             : null;
-
+            userDocName = userdocMark ? userdocMark.filename : null;
             userDocType = userdocMark.DocumentType.name;
             userDoctypeId = userdocMark? userdocMark.doc_type_id: null;
         }
@@ -431,6 +440,8 @@ exports.findAll = async (req, res) => {
         program_id: programmeDetails ? programmeDetails.id : null,
         program_title: programmeDetails ? programmeDetails.name : null,
         board_university: studentEnrollment.board_university,
+        institute_type_id: instituteDetails ? instituteDetails.institute_type_id: null,
+        institute_type_name: instituteDetails ? instituteDetails.InstituteType.name: null,
         institute_name: instituteDetails ? instituteDetails.name: null,
         academic_year_id: studentEnrollment.academic_year_id,
         current_semester_id: studentEnrollment.Semester? studentEnrollment.Semester.name: null,
@@ -438,6 +449,7 @@ exports.findAll = async (req, res) => {
         other_institute_name: studentEnrollment.other_institute_name,
         other_programme_name: studentEnrollment.other_programme_name,
         other_subject_name: studentEnrollment.other_subject_name,
+        eval_type_id: evalType? evalType.id : null,
         eval_type: evalType? evalType.name : null,
         consolidated_total_marks: studentEnrollment.consolidated_total_marks,
         consolidated_marks_obtained:
@@ -450,6 +462,7 @@ exports.findAll = async (req, res) => {
         is_active: studentEnrollment.is_active,
         doc_type_id: userDoctypeId ? userDoctypeId : null,
         userDoc_type: userDocType,
+        userDocFileName: userDocName,
         userDoc: studentMark ? filePathMark : filePathEnrollment,
         last_qual_year: studentMark ? studentMark.last_qual_year : null,
       });

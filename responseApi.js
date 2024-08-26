@@ -115,10 +115,10 @@ exports.EmailNotification = (
   to,
   subject,
   template,
-  otp,
+  name,
   username,
-  password, 
-  name
+  password,
+  otp
 ) => {
   console.log("email microservice", subject);
   try {
@@ -127,10 +127,11 @@ exports.EmailNotification = (
       to: to,
       subject: subject,
       template: template,
-      otp: otp,
+      firstname: name,
       username: username,
       password: password,
-      name: name
+      otp: otp
+      
     });
     return response;
   } catch (error) {
@@ -140,7 +141,7 @@ exports.EmailNotification = (
 
 //call SMS microservice
 exports.SMSNotification = (to, template) => {
-  console.log("SMS microservice");
+  console.log("SMS microservice", to);
   const url =
     "https://japi.instaalerts.zone/httpapi/QueryStringReceiver?ver=1.0&key=1XC7N4zUq8ct40avCum5AA==&dest=" +
     to +

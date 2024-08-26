@@ -6,6 +6,7 @@ exports.create = function (req, res){
     console.log(req.body);
     AcademicYear.create({
         value: (req.body.value),
+        is_active: (req.body.current),
     }).then(AcademicYear => {
         res.status(200).json(success("Academic Year created successfully!"))
     }).catch(error => {
@@ -14,7 +15,6 @@ exports.create = function (req, res){
 }
 
 exports.get = async function (req, res){
-  console.log("hey there", req.body)
   await AcademicYear
     .findAll({
       where: {

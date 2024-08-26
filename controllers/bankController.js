@@ -29,7 +29,7 @@ exports.update = function (req, res) {
       user_id: req.user.id,
       name: req.body.name,
       branch: req.body.branch,
-      account_number: req.body.name,
+      account_number: req.body.account_number,
       ifsc_code: req.body.ifsc_code,
       bank_address: req.body.bank_address,
       is_active: req.body.is_active? req.body.is_active: true,

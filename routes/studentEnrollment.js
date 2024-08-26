@@ -26,7 +26,7 @@ router.post("/", [
       .withMessage("Your Programme is required")
       .isNumeric()
       .withMessage("Please enter a valid Programme"),
-      check("class_id")
+      check("current_class_id")
       .not()
       .isEmpty()
       .withMessage("Your Class is required")

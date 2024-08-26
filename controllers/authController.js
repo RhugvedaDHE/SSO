@@ -87,6 +87,7 @@ exports.getUserDetails = function (req, res) {
                   id: student.institute_id,
                 },
               });
+
               cio_name_ur = institute.name;
             } else {
               queryOptions = {
@@ -138,18 +139,38 @@ exports.getUserDetails = function (req, res) {
               {
                 model: Taluka,
                 attributes: ["name"],
+                where: {
+                  id: {
+                    [Op.ne]: null, // Only include if semester_id is not zero
+                  },
+                },
               },
               {
                 model: State,
                 attributes: ["name"],
+                where: {
+                  id: {
+                    [Op.ne]: null, // Only include if semester_id is not zero
+                  },
+                },
               },
               {
                 model: District,
                 attributes: ["name"],
+                where: {
+                  id: {
+                    [Op.ne]: null, // Only include if semester_id is not zero
+                  },
+                },
               },
               {
                 model: Country,
                 attributes: ["name"],
+                where: {
+                  id: {
+                    [Op.ne]: null, // Only include if semester_id is not zero
+                  },
+                },
               },
             ],
           }).then(async (userContact) => {
@@ -314,7 +335,8 @@ exports.register = async function (req, res) {
                           console.log("instprog", instprog.id);
                           StudentEnrollment.create({
                             user_id: user.id,
-                            institute_programme_id: instprog.id,
+                            institute_id: req.body.institute_id,
+                            programme_id: req.body.programme_id,
                             current_class_id: req.body.class,
                             current_semester_id: req.body.current_semester,
                             subject_id: req.body.subject_id,
@@ -653,19 +675,10 @@ exports.registerAdmins = function (req, res) {
                     }
                   })
                   .catch((error) => {
-                    res
-                      .status(400)
-                      .json(errorResponse("Failed to save Entity User", 400));
+                    res.status(400).json(errorResponse(error, 400));
                   });
               })
               .catch((error) => {
-                console.log(
-                  "*********************************************************************"
-                );
-                console.log(
-                  "errrrooorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrris: ",
-                  error
-                );
                 res
                   .status(400)
                   .json(errorResponse("Failed to save Admin Designation", 400));
@@ -1241,34 +1254,51 @@ exports.verifyStudent = async (req, res) => {
     });
 };
 
-//requirement for students who log in using e-pramaan
-exports.createStudentDetailsForEpramaan = async function (req, res) {
+//requirement for users who log in using e-pramaan
+exports.createUserDetailsForEpramaan = async function (req, res) {
   // const result = await sequelize.transaction(async (t) => {
   // var salt = bcrypt.genSaltSync(10);
   // var hash = bcrypt.hashSync(req.body.password, salt);
 
-  Role.findOne(
-    { attributes: ["id", "name"] },
-    {
-      where: {
-        id: req.body.role_id,
-      },
-    }
-  )
-    .then((role) => {
-      console.log(role);
+  User.findOne({
+    where: {
+      username: req.body.username,
+    },
+  }).then((user) => {
+    if (user) {
+      tokendata = {
+        username: user.username,
+        userId: user.id,
+        userRole: 7,
+      };
+
+      var token = jwt.sign(
+        JSON.parse(JSON.stringify(tokendata)),
+        process.env.JWT_SECRET,
+        {
+          expiresIn: 120000,
+        }
+      );
+
+      res
+        .status(200)
+        .json(success("Student-User logged in successfully", token));
+    } else {
+            
       User.create({
         username: req.body.username,
         password: "",
         phone: req.body.phone,
         email: req.body.email,
-        status: "REG",
+        status: "VER", //VER
+        is_verified: true, //VER
+        verified_by: 77, //superadmin
       })
-        .then((user) => {
+        .then((createdUser) => {
           //save user id and college id in students and staff table
           UserRole.create({
-            user_id: user.id,
-            role_id: req.body.role_id,
+            user_id: createdUser.id,
+            role_id: 7, //only student
             preferred_role: true,
           })
             .then((userRole) => {
@@ -1281,102 +1311,164 @@ exports.createStudentDetailsForEpramaan = async function (req, res) {
               })
                 .then((userpersonaldetails) => {
                   UserContact.create({
-                    user_id: user.id,
-                  }).then((userContact) => {
-                    //check if student
-                    if (req.body.role_id == 7) {
-                      console.log(
-                        "inside studenntttttttttttttttttttttttttttttt"
+                    user_id: createdUser.id,
+                  })
+                    .then((userContact) => {
+                      // const template =
+                      //   "Hello " +
+                      //   req.body.firstname +
+                      //   "! Your application has been successfully submitted on SUGAM Portal! " +
+                      //   "Your profile is pending for verification.-Directorate of Higher Education.";
+
+                      // var responseSMS = SMSNotification(
+                      //   req.body.phone,
+                      //   template
+                      // );
+
+                      tokendata = {
+                        username: createdUser.username,
+                        userId: createdUser.id,
+                        userRole: 7,
+                      };
+
+                      var token = jwt.sign(
+                        JSON.parse(JSON.stringify(tokendata)),
+                        process.env.JWT_SECRET,
+                        {
+                          expiresIn: 120000,
+                        }
                       );
-                      InstituteProgramme.findOne({
-                        attributes: ["id"],
-                        where: {
-                          institute_id: req.body.institute_id,
-                          programme_id: req.body.programme_id,
-                        },
-                      })
-                        .then((instprog) => {
-                          console.log("instprog", instprog);
-                          console.log("instprog", instprog.id);
-                          StudentEnrollment.create({
-                            user_id: user.id,
-                            institute_programme_id: instprog.id,
-                            current_class_id: req.body.class,
-                            current_semester_id: req.body.current_semester,
-                            subject_id: req.body.subject_id,
-                          })
-                            .then((studentEnrollment) => {
-                              const template =
-                                "Hello " +
-                                req.body.firstname +
-                                "! Your application has been successfully submitted on SUGAM Portal! " +
-                                "Your profile is pending for verification.-Directorate of Higher Education.";
 
-                              var responseSMS = SMSNotification(
-                                req.body.phone,
-                                template
-                              );
+                      // var response =
+                      //   notificationController.createNotification(
+                      //     49,
+                      //     userRole.id,
+                      //     "Registration",
+                      //     "Your Resgistration has been created Successfully! "
+                      //   );
 
-                              console.log(response);
-                              tokendata = {
-                                username: user.username,
-                                userId: user.id,
-                                userRole: role.role_id,
-                              };
-
-                              var token = jwt.sign(
-                                JSON.parse(JSON.stringify(tokendata)),
-                                process.env.JWT_SECRET,
-                                {
-                                  expiresIn: 120000,
-                                }
-                              );
-
-                              var response =
-                                notificationController.createNotification(
-                                  49,
-                                  userRole.id,
-                                  "Registration",
-                                  "Your Resgistration has been created Successfully! "
-                                );
-
-                              res
-                                .status(200)
-                                .json(
-                                  success(
-                                    "Student-User created successfully",
-                                    token
-                                  )
-                                );
-                            })
-                            .catch((error) => {
-                              res.status(400).json(errorResponse(error, 400));
-                            });
-                        })
-                        .catch((error) => {
-                          res.status(400).json(errorResponse("InstProg", 400));
-                        });
-                    } else {
                       res
-                        .status(400)
-                        .json(errorResponse("Select a valid role!", 400));
-                    }
-                  });
+                        .status(200)
+                        .json(
+                          success("Student-User created successfully", token)
+                        );
+                    })
+                    .catch((error) => {
+                      res.status(400).json(errorResponse(error, 400));
+                    });
                 })
-                // }) //transaction close
                 .catch((error) => {
-                  res.status(400).json(errorResponse("here", 400));
+                  res.status(400).json(errorResponse("InstProg", 400));
                 });
             })
+            // }) //transaction close
             .catch((error) => {
-              res.status(400).json(errorResponse(error, 400));
+              res.status(400).json(errorResponse("here", 400));
             });
+
+          // })
+          // .catch((error) => {
+          //   res.status(400).json(errorResponse(error, 400));
+          // });
         })
         .catch((error) => {
           res.status(400).json(errorResponse(error, 400));
         });
-    })
-    .catch((error) => {
-      res.status(400).json(errorResponse(error, 400));
+    }
+  });
+  // .catch((error) => {
+  //   res.status(400).json(errorResponse(error, 400));
+  // });
+};
+
+exports.registerGEDCAdmin = async function (req, res) {
+  var userCredentialsdata;
+  userCredentialsdata = userCredentials(req.body.email, req.body.phone);
+  var salt = bcrypt.genSaltSync(10);
+  var hash = bcrypt.hashSync(userCredentialsdata.password, salt);
+
+  User.create({
+    username: userCredentialsdata.username,
+    password: hash,
+    phone: req.body.phone,
+    email: req.body.email,
+    status: "VER",
+    is_verified: true,
+  }).then((user) => {
+    //save superAdmin Role
+    UserRole.create({
+      user_id: user.id,
+      role_id: req.body.role_id,
+      preferred_role: true,
+      is_active: true,
+    }).then((userRole) => {
+      //Save SuperAdmin Personal Details
+      UserPersonalDetails.create({
+        user_id: userRole.user_id,
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
+        phone: req.body.phone,
+        email: req.body.email,
+      }).then((UserPersonalDetails) => {
+        UserDesignation.create({
+          user_id: userRole.user_id,
+          designation_id: req.body.designation_id,
+          employementtype_id: req.body.employementtype_id,
+        })
+          .then((UserDesignation) => {
+            EntityUser.create({
+              user_id: userRole.user_id,
+              entity_type_id: req.body.entity_type_id,
+              cio_id: req.body.cio_id,
+            })
+              .then(async (EntityUser) => {
+                console.log("call email Notification function");
+                var from = process.env.EMAIL_FROM;
+                var subject = "User Credentials";
+                var template = "welcome";
+                var response;
+
+                // response = await EmailNotification(
+                //   from,
+                //   req.body.email,
+                //   subject,
+                //   template,
+                //   req.body.firstname,
+                //   userCredentialsdata.username,
+                //   userCredentialsdata.password,
+                //   ""
+                // );
+                // if (response) {
+                res
+                  .status(200)
+                  .json(
+                    success(
+                      "GEDC admin User Credentials forwarded successfully"
+                    )
+                  );
+                // } else {
+                //   res
+                //     .status(400)
+                //     .json(
+                //       errorResponse(
+                //         "Failed to Forwarded User Credentials",
+                //         400
+                //       )
+                //     );
+                // }
+              })
+              .catch((error) => {
+                res
+                  .status(400)
+                  .json(errorResponse("Failed to save Entity User", 400));
+              });
+          })
+          .catch((error) => {
+            res
+              .status(400)
+              .json(errorResponse("Failed to save Admin Designation", 400));
+          });
+      });
     });
+  });
 };

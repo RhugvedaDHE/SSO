@@ -36,7 +36,7 @@ exports.create = async (req, res) => {
         annual_income: req.body.annual_income,
         gender: req.body.gender_id,
         aadhar_card_no: req.body.aadhar_card_no,
-        is_deceased: req.body.is_deceased,
+        is_deceased: parseInt(req.body.is_deceased) == 1 ? true : false,
         is_employed: req.body.is_employed,
       };
 
