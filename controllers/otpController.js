@@ -10,6 +10,7 @@ const {
 } = require("../responseApi");
 const bcrypt = require("bcryptjs");
 require("dotenv").config();
+const Op = require("sequelize").Op;
 
 exports.generate = async function (req, res) {
   var salt = bcrypt.genSaltSync(10);
@@ -294,6 +295,7 @@ exports.reset_attempts = async function (req, res) {
         });
     }
   } else {
+    res.status(400).json(errorResponse("Not found!", 400));
   }
 };
 

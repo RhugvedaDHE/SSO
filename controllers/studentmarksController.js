@@ -198,7 +198,7 @@ exports.createEnrollment = async (req, res) => {
   const studentEnrollment = {
     user_id: req.user.id,
     qual_type_id: req.body.qual_type_id,
-    evaltype_id: req.body.evaltype_id,
+    evaltype_id: req.body.eval_type_id,
     stream_id: req.body.stream_id,
     institute_id: req.body.institute_id,
     programme_id: req.body.programme_id,
@@ -309,13 +309,21 @@ exports.findAll = async (req, res) => {
     include: [
       {
         model: Subject,
-        attributes: ["name"],
+        attributes: ["id", "name"],
       },
       {
         model: Class,
         attributes: ["name"],
       },
-
+      {
+        model: EvalTypes,
+        required: false, // This makes the inclusion optional
+        where: {
+          id: {
+            [Op.not]: null, // Include EvalTypes only when id is not null
+          },
+        },
+      },
       {
         model: Semester,
         attributes: ["name"],
@@ -340,16 +348,14 @@ exports.findAll = async (req, res) => {
     let userdocMark;
     let filePathMark = (filePathEnrollment = null);
     for (const studentEnrollment of studentEnrollments) {
-
       let evalType = null;
-      if(studentEnrollment.evaltype_id){
+      if (studentEnrollment.evaltype_id) {
         evalType = await EvalTypes.findOne({
           where: {
-            id: studentEnrollment.evaltype_id
-          }
+            id: studentEnrollment.evaltype_id,
+          },
         });
       }
-      
 
       let programmeDetails = await Programme.findOne({
         where: {
@@ -366,14 +372,19 @@ exports.findAll = async (req, res) => {
             model: InstituteType,
             attributes: ["name"],
           },
-        ]
+        ],
       });
 
       // res
       //   .status(200)
       //   .json(success("Student Marks fetched successfully!", programmeDetails.id));
 
-      let userdocEnrollment = await UserDocs.findOne({
+      let userdocEnrollment = null;
+
+      if(studentEnrollment.userdoc_id){
+
+      
+      userdocEnrollment = await UserDocs.findOne({
         where: {
           // user_id: req.user.id,
           id: studentEnrollment.userdoc_id,
@@ -385,18 +396,18 @@ exports.findAll = async (req, res) => {
           },
         ],
       });
-
-      filePathEnrollment = userdocEnrollment
+    }
+      filePathEnrollment = userdocEnrollment != null
         ? req.protocol +
           "://" +
           req.get("host") +
           "/static/user/" +
           userdocEnrollment.filename
         : null;
-        userDocName = userdocEnrollment? userdocEnrollment.filename : null;
-        userDocType = userdocEnrollment? userdocEnrollment.DocumentType.name: null;
-        userDoctypeId = userdocEnrollment? userdocEnrollment.doc_type_id : null;
-        
+      userDocName = userdocEnrollment != null ? userdocEnrollment.filename : null;
+      userDocType = userdocEnrollment != null ? null : null;
+      userDoctypeId = userdocEnrollment != null ? userdocEnrollment.doc_type_id : null;
+
       let studentMark = null;
       if (!studentEnrollment.is_active) {
         studentMark = await StudentMarks.findOne({
@@ -427,9 +438,9 @@ exports.findAll = async (req, res) => {
               "/static/user/" +
               userdocMark.filename
             : null;
-            userDocName = userdocMark ? userdocMark.filename : null;
-            userDocType = userdocMark.DocumentType.name;
-            userDoctypeId = userdocMark? userdocMark.doc_type_id: null;
+          userDocName = userdocMark ? userdocMark.filename : null;
+          userDocType = userdocMark.DocumentType.name;
+          userDoctypeId = userdocMark ? userdocMark.doc_type_id : null;
         }
       }
 
@@ -440,31 +451,56 @@ exports.findAll = async (req, res) => {
         program_id: programmeDetails ? programmeDetails.id : null,
         program_title: programmeDetails ? programmeDetails.name : null,
         board_university: studentEnrollment.board_university,
-        institute_type_id: instituteDetails ? instituteDetails.institute_type_id: null,
-        institute_type_name: instituteDetails ? instituteDetails.InstituteType.name: null,
-        institute_name: instituteDetails ? instituteDetails.name: null,
+        institute_type_id: instituteDetails
+          ? instituteDetails.institute_type_id
+          : null,
+        institute_type_name: instituteDetails
+          ? instituteDetails.InstituteType.name
+          : null,
+        institute_id: instituteDetails ? instituteDetails.id : null,
+        institute_name: instituteDetails ? instituteDetails.name : null,
         academic_year_id: studentEnrollment.academic_year_id,
-        current_semester_id: studentEnrollment.Semester? studentEnrollment.Semester.name: null,
-        current_class_id: studentEnrollment.Class? studentEnrollment.Class.name : null,
+        current_semester_id: studentEnrollment.Semester
+          ? studentEnrollment.Semester.name
+          : null,
+        current_class_id: studentEnrollment.Class
+          ? studentEnrollment.Class.name
+          : null,
         other_institute_name: studentEnrollment.other_institute_name,
         other_programme_name: studentEnrollment.other_programme_name,
         other_subject_name: studentEnrollment.other_subject_name,
-        eval_type_id: evalType? evalType.id : null,
-        eval_type: evalType? evalType.name : null,
+        subject_id: studentEnrollment.Subject
+          ? studentEnrollment.Subject.id
+          : null,
+        subject_name: studentEnrollment.Subject
+          ? studentEnrollment.Subject.name
+          : null,
+        eval_type_id: evalType ? evalType.id : null,
+        eval_type: evalType ? evalType.name : null,
         consolidated_total_marks: studentEnrollment.consolidated_total_marks,
         consolidated_marks_obtained:
           studentEnrollment.consolidated_marks_obtained,
         consolidated_grade_obtained:
-          studentEnrollment.consolidated_marks_obtained,
+          studentEnrollment.consolidated_grade_obtained,
         board_university: studentEnrollment.board_university,
-        month_year: studentEnrollment.month_year,
-        userdoc_id: studentEnrollment.userdoc_id,
+        month_year: studentEnrollment.month_year,        
         is_active: studentEnrollment.is_active,
         doc_type_id: userDoctypeId ? userDoctypeId : null,
+        userdoc_id: studentEnrollment.userdoc_id,
         userDoc_type: userDocType,
         userDocFileName: userDocName,
         userDoc: studentMark ? filePathMark : filePathEnrollment,
         last_qual_year: studentMark ? studentMark.last_qual_year : null,
+
+        //marks data
+        userMarks_id: studentMark ? studentMark.id : null,
+        userDoc_mark: studentMark ? filePathMark : null,
+        userMarks_semester_id: studentMark ? studentMark.semester_id : null,
+        userMarks_eval_type_id: studentMark ? studentMark.eval_type_id : null,
+        userMarks_total_marks: studentMark ? studentMark.total_marks : null,
+        userMarks_marks_obtained: studentMark ? studentMark.marks_obtained : null,
+        userMarks_grade_obtained: studentMark ? studentMark.grade_obtained : null,
+        userMarks_month_year: studentMark ? studentMark.month_year : null,
       });
     } //end for
 
@@ -605,28 +641,30 @@ exports.updateMarks = async (req, res) => {
   }
 };
 
-// Delete a StudentMarks with the specified id in the request
-exports.delete = (req, res) => {
+// Delete a StudentMarks and corresponding enrollment with the specified id in the request
+exports.delete = async (req, res) => {
   const id = req.body.id;
 
-  StudentMarks.destroy({
+  var studentMarks = await StudentMarks.findOne({
+    where: {
+      id: id,
+    },
+  });
+
+  await StudentMarks.destroy({
     where: { id: id },
   })
-    .then((num) => {
-      if (num == 1) {
+    .then(async (num) => {
+      await StudentEnrollment.destroy({
+        where: {
+          id: studentMarks.student_enrollment_id,
+          is_active: 0,
+        },
+      }).then((deleted) => {
         res
           .status(200)
           .json(success("Student Marks were deleted successfully!"));
-      } else {
-        res
-          .status(400)
-          .json(
-            errorResponse(
-              ` Cannot delete StudentMarks with id=${id}. Maybe Student Marks were not found!`,
-              400
-            )
-          );
-      }
+      });
     })
     .catch((err) => {
       res
@@ -635,6 +673,27 @@ exports.delete = (req, res) => {
           errorResponse(err + ` Cannot delete Student Marks with id=${id}`, 400)
         );
     });
+};
+
+// Delete a StudentMarks with the specified id in the request
+exports.deleteOnlyMarks = async (req, res) => {
+  const id = req.body.id;
+
+  var studentMarks = await StudentMarks.findOne({
+    where: {
+      id: id,
+    },
+  });
+
+  await StudentMarks.destroy({
+    where: { id: id },
+  })
+    .then(async (num) => {
+      
+        res
+          .status(200)
+          .json(success("Student Marks were deleted successfully!"));
+      });
 };
 
 // Delete all StudentMarks from the database.
@@ -691,3 +750,5 @@ exports.calculatePercentage = (req, res) => {
     })
   );
 };
+
+exports.deleteMarks = (req, res) => {};

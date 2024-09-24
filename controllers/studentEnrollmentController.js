@@ -9,9 +9,11 @@ const Programme = require("../models").Programme;
 const Subject = require("../models").Subject;
 const Class = require("../models").Class;
 const Semester = require("../models").Semester;
+const Stream = require("../models").Stream;
 const User = require("../models").User;
 const Institute = require("../models").Institute;
 const InstituteType = require("../models").InstituteType;
+const EvalTypes = require("../models").EvalTypes;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const { success, errorResponse, validation } = require("../responseApi");
 const e = require("express");
@@ -21,34 +23,50 @@ const e = require("express");
 //const StudentMarks = db.studentMarks;
 const Op = require("sequelize").Op;
 
-// Find a single StudentEnrollment with an id
+// Find a single StudentEnrollment with an id (current enrollment/register)
 exports.findOne = (req, res) => {
-  StudentEnrollment.findOne({
+  StudentEnrollment.findAll({
     include: [
       {
         model: Class,
-        where: {
-          id: {
-            [Op.ne]: 0, // Only include if class is not zero
-          },
-        },
+        // where: {
+        //   id: {
+        //     [Op.ne]: 0, // Only include if class is not zero
+        //   },
+        // },
+      },
+      {
+        model: EvalTypes,
+        // required: false, // This makes the inclusion optional
+        // where: {
+        //   id: {
+        //     [Op.not]: null, // Include EvalTypes only when id is not null
+        //   },
+        // },
       },
       {
         model: Semester,
+      },
+      {
+        model: Stream,
         // where: {
         //   id: {
-        //     [Op.ne]: 0, // Only include if semester_id is not zero
+        //     [Op.ne]: 0, // Only include if class is not zero
+        //     [Op.ne]: null, // Only include if class is not zero
         //   },
         // },
       },
     ],
     where: {
       user_id: req.user.id,
-      // is_active: 1,
+      is_active: 1,
     },
   })
-    .then(async (data) => {
-      if (data) {
+    .then(async (datas) => {
+      let finalData = [];
+      if (datas.length) {
+        for (const data of datas) {
+
         let institute = await Institute.findOne({
           attributes: ["name"],
           include: [
@@ -81,6 +99,7 @@ exports.findOne = (req, res) => {
           subjectDetails.name = "";
         }
 
+        
         academic = {
           student_enrollemnt_id: data.id,
           academic_year_id: data.academic_year_id,
@@ -92,33 +111,38 @@ exports.findOne = (req, res) => {
           program_name: program.name,
           subject_id: subjectDetails.id,
           subject_name: subjectDetails.name,
+          stream_id: data.Stream ? data.Stream.id : null,
+          stream_name: data.Stream ? data.Stream.name : null,
           // board_univ: instituteProgramme.board_univ,
           current_semester_id: data.current_semester_id,
           current_semester_name: data.Semester ? data.Semester.name : null,
+          eval_type_id: data.evaltype_id,
+          eval_type_name: data.EvalTypes ? data.EvalTypes.name : null,
           current_class: data.Class,
           is_active: data.is_active,
         };
-
-        res
-          .status(200)
-          .json(
-            success(
-              "Student Enrollment details fetched successfully!",
-              academic
-            )
-          );
+        finalData.push({academic});
+        
+        }
       } else {
         res
           .status(400)
           .json(
             errorResponse(
-              err +
-                "UP Error retrieving Student Enrollment details with id=" +
-                id,
+              err + "UP Error retrieving Student Enrollment details with id=",
               400
             )
           );
       }
+
+      res
+          .status(200)
+          .json(
+            success(
+              "Student Enrollment details fetched successfully!",
+              finalData
+            )
+          );
     })
     .catch((err) => {
       res
@@ -134,14 +158,7 @@ exports.findOne = (req, res) => {
 
 // Save a single StudentEnrollment with an id
 exports.update = async (req, res) => {
-  await InstituteProgramme.findOne({
-    attributes: ["id"],
-    where: {
-      institute_id: req.body.institute_id,
-      programme_id: req.body.programme_id,
-    },
-  })
-    .then(async (instprog) => {
+ 
       await StudentEnrollment.update(
         {
           user_id: req.user.id,
@@ -151,11 +168,10 @@ exports.update = async (req, res) => {
           current_semester_id: req.body.current_semester_id,
           subject_id: req.body.subject_id,
           academic_year_id: req.body.academic_year_id,
+          stream_id: req.body.stream_id,
           is_active: req.body.pursuing,
         },
-        { where: { user_id: req.user.id,
-          id: req.body.enrollment_id
-         } }
+        { where: { user_id: req.user.id, id: req.body.enrollment_id } }
       ).then(async (data) => {
         res
           .status(200)
@@ -163,17 +179,7 @@ exports.update = async (req, res) => {
             success("Student Enrollment details updated successfully!", data)
           );
       });
-    })
-    .catch((err) => {
-      res
-        .status(400)
-        .json(
-          errorResponse(
-            err + " Error updating Student Enrollment details with id=",
-            400
-          )
-        );
-    });
+    
 };
 
 // create a new StudentEnrollment
@@ -195,6 +201,7 @@ exports.create = async (req, res) => {
       current_semester_id: req.body.current_semester_id,
       subject_id: req.body.subject_id,
       academic_year_id: req.body.academic_year_id,
+      stream_id: req.body.stream_id,
       is_active: req.body.pursuing,
     }
     // { where: { user_id: req.user.id } } //need token on priority
@@ -215,4 +222,17 @@ exports.create = async (req, res) => {
           errorResponse(err + " Error creating Student Enrollment details", 400)
         );
     });
+};
+
+// Delete a studentEnrollment with the specified id in the request
+exports.deleteOnlyEnrollment = async (req, res) => {
+  const id = req.body.id;
+
+  await StudentEnrollment.destroy({
+    where: { id: id },
+  }).then(async (num) => {
+    res
+      .status(200)
+      .json(success("Student enrollment were deleted successfully!"));
+  });
 };

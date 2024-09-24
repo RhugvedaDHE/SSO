@@ -53,18 +53,18 @@ router.post("/create", [
   //   .withMessage("Your Programme is required")
   //   .isNumeric()
   //   .withMessage("Please enter a valid Programme"),
-  check("user_id")
-    .not()
-    .isEmpty()
-    .withMessage("User is required")
-    .isNumeric()
-    .withMessage("Please enter a valid User"),
-  check("inst_prog_id")
-    .not()
-    .isEmpty()
-    .withMessage("Your Institute-Programme is required")
-    .isNumeric()
-    .withMessage("Please enter a valid Institute-Programme"),
+  // check("user_id")
+  //   .not()
+  //   .isEmpty()
+  //   .withMessage("User is required")
+  //   .isNumeric()
+  //   .withMessage("Please enter a valid User"),
+  // check("inst_prog_id")
+  //   .not()
+  //   .isEmpty()
+  //   .withMessage("Your Institute-Programme is required")
+  //   .isNumeric()
+  //   .withMessage("Please enter a valid Institute-Programme"),
     check("current_class_id")
     .not()
     .isEmpty()
@@ -77,6 +77,8 @@ router.post("/create", [
     .withMessage("Your Subject is required")
     .isNumeric()
     .withMessage("Please enter a valid Subject"),
-], validate, studentEnrollment.create);
+], validate, authenticate, studentEnrollment.create);
+
+router.post("/delete", authenticate, studentEnrollment.deleteOnlyEnrollment);
 
 module.exports = router;

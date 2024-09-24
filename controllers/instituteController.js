@@ -12,7 +12,7 @@ const Programme = require("../models").Programme;
 const Subject = require("../models").Subject;
 const UserDocs = require("../models").UserDocs;
 const InstituteStaff = require("../models").InstituteStaff;
-const Staff = require("../models").Staff;
+const User = require("../models").User;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
 const Role = require("../models").Role;
 const UserRole = require("../models").UserRole;
@@ -301,4 +301,48 @@ exports.getInstituteProgrammesSubjects = async function (req, res) {
   } else {
     return res.status(400).json(errorResponse(error, 400));
   }
+};
+
+//get institute data- all programmes, subjects and documents
+exports.getHOIId = async function (req, res) {
+  const institute = await Institute.findOne({
+    where: {
+      id: req.body.id, // Replace with the actual institute ID
+    },
+    include: [
+      {
+        model: User,
+        where: Sequelize.where(Sequelize.col('Institute.hoi_id'), '=', Sequelize.col('User.id')), 
+        // This explicitly tells Sequelize to compare these two columns
+      },
+    ],
+  });
+
+  
+
+  if(institute){
+    const userRole = await UserRole.findOne({
+      where: {
+        user_id: institute.User.id
+      },
+      include: [
+        {
+          model: Role,
+        }
+      ],
+    })
+
+    let response = {
+      institute_id: institute.id,
+      hoi_user_id: institute.User.id,
+      role_id: userRole.Role.id,
+    }
+    return res
+    .status(200)
+    .json(success("HOI and Role id fetched successfully!", response));
+  }else{
+    return res
+    .status(200)
+    .json(success("Institute Not found!"));
+  }  
 };

@@ -332,5 +332,5 @@ router.post(
   studentMarks.createMarks
 );
 
-// router.delete("/", studentMarks.deleteAll);
+router.post("/delete-marks", authenticate, studentMarks.deleteOnlyMarks);
 module.exports = router;

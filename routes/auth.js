@@ -104,6 +104,103 @@ router.post(
 );
 
 router.post(
+  "/register/HSStudent",
+  [
+    check("username").not().isEmpty().withMessage("Your username is required"),
+    check("password")
+      .isStrongPassword({
+        minLength: 8,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1,
+        returnScore: false,
+        pointsPerUnique: 1,
+        pointsPerRepeat: 0.5,
+        pointsForContainingLower: 10,
+        pointsForContainingUpper: 10,
+        pointsForContainingNumber: 10,
+        pointsForContainingSymbol: 10,
+      })
+      .exists({ checkFalsy: true })
+      .withMessage(
+        "Password should Contain Atleast 1 uppercase, Atleast 1 lowercase, Atleast 1 special character and should be 8 chars long."
+      ),
+    check("password")
+      .exists()
+      .custom((value) => {
+        if (value.includes(" ")) {
+          console.log("Password:", value);
+          throw new Error("Password must not contain spaces");
+        }
+        return true;
+      }),
+    check(
+      "passwordConfirmation",
+      "passwordConfirmation field must have the same value as the password field"
+    )
+      .exists()
+      .custom((value, { req }) => value === req.body.password),
+
+    check("role_id")
+      .not()
+      .isEmpty()
+      .withMessage("Your role is required")
+      .isNumeric()
+      .withMessage("Please select a valid Role"),
+    check("institute_type_id")
+      .not()
+      .isEmpty()
+      .withMessage("Institute type id is required")
+      .isNumeric()
+      .withMessage("Please select a valid Institute type"),
+    check("institute_id")
+      .not()
+      .isEmpty()
+      .withMessage("Institute id is required")
+      .isNumeric()
+      .withMessage("Please select a valid Institute"),
+    // check("programme_id")
+    //   .not()
+    //   .isEmpty()
+    //   .withMessage("Your Programme is required")
+    //   .isNumeric()
+    //   .withMessage("Please select a valid Programme"),
+    // check("class")
+    //   .not()
+    //   .isEmpty()
+    //   .withMessage("Your class is required")
+    //   .isNumeric()
+    //   .withMessage("Please select a valid Class"),
+    check("firstname")
+      .not()
+      .isEmpty()
+      .withMessage("Your First name is required")
+      .isAlpha()
+      .withMessage("First name must have only alphabets"),
+    check("lastname")
+      .not()
+      .isEmpty()
+      .withMessage("Your Last name is required")
+      .isAlpha()
+      .withMessage("Last name must have only alphabets"),
+    check("email")
+      .isEmail()
+      .withMessage("Please provide a valid email address"),
+    check("phone")
+      .not()
+      .isEmpty()
+      .withMessage("Phone number is required")
+      .matches(/^[0-9]{10}$/)
+      .withMessage("Phone number must be 10 digits")
+      .isNumeric()
+      .withMessage("Phone number must contain only numeric digits"),
+  ],
+  validate,
+  Auth.registerHSStudent
+);
+
+router.post(
   "/login",
   [
     check("username").not().isEmpty().withMessage("Your username is required"),
@@ -116,8 +213,6 @@ router.post(
   validate,
   Auth.login
 );
-
-
 router.post(
   "/register-epramaan",
   [
@@ -530,25 +625,25 @@ router.post(
       .withMessage("Phone number must be 10 digits")
       .isNumeric()
       .withMessage("Phone number must contain only numeric digits"),
-      check('dob')
-        .isDate().withMessage('Please select a valid Date of birth')
-        .custom((value) => {
-            const dob = new Date(value);
-            console.log(dob)
-            const today = new Date();
-            let age = today.getFullYear() - dob.getFullYear();
-            const monthDifference = today.getMonth() - dob.getMonth();
-            const dayDifference = today.getDate() - dob.getDate();
+      // check('dob')
+      //   .isDate().withMessage('Please select a valid Date of birth')
+        // .custom((value) => {
+        //     const dob = new Date(value);
+        //     console.log(dob)
+        //     const today = new Date();
+        //     let age = today.getFullYear() - dob.getFullYear();
+        //     const monthDifference = today.getMonth() - dob.getMonth();
+        //     const dayDifference = today.getDate() - dob.getDate();
 
-            if (
-                age > 25 ||
-                (age === 25 && (monthDifference > 0 || (monthDifference === 0 && dayDifference >= 0)))
-            ) {
-                throw new Error('Age must not exceed 25 years');
-            }
+        //     if (
+        //         age > 25 ||
+        //         (age === 25 && (monthDifference > 0 || (monthDifference === 0 && dayDifference >= 0)))
+        //     ) {
+        //         throw new Error('Age must not exceed 25 years');
+        //     }
 
-            return true;
-        }),
+        //     return true;
+        // })
     check("physically_disabled")
       .isBoolean()
       .withMessage("Please specify if the person is specially abled or not"),

@@ -26,6 +26,9 @@ module.exports = (sequelize, DataTypes) => {
       Institute.belongsTo(models.Country, {
         foreignKey: 'country_id'
       })
+      Institute.belongsTo(models.User, {
+        foreignKey: 'hoi_id'
+      })
       Institute.belongsToMany(models.Programme,{
         through: "InstituteProgramme",
         as: "institute_id",

@@ -55,4 +55,6 @@ router.post("/get/users", Institute.getusers);
 
 router.get("/get/institutes/:institute_id", Institute.getInstituteProgrammesSubjects);
 
+router.post("/get/hoi", Institute.getHOIId);
+
 module.exports = router;

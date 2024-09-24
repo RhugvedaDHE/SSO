@@ -229,6 +229,7 @@ application.use("/api/v1/doctype", doctypeRouter);
 application.listen(PORT, () => console.log("hello:" + PORT + "/"));
 
 //cron job
+const Otp = require('./controllers/otpController');
 var task = cron.schedule(
   "*/1 * * * *",
   async () => {
@@ -245,7 +246,7 @@ task.start();
 
 // Error Handler
 process.on("uncaughtException", function (error, result, res, next) {
-  console.log("Caught exception: " + error + " bfbvuj  " + next);
+  console.log("Caught exceptionnn: " + error + " bfbvuj  " + next);
   console.log("Caught exception: " + error.stack + " stacckk  " + next);
   // res.sendStatus(400);
   // res.status(400).json(errorResponse(error, 400));

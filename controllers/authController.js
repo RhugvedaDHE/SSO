@@ -590,6 +590,84 @@ exports.register = async function (req, res) {
     });
 };
 
+exports.registerHSStudent = async function (req, res) {
+  // const result = await sequelize.transaction(async (t) => {
+  var salt = bcrypt.genSaltSync(10);
+  var hash = bcrypt.hashSync(req.body.password, salt);
+
+  Role.findOne(
+    { attributes: ["id", "name"] },
+    {
+      where: {
+        id: req.body.role_id,
+      },
+    }
+  ).then((role) => {
+    console.log(role);
+    User.create({
+      username: req.body.username,
+      password: hash,
+      phone: req.body.phone,
+      email: req.body.email,
+      status: "REG",
+    }).then((user) => {
+      //save user id and college id in students and staff table
+      UserRole.create({
+        user_id: user.id,
+        role_id: req.body.role_id,
+        preferred_role: true,
+      }).then((userRole) => {
+        UserPersonalDetails.create({
+          user_id: userRole.user_id,
+          firstname: req.body.firstname,
+          lastname: req.body.lastname,
+          phone: req.body.phone,
+          email: req.body.email,
+        }).then((userpersonaldetails) => {
+          UserContact.create({
+            user_id: user.id,
+          }).then((userContact) => {
+            //check if student
+
+            StudentEnrollment.create({
+              user_id: user.id,
+              institute_id: req.body.institute_id,
+              programme_id: null,
+              current_class_id: req.body.class,
+              current_semester_id: null,
+              subject_id: null,
+              stream_id: req.body.stream_id,
+            })
+              .then((studentEnrollment) => {
+                const template =
+                  "Hello " +
+                  req.body.firstname +
+                  "! Your application has been successfully submitted on SUGAM Portal! " +
+                  "Your profile is pending for verification.-Directorate of Higher Education.";
+
+                var responseSMS = SMSNotification(req.body.phone, template);
+
+                var response = notificationController.createNotification(
+                  49,
+                  userRole.id,
+                  "Registration",
+                  "Your Resgistration has been created Successfully! "
+                );
+                console.log(response);
+                res
+                  .status(200)
+                  .json(success("Student-User created successfully"));
+              })
+              .catch((error) => {
+                res.status(400).json(errorResponse(error, 400));
+              });
+          });
+        });
+      });
+    });
+  });
+};
+
 exports.registerAdmins = function (req, res) {
   //only user with role id ....... can create admins
 
@@ -816,7 +894,10 @@ exports.login = function (req, res) {
             res
               .status(400)
               .json(
-                errorResponse("User Not found! Please register first", 400)
+                errorResponse(
+                  { username: "User Not found! Please register first" },
+                  400
+                )
               );
           }
           const result = bcrypt.compareSync(req.body.password, user.password);
@@ -851,7 +932,9 @@ exports.login = function (req, res) {
           } else {
             res
               .status(400)
-              .json(errorResponse("Please check your password", 400));
+              .json(
+                errorResponse({ password: "Please check your password" }, 400)
+              );
           }
         })
         .catch((error) => {
@@ -870,7 +953,10 @@ exports.login = function (req, res) {
       res
         .status(400)
         .json(
-          errorResponse("User Not Found! Please check your username!", 400)
+          errorResponse(
+            { username: "User Not found! Please register first" },
+            400
+          )
         );
     });
 };
@@ -969,7 +1055,14 @@ exports.forgotPassword = function (req, res) {
 
         res.status(200).json(success("User Password updated successfully!"));
       } else {
-        res.status(400).json(errorResponse("User Not Found!", 400));
+        res
+          .status(400)
+          .json(
+            errorResponse(
+              { username: "User Not found! Please register first" },
+              400
+            )
+          );
       }
     })
     .catch((error) => {
@@ -1072,7 +1165,11 @@ exports.refreshToken = function (req, res) {
             .json(success("User Role changed successfully!", token));
         } else {
           console.log("inside else");
-          res.status(404).json(success("User Not found!"));
+          res
+            .status(404)
+            .json(
+              success({ username: "User Not found! Please register first" })
+            );
         }
       })
       .catch((error) => {
@@ -1262,9 +1359,14 @@ exports.createUserDetailsForEpramaan = async function (req, res) {
 
   User.findOne({
     where: {
-      username: req.body.username,
+      [Op.or]: [
+        { username: req.body.username },
+        { phone: req.body.phone },
+        { email: req.body.email },
+      ],
     },
   }).then((user) => {
+    
     if (user) {
       tokendata = {
         username: user.username,
@@ -1284,7 +1386,6 @@ exports.createUserDetailsForEpramaan = async function (req, res) {
         .status(200)
         .json(success("Student-User logged in successfully", token));
     } else {
-            
       User.create({
         username: req.body.username,
         password: "",
@@ -1363,7 +1464,7 @@ exports.createUserDetailsForEpramaan = async function (req, res) {
             })
             // }) //transaction close
             .catch((error) => {
-              res.status(400).json(errorResponse("here", 400));
+              res.status(400).json(errorResponse(error, 400));
             });
 
           // })
