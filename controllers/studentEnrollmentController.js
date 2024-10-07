@@ -63,9 +63,12 @@ exports.findOne = (req, res) => {
     },
   })
     .then(async (datas) => {
+      
       let finalData = [];
       if (datas.length) {
         for (const data of datas) {
+
+          
 
         let institute = await Institute.findOne({
           attributes: ["name"],
@@ -85,7 +88,6 @@ exports.findOne = (req, res) => {
             id: data.programme_id,
           },
         });
-
         //student academic details---------------------------------------
         var academic;
         let subjectDetails = {};
@@ -98,8 +100,7 @@ exports.findOne = (req, res) => {
         } else {
           subjectDetails.name = "";
         }
-
-        
+       
         academic = {
           student_enrollemnt_id: data.id,
           academic_year_id: data.academic_year_id,
@@ -109,8 +110,8 @@ exports.findOne = (req, res) => {
           institute_name: institute.name,
           program_id: data.programme_id,
           program_name: program.name,
-          subject_id: subjectDetails.id,
-          subject_name: subjectDetails.name,
+          subject_id: subjectDetails ? subjectDetails.id : null,
+          subject_name: subjectDetails ? subjectDetails.name : null,
           stream_id: data.Stream ? data.Stream.id : null,
           stream_name: data.Stream ? data.Stream.name : null,
           // board_univ: instituteProgramme.board_univ,

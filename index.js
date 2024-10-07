@@ -7,7 +7,7 @@ const cron = require("node-cron");
 const fs = require('fs');
 var path = require("path");
 const morgan = require('morgan');
-
+const winston = require('winston');
 const cors = require("cors");
 application.use(
   cors({
@@ -49,6 +49,19 @@ application.use((err, req, res, next) => {
   res.status(500).send('Internal Server Error');
 });
 
+//logger 
+// Create a logger with specific settings
+const logger = winston.createLogger({
+  level: 'error', // Only log errors and more severe levels
+  format: winston.format.combine(
+    winston.format.timestamp(),        // Add a timestamp to logs
+    winston.format.json()              // Format logs as JSON
+  ),
+  transports: [
+    new winston.transports.File({ filename: 'error.log' }),  // Log errors to a file
+    new winston.transports.Console()                         // Log errors to the console
+  ]
+});
 
 // Setting up port
 let PORT = process.env.PORT || 3000;
@@ -248,6 +261,11 @@ task.start();
 process.on("uncaughtException", function (error, result, res, next) {
   console.log("Caught exceptionnn: " + error + " bfbvuj  " + next);
   console.log("Caught exception: " + error.stack + " stacckk  " + next);
+  logger.error({
+    message: error,  // Log the error message
+    stack: error.stack,      // Log the stack trace
+    timestamp: new Date()  // Add timestamp for better tracing
+  });
   // res.sendStatus(400);
   // res.status(400).json(errorResponse(error, 400));
   // return res.status(400).send({

@@ -21,4 +21,6 @@ router.get('/get/',  Programme.get);
 router.post('/get/institute',  Programme.getInstituteProgramme);
 router.post('/get/programme-semesters',  Programme.getProgSems);
 
+router.post('/get/insttype',  Programme.getInstituteTypeProgramme);
+
 module.exports = router;

@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   UserContact.init({
     user_id: DataTypes.INTEGER,
-    type: DataTypes.STRING,
+    type_id: DataTypes.INTEGER,
     address: DataTypes.STRING,
     country_id: DataTypes.INTEGER,
     state_id: DataTypes.INTEGER,

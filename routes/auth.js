@@ -84,9 +84,7 @@ router.post(
     check("lastname")
       .not()
       .isEmpty()
-      .withMessage("Your Last name is required")
-      .isAlpha()
-      .withMessage("Last name must have only alphabets"),
+      .withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -181,9 +179,7 @@ router.post(
     check("lastname")
       .not()
       .isEmpty()
-      .withMessage("Your Last name is required")
-      .isAlpha()
-      .withMessage("Last name must have only alphabets"),
+      .withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -262,9 +258,7 @@ router.post(
     check("lastname")
       .not()
       .isEmpty()
-      .withMessage("Your Last name is required")
-      .isAlpha()
-      .withMessage("Last name must have only alphabets"),
+      .withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -397,9 +391,7 @@ router.post(
     check("lastname")
       .not()
       .isEmpty()
-      .withMessage("Your Last name is required")
-      .isAlpha()
-      .withMessage("Last name must have only alphabets"),
+      .withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -426,9 +418,7 @@ router.post(
     check("lastname")
       .not()
       .isEmpty()
-      .withMessage("Your Last name is required")
-      .isAlpha()
-      .withMessage("Last name must have only alphabets"),
+      .withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -455,9 +445,7 @@ router.post(
     check("lastname")
       .not()
       .isEmpty()
-      .withMessage("Your Last name is required")
-      .isAlpha()
-      .withMessage("Last name must have only alphabets"),
+      .withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -618,7 +606,7 @@ router.post(
   "/update-profile",
   [
     check("firstname").isAlpha().withMessage("Please enter a valid First name"),
-    check("lastname").isAlpha().withMessage("Please enter a valid First name"),
+    // check("lastname").isAlpha().withMessage("Please enter a valid First name"),
     check("email").isEmail().withMessage("Please enter a valid Email"),
     check("phone")
       .matches(/^[0-9]{10}$/)

@@ -25,3 +25,16 @@ exports.get = async function (req, res){
         res.status(400).json(errorResponse(error, 400));
     })
 }
+
+exports.get = async function (req, res){
+    console.log("fdsbghdrbghghghgs");
+    await Subject.findAll({
+        where: {
+            is_active: true,
+        }
+    }).then(subjects => {
+        res.status(200).json(success("Subjects fetched successfully!", subjects))
+    }).catch(error => {
+        res.status(400).json(errorResponse(error, 400));
+    })
+}

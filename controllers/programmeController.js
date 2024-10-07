@@ -123,3 +123,26 @@ exports.getInstituteProgramme = async function (req, res) {
     //   res.status(400).json(errorResponse(error, 400));
     // });
 };
+
+
+exports.getInstituteTypeProgramme = async function (req, res) {
+  let name = "";
+  let programmes = [];
+  console.log("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^", req.body.insttype)
+  req.body.insttype == "School" ? name = "SSC" : name = "HSSC";
+  await Programme.findOne({
+    where: {
+      name: name,
+      is_active: true,
+    },
+  })
+    .then((programme) => {
+      programmes.push(programme);
+      res
+        .status(200)
+        .json(success("Programme fetched successfully!", programmes));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};

@@ -15,4 +15,6 @@ router.post('/create', [
 
 router.post('/get/', InstProgSub.get);
 
+router.post('/get/subjects', InstProgSub.getSubjects);
+
 module.exports = router;

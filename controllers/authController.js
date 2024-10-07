@@ -28,6 +28,7 @@ const OTP = require("../models").OTP;
 const tokenList = {};
 
 const Sequelize = require("sequelize");
+const sequelize = require('../models').sequelize;
 // const { sequelize } = require("../sequelize/models");
 const Op = Sequelize.Op;
 const {
@@ -96,7 +97,7 @@ exports.getUserDetails = function (req, res) {
                 },
                 attributes: ["cio_id"],
               };
-
+             
               if (ur.Role.type == "dept") {
                 queryOptions.include = ["Department"];
               } else if (ur.Role.type == "company") {
@@ -194,7 +195,7 @@ exports.getUserDetails = function (req, res) {
             response.selected_role = {};
             let queryOptions = {};
             let cio = (cio_name = null);
-
+            let institute;
             if (
               selectedRole.type == "institute" &&
               selectedRole.name == "Student"
@@ -204,8 +205,8 @@ exports.getUserDetails = function (req, res) {
                   user_id: req.user.id,
                 },
               });
-              let institute = await Institute.findOne({
-                attributes: ["id"],
+              institute = await Institute.findOne({
+                attributes: ["id", "name"],
                 where: {
                   id: student.institute_id,
                 },
@@ -248,14 +249,16 @@ exports.getUserDetails = function (req, res) {
                   ? cio.Department.name
                   : selectedRole.type == "company"
                   ? cio.Company.name
-                  : selectedRole.type == "institute" &&
-                    ur.Role.name != "Student"
+                  : selectedRole.type == "institute" 
+                  &&ur.Role.name != "Student"
                   ? cio.Institute.name
                   : selectedRole.type == "service"
                   ? cio.Service.name
                   : null;
+                        
               response.type = cio;
-            }
+            } //else closed
+           
             response.selected_role = {
               id: selectedRole.id,
               name: selectedRole.name,
@@ -278,316 +281,160 @@ exports.getUserDetails = function (req, res) {
 };
 
 exports.register = async function (req, res) {
-  // const result = await sequelize.transaction(async (t) => {
-  var salt = bcrypt.genSaltSync(10);
-  var hash = bcrypt.hashSync(req.body.password, salt);
+  const t = await sequelize.transaction();
+  try {
+    // Hash password
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(req.body.password, salt);
 
-  Role.findOne(
-    { attributes: ["id", "name"] },
-    {
-      where: {
-        id: req.body.role_id,
-      },
+    // Find role
+    const role = await Role.findOne(
+      { attributes: ["id", "name"] },
+      { where: { id: req.body.role_id } }
+    );
+    if (!role) {
+      throw new Error('Role not found');
     }
-  )
-    .then((role) => {
-      console.log(role);
-      User.create({
+
+    // Create user
+    const user = await User.create(
+      {
         username: req.body.username,
         password: hash,
         phone: req.body.phone,
         email: req.body.email,
         status: "REG",
-      })
-        .then((user) => {
-          //save user id and college id in students and staff table
-          UserRole.create({
-            user_id: user.id,
-            role_id: req.body.role_id,
-            preferred_role: true,
-          })
-            .then((userRole) => {
-              UserPersonalDetails.create({
-                user_id: userRole.user_id,
-                firstname: req.body.firstname,
-                lastname: req.body.lastname,
-                phone: req.body.phone,
-                email: req.body.email,
-              })
-                .then((userpersonaldetails) => {
-                  UserContact.create({
-                    user_id: user.id,
-                  }).then((userContact) => {
-                    //check if student
-                    if (req.body.role_id == 7) {
-                      console.log(
-                        "inside studenntttttttttttttttttttttttttttttt"
-                      );
-                      InstituteProgramme.findOne({
-                        attributes: ["id"],
-                        where: {
-                          institute_id: req.body.institute_id,
-                          programme_id: req.body.programme_id,
-                        },
-                      })
-                        .then((instprog) => {
-                          console.log("instprog", instprog);
-                          console.log("instprog", instprog.id);
-                          StudentEnrollment.create({
-                            user_id: user.id,
-                            institute_id: req.body.institute_id,
-                            programme_id: req.body.programme_id,
-                            current_class_id: req.body.class,
-                            current_semester_id: req.body.current_semester,
-                            subject_id: req.body.subject_id,
-                          })
-                            .then((studentEnrollment) => {
-                              const template =
-                                "Hello " +
-                                req.body.firstname +
-                                "! Your application has been successfully submitted on SUGAM Portal! " +
-                                "Your profile is pending for verification.-Directorate of Higher Education.";
+      },
+      { transaction: t }
+    );
 
-                              var responseSMS = SMSNotification(
-                                req.body.phone,
-                                template
-                              );
+    // Assign role to the user
+    const userRole = await UserRole.create(
+      {
+        user_id: user.id,
+        role_id: req.body.role_id,
+        preferred_role: true,
+      },
+      { transaction: t }
+    );
 
-                              var response =
-                                notificationController.createNotification(
-                                  49,
-                                  userRole.id,
-                                  "Registration",
-                                  "Your Resgistration has been created Successfully! "
-                                );
-                              console.log(response);
-                              res
-                                .status(200)
-                                .json(
-                                  success("Student-User created successfully")
-                                );
-                            })
-                            .catch((error) => {
-                              res.status(400).json(errorResponse(error, 400));
-                            });
-                        })
-                        .catch((error) => {
-                          res.status(400).json(errorResponse("InstProg", 400));
-                        });
-                    }
-                    //check if staff or non-teaching
-                    else if (req.body.role_id == 6 || req.body.role_id == 2) {
-                      Staff.create({
-                        user_id: user.id,
-                      }).then((staff) => {
-                        if (
-                          req.body.institute_type_id == null &&
-                          req.body.institute_id == null
-                        ) {
-                          res
-                            .status(400)
-                            .json(
-                              errorResponse(
-                                "Select valid Institute and programme!",
-                                400
-                              )
-                            );
-                        }
-                        InstituteStaff.create({
-                          institute_id: req.body.institute_id,
-                          staff_id: staff.id,
-                          role_id: req.body.role_id,
-                          institute_type_id: req.body.institute_type_id,
-                        })
-                          .then((instituteStaff) => {
-                            UserDesignation.create({
-                              user_id: user.id,
-                              employementtype_id: req.body.employment_type_id,
-                              designation_id: req.body.designation_id,
-                            })
-                              .then((userDes) => {
-                                //put data in Entity User table
-                                const staffData = {
-                                  user_id: user.id,
-                                  entity_type_id: 1,
-                                  cio_id: req.body.institute_id,
-                                  active: req.body.active
-                                    ? req.body.active
-                                    : true,
-                                };
+    // Create user personal details
+    await UserPersonalDetails.create(
+      {
+        user_id: userRole.user_id,
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
+        phone: req.body.phone,
+        email: req.body.email,
+      },
+      { transaction: t }
+    );
 
-                                //console.log(companyHRData);
-                                EntityUser.create(staffData).then((staff) => {
-                                  const template =
-                                    "Hello " +
-                                    req.body.firstname +
-                                    "! Your application has been successfully submitted on SUGAM Portal! " +
-                                    "Your profile is pending for verification.-Directorate of Higher Education.";
+    // Create user contact
+    await UserContact.create({ user_id: user.id }, { transaction: t });
 
-                                  var responseSMS = SMSNotification(
-                                    req.body.phone,
-                                    template
-                                  );
+    // Check if role is student (role_id == 7)
+    if (req.body.role_id == 7) {
+      const instprog = await InstituteProgramme.findOne({
+        attributes: ["id"],
+        where: {
+          institute_id: req.body.institute_id,
+          programme_id: req.body.programme_id,
+        },
+        transaction: t,
+      });
 
-                                  var response =
-                                    notificationController.createNotification(
-                                      49,
-                                      userRole.id,
-                                      "Registration",
-                                      "Your Resgistration has been created Successfully! "
-                                    );
+      if (!instprog) {
+        throw new Error('Institute Programme not found');
+      }
 
-                                  res
-                                    .status(200)
-                                    .json(
-                                      success("Staff-User created successfully")
-                                    );
-                                });
-                              })
-                              .catch((error) => {
-                                res
-                                  .status(400)
-                                  .json(errorResponse("userdes here", 400));
-                              });
-                          })
-                          .catch((error) => {
-                            console.log(error);
-                            res
-                              .status(400)
-                              .json(errorResponse("institutestaff", 400));
-                          });
-                      });
-                    } else if (req.body.role_id == 12) {
-                      //Company admin
-                      console.log("In company create", req.body);
+      // Create student enrollment
+      await StudentEnrollment.create(
+        {
+          user_id: user.id,
+          institute_id: req.body.institute_id,
+          programme_id: req.body.programme_id,
+          current_class_id: req.body.class,
+          current_semester_id: req.body.current_semester,
+          subject_id: req.body.subject_id,
+        },
+        { transaction: t }
+      );
 
-                      const companyData = {
-                        organization_type_id: req.body.organization_type_id,
-                        user_id: user.id,
-                        owner_type_id: req.body.owner_type_id,
-                        owner_id: req.body.owner_id,
-                        name: req.body.name,
-                        logo: req.body.logo,
-                        website: req.body.website,
-                        description: req.body.description,
-                        state_id: req.body.state_id,
-                        district_id: req.body.district_id,
-                        taluka_id: req.body.taluka_id,
-                        village: req.body.village,
-                        country_id: req.body.country_id,
-                        landmark: req.body.landmark,
-                        street: req.body.street,
-                        pincode: req.body.pincode,
-                        phone: req.body.phone,
-                        email: req.body.email,
-                        // reg_no: req.body.reg_no,
-                        reg_certificate: "", //req.certificate.originalname,
-                        verified: req.body.verified ? req.body.verified : false,
-                        active: req.body.active ? req.body.active : true,
-                        createdAt: "",
-                        updateAt: null,
-                        deletedAt: null,
-                      };
+      // Send SMS notification
+      const template = `Hello ${req.body.firstname}! Your application has been successfully submitted on the SUGAM Portal! Your profile is pending verification. -Directorate of Higher Education.`;
+      SMSNotification(req.body.phone, template);
 
-                      Company.create(companyData)
-                        .then((company) => {
-                          const companyHRData = {
-                            user_id: user.id,
-                            entity_type_id: 2,
-                            cio_id: company.id,
-                            active: req.body.active ? req.body.active : true,
-                          };
+      // Create notification
+      await notificationController.createNotification(
+        49,
+        userRole.id,
+        "Registration",
+        "Your Registration has been created Successfully!"
+      );
 
-                          //console.log(companyHRData);
-                          EntityUser.create(companyHRData)
-                            .then((HR) => {
-                              //send mobile OTP
-                              const template =
-                                "Hello " +
-                                req.body.name +
-                                "! Your application has been successfully submitted on SUGAM Portal! " +
-                                "Your profile is pending for verification.-Directorate of Higher Education.";
+      res.status(200).json(success("Student-User created successfully"));
+                            
+    } 
+    // Check if role is staff or non-teaching (role_id == 6 or role_id == 2)
+    else if (req.body.role_id == 6 || req.body.role_id == 2) {
+      const staff = await Staff.create({ user_id: user.id }, { transaction: t });
 
-                              var responseSMS = SMSNotification(
-                                req.body.phone,
-                                template
-                              );
+      if (!req.body.institute_type_id || !req.body.institute_id) {
+        throw new Error('Select valid Institute and programme!');
+      }
 
-                              var response =
-                                notificationController.createNotification(
-                                  49,
-                                  userRole.id,
-                                  "Registration",
-                                  "Your Resgistration has been created Successfully! "
-                                );
-                              //send Email OTP
+      const instituteStaff = await InstituteStaff.create(
+        {
+          institute_id: req.body.institute_id,
+          staff_id: staff.id,
+          role_id: req.body.role_id,
+          institute_type_id: req.body.institute_type_id,
+        },
+        { transaction: t }
+      );
 
-                              res
-                                .status(200)
-                                .json(
-                                  success("Company Admin created successfully")
-                                );
-                            })
-                            .catch((error) => {
-                              res.status(400).json(errorResponse(error, 400));
-                            });
-                        })
-                        .catch((error) => {
-                          res.status(400).json(errorResponse(error, 400));
-                        });
-                    } else if (
-                      req.body.role_id == 10 ||
-                      req.body.role_id == 11
-                    ) {
-                      //Company HR or Guide
-                      console.log("In company HR/Guide create");
-                      user.status = "VER";
-                      user.is_verified = true;
-                      user.save();
+      await UserDesignation.create(
+        {
+          user_id: user.id,
+          employementtype_id: req.body.employment_type_id,
+          designation_id: req.body.designation_id,
+        },
+        { transaction: t }
+      );
 
-                      const companyHRData = {
-                        user_id: user.id,
-                        entity_type_id: req.body.entity_type_id,
-                        cio_id: req.body.cio_id,
-                        active: req.body.active ? req.body.active : true,
-                      };
+      const staffData = {
+        user_id: user.id,
+        entity_type_id: 1,
+        cio_id: req.body.institute_id,
+        active: req.body.active || true,
+      };
 
-                      //console.log(companyHRData);
+      await EntityUser.create(staffData, { transaction: t });
 
-                      EntityUser.create(companyHRData)
-                        .then((HR) => {
-                          //send mobile OTP
+      const template = `Hello ${req.body.firstname}! Your application has been successfully submitted on the SUGAM Portal! Your profile is pending for verification. -Directorate of Higher Education.`;
+      SMSNotification(req.body.phone, template);
 
-                          //send Email OTP
+      await notificationController.createNotification(
+        49,
+        userRole.id,
+        "Registration",
+        "Your Registration has been created Successfully!"
+      );
 
-                          res
-                            .status(200)
-                            .json(
-                              success("Company HR/Guide created successfully")
-                            );
-                        })
-                        .catch((error) => {
-                          res.status(400).json(errorResponse(error, 400));
-                        });
-                    }
-                  });
-                })
-                // }) //transaction close
-                .catch((error) => {
-                  res.status(400).json(errorResponse("here", 400));
-                });
-            })
-            .catch((error) => {
-              res.status(400).json(errorResponse(error, 400));
-            });
-        })
-        .catch((error) => {
-          res.status(400).json(errorResponse(error, 400));
-        });
-    })
-    .catch((error) => {
-      res.status(400).json(errorResponse(error, 400));
-    });
+      res.status(200).json(success("Staff-User created successfully"));
+    }
+
+    // Commit the transaction if everything succeeds
+    await t.commit();
+
+  } catch (error) {
+    // Rollback the transaction in case of an error
+    await t.rollback();
+
+    console.error(error);
+    res.status(400).json({ error: error.message });
+  }
 };
 
 exports.registerHSStudent = async function (req, res) {

@@ -4,20 +4,32 @@
     "password": "123456789",
     "database": "sso",
     "host": "127.0.0.1",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "dialectOptions": {
+      "timezone": "Etc/UTC"
+    },
+    "timezone": "Etc/UTC"
   },
   "test": {
     "username": "postgres",
     "password": "123456789",
     "database": "sso",
     "host": "127.0.0.1",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "dialectOptions": {
+      "timezone": "Etc/UTC"
+    },
+    "timezone": "Etc/UTC"
   },
   "production": {
     "username": "postgres",
     "password": "123456789",
     "database": "sso",
     "host": "127.0.0.1",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "dialectOptions": {
+      "timezone": "Etc/UTC"
+    },
+    "timezone": "Etc/UTC"
   }
 }

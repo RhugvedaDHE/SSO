@@ -26,7 +26,7 @@ exports.get = async function (req, res) {
   let user = await User.findOne({
     where: {
       id: req.user.id,
-      is_verified: true,
+      // is_verified: true,
     },
   });
   if (user) {

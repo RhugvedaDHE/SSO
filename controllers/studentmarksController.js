@@ -14,10 +14,12 @@ const UserDocs = require("../models").UserDocs;
 const Institute = require("../models").Institute;
 const InstituteType = require("../models").InstituteType;
 const Semester = require("../models").Semester;
+const Stream = require("../models").Stream;
 const DocumentType = require("../models").DocumentType;
 const EvalTypes = require("../models").EvalTypes;
 const { success, errorResponse, validation } = require("../responseApi");
 const e = require("express");
+// const { Stream } = require("winston/lib/winston/transports");
 
 //const db = require("../models");
 
@@ -185,16 +187,24 @@ exports.create = async (req, res) => {
 
 // Create and Save a new StudentMarks
 exports.createEnrollment = async (req, res) => {
-  console.log("in controller studentMarks", req.body);
+  
 
-  // let instituteProgramme = await InstituteProgramme.findOne({
-  //   attributes: ["id", "institute_id", "programme_id"],
-  //   where: {
-  //     institute_id: req.body.institute_id,
-  //     programme_id: req.body.programme_id,
-  //   },
-  // });
+  let studentenroll = await StudentEnrollment.findAll({
+    where: {
+      institute_id: req.body.institute_id,
+      programme_id: req.body.programme_id,
+      is_active: 1,
+    },
+  });
+  if(studentenroll.length > 1){
+    res
+    .status(200)
+    .json(
+      success("You cannot pursue 2 courses at a time!", studentenroll.length)
+    );
 
+  }
+  
   const studentEnrollment = {
     user_id: req.user.id,
     qual_type_id: req.body.qual_type_id,
@@ -215,7 +225,7 @@ exports.createEnrollment = async (req, res) => {
     consolidated_grade_obtained: req.body.consolidated_grade_obtained,
     board_university: req.body.board_university,
     month_year: req.body.month_year,
-    is_active: req.body.pursuing,
+    is_active: req.body.pursuing, //current or not
   };
 
   if (req.body.enrollment_id) {
@@ -334,13 +344,20 @@ exports.findAll = async (req, res) => {
           },
         },
       },
+      {
+        model: Stream,
+        attributes: ["name"],
+        required: false, // This makes the join optional
+        where: {
+          id: {
+            [Op.ne]: 0, // Only include if semester_id is not zero
+          },
+        },
+      },
     ],
   });
-
-  // res
-  // .status(200)
-  // .json(success("Student Marks fetched successfully!", studentEnrollments));
   if (studentEnrollments) {
+    let finalMarksData;
     let finalData = [];
     let userDocType;
     let userDoctypeId;
@@ -374,73 +391,82 @@ exports.findAll = async (req, res) => {
           },
         ],
       });
-
-      // res
-      //   .status(200)
-      //   .json(success("Student Marks fetched successfully!", programmeDetails.id));
-
       let userdocEnrollment = null;
-
-      if(studentEnrollment.userdoc_id){
-
-      
-      userdocEnrollment = await UserDocs.findOne({
-        where: {
-          // user_id: req.user.id,
-          id: studentEnrollment.userdoc_id,
-        },
-        include: [
-          {
-            model: DocumentType,
-            attributes: ["name"],
+      if (studentEnrollment.userdoc_id) {
+        userdocEnrollment = await UserDocs.findOne({
+          where: {
+            // user_id: req.user.id,
+            id: studentEnrollment.userdoc_id,
           },
-        ],
-      });
-    }
-      filePathEnrollment = userdocEnrollment != null
-        ? req.protocol +
-          "://" +
-          req.get("host") +
-          "/static/user/" +
-          userdocEnrollment.filename
-        : null;
-      userDocName = userdocEnrollment != null ? userdocEnrollment.filename : null;
+          include: [
+            {
+              model: DocumentType,
+              attributes: ["name"],
+            },
+          ],
+        });
+      }
+      filePathEnrollment =
+        userdocEnrollment != null
+          ? req.protocol +
+            "://" +
+            req.get("host") +
+            "/static/user/" +
+            userdocEnrollment.filename
+          : null;
+      userDocName =
+        userdocEnrollment != null ? userdocEnrollment.filename : null;
       userDocType = userdocEnrollment != null ? null : null;
-      userDoctypeId = userdocEnrollment != null ? userdocEnrollment.doc_type_id : null;
+      userDoctypeId =
+        userdocEnrollment != null ? userdocEnrollment.doc_type_id : null;
 
-      let studentMark = null;
-      if (!studentEnrollment.is_active) {
-        studentMark = await StudentMarks.findOne({
+      let studentMarks = null;
+      if (studentEnrollment.is_active) {
+        studentMarks = await StudentMarks.findAll({
           where: {
             active: true,
             student_enrollment_id: studentEnrollment.id,
           },
         });
 
-        if (studentMark) {
-          userdocMark = await UserDocs.findOne({
-            where: {
-              // user_id: req.user.id,
-              id: studentMark.userdoc_id,
-            },
-            include: [
-              {
-                model: DocumentType,
-                attributes: ["name"],
+        if (studentMarks) {
+          finalMarksData = [];
+          for (const smark of studentMarks) {
+            
+            finalMarksData.push({
+              userMarks_id: smark ? smark.id : null,
+              userDoc_mark: smark ? filePathMark : null,
+              userMarks_semester_id: smark ? smark.semester_id : null,
+              userMarks_eval_type_id: smark ? smark.eval_type_id : null,
+              userMarks_total_marks: smark ? smark.total_marks : null,
+              userMarks_marks_obtained: smark ? smark.marks_obtained : null,
+              userMarks_grade_obtained: smark ? smark.grade_obtained : null,
+              userMarks_month_year: smark ? smark.month_year : null,
+            });
+          
+            userdocMark = await UserDocs.findOne({
+              where: {
+                id: smark.userdoc_id,
               },
-            ],
-          });
+              include: [
+                {
+                  model: DocumentType,
+                  attributes: ["name"],
+                },
+              ],
+            });
 
-          filePathMark = userdocMark
-            ? req.protocol +
-              "://" +
-              req.get("host") +
-              "/static/user/" +
-              userdocMark.filename
-            : null;
-          userDocName = userdocMark ? userdocMark.filename : null;
-          userDocType = userdocMark.DocumentType.name;
-          userDoctypeId = userdocMark ? userdocMark.doc_type_id : null;
+            filePathMark = userdocMark
+              ? req.protocol +
+                "://" +
+                req.get("host") +
+                "/static/user/" +
+                userdocMark.filename
+              : null;
+            userDocName = userdocMark ? userdocMark.filename : null;
+            userDocType = null; //userdocMark ? userdocMark.DocumentType.name :
+            userDoctypeId = userdocMark ? userdocMark.doc_type_id : null;
+          }
         }
       }
 
@@ -475,6 +501,10 @@ exports.findAll = async (req, res) => {
         subject_name: studentEnrollment.Subject
           ? studentEnrollment.Subject.name
           : null,
+        stream_id: studentEnrollment.stream_id,
+        stream_name: studentEnrollment.Stream
+          ? studentEnrollment.Stream.name
+          : null,
         eval_type_id: evalType ? evalType.id : null,
         eval_type: evalType ? evalType.name : null,
         consolidated_total_marks: studentEnrollment.consolidated_total_marks,
@@ -483,26 +513,27 @@ exports.findAll = async (req, res) => {
         consolidated_grade_obtained:
           studentEnrollment.consolidated_grade_obtained,
         board_university: studentEnrollment.board_university,
-        month_year: studentEnrollment.month_year,        
+        month_year: studentEnrollment.month_year,
         is_active: studentEnrollment.is_active,
         doc_type_id: userDoctypeId ? userDoctypeId : null,
         userdoc_id: studentEnrollment.userdoc_id,
         userDoc_type: userDocType,
         userDocFileName: userDocName,
-        userDoc: studentMark ? filePathMark : filePathEnrollment,
-        last_qual_year: studentMark ? studentMark.last_qual_year : null,
+        userDoc: studentMarks ? filePathMark : filePathEnrollment,
+        last_qual_year: studentMarks ? studentMarks.last_qual_year : null,
 
         //marks data
-        userMarks_id: studentMark ? studentMark.id : null,
-        userDoc_mark: studentMark ? filePathMark : null,
-        userMarks_semester_id: studentMark ? studentMark.semester_id : null,
-        userMarks_eval_type_id: studentMark ? studentMark.eval_type_id : null,
-        userMarks_total_marks: studentMark ? studentMark.total_marks : null,
-        userMarks_marks_obtained: studentMark ? studentMark.marks_obtained : null,
-        userMarks_grade_obtained: studentMark ? studentMark.grade_obtained : null,
-        userMarks_month_year: studentMark ? studentMark.month_year : null,
+        // userMarks_id: studentMark ? studentMark.id : null,
+        // userDoc_mark: studentMark ? filePathMark : null,
+        // userMarks_semester_id: studentMark ? studentMark.semester_id : null,
+        // userMarks_eval_type_id: studentMark ? studentMark.eval_type_id : null,
+        // userMarks_total_marks: studentMark ? studentMark.total_marks : null,
+        // userMarks_marks_obtained: studentMark ? studentMark.marks_obtained : null,
+        // userMarks_grade_obtained: studentMark ? studentMark.grade_obtained : null,
+        // userMarks_month_year: studentMark ? studentMark.month_year : null,
+        marksData: finalMarksData ? finalMarksData : null,
       });
-    } //end for
+    } //end for enrollments
 
     if (finalData) {
       res
@@ -687,13 +718,9 @@ exports.deleteOnlyMarks = async (req, res) => {
 
   await StudentMarks.destroy({
     where: { id: id },
-  })
-    .then(async (num) => {
-      
-        res
-          .status(200)
-          .json(success("Student Marks were deleted successfully!"));
-      });
+  }).then(async (num) => {
+    res.status(200).json(success("Student Marks were deleted successfully!"));
+  });
 };
 
 // Delete all StudentMarks from the database.

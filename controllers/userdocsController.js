@@ -237,7 +237,7 @@ exports.findAll = async (req, res) => {
       docsData.push({
         id: rm.id,
         doc_type_id: rm.doc_type_id,
-        doc_type_name: docTypeData.name,
+        doc_type_name: docTypeData? docTypeData.name : null,
         filename: rm.filename,
         filepath: filePath,
       });
