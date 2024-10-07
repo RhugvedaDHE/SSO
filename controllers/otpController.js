@@ -202,25 +202,25 @@ exports.verify = async function (req, res) {
     }
 
     if (req.body.type === "phone") {
-      const user = await User.findOne({
-        where: { phone: req.body.details },
-      });
+      // const user = await User.findOne({
+      //   where: { phone: req.body.details },
+      // });
 
-      if (user) {
+      // if (user) {
         // user.phone_verified = true;
         // await user.save({ fields: ["phone_verified"] });
         phone_verified = true;
-      }
+      // }
     } else if (req.body.type === "email") {
-      const user = await User.findOne({
-        where: { email: req.body.details },
-      });
+      // const user = await User.findOne({
+      //   where: { email: req.body.details },
+      // });
 
-      if (user) {
+      // if (user) {
         // user.email_verified = true;
         // await user.save({ fields: ["email_verified"] });
         email_verified = true;
-      }
+      // }
     } else {
       otp_verified = true; // For forgot password case
     }
