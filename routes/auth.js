@@ -173,9 +173,7 @@ router.post(
     check("firstname")
       .not()
       .isEmpty()
-      .withMessage("Your First name is required")
-      .isAlpha()
-      .withMessage("First name must have only alphabets"),
+      .withMessage("Your First name is required"),
     check("lastname")
       .not()
       .isEmpty()
@@ -253,8 +251,7 @@ router.post(
       .not()
       .isEmpty()
       .withMessage("Your First name is required")
-      .isAlpha()
-      .withMessage("First name must have only alphabets"),
+      ,
     check("lastname")
       .not()
       .isEmpty()
@@ -385,9 +382,7 @@ router.post(
     check("firstname")
       .not()
       .isEmpty()
-      .withMessage("Your First name is required")
-      .isAlpha()
-      .withMessage("First name must have only alphabets"),
+      .withMessage("Your First name is required"),
     check("lastname")
       .not()
       .isEmpty()
@@ -412,9 +407,7 @@ router.post(
     check("firstname")
       .not()
       .isEmpty()
-      .withMessage("Your First name is required")
-      .isAlpha()
-      .withMessage("First name must have only alphabets"),
+      .withMessage("Your First name is required"),
     check("lastname")
       .not()
       .isEmpty()
@@ -439,9 +432,7 @@ router.post(
     check("firstname")
       .not()
       .isEmpty()
-      .withMessage("Your First name is required")
-      .isAlpha()
-      .withMessage("First name must have only alphabets"),
+      .withMessage("Your First name is required"),
     check("lastname")
       .not()
       .isEmpty()
