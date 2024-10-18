@@ -56,7 +56,7 @@ module.exports = (sequelize, DataTypes) => {
       grade_obtained: {
         type: DataTypes.STRING
       },
-      last_qual_year: {
+      last_qual_sem: {
         type: DataTypes.BOOLEAN
       },
       userdoc_id: {

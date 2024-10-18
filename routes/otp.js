@@ -17,4 +17,8 @@ router.post('/verify', [
     check('type').not().isEmpty().withMessage('Type is required'),
 ], validate, Otp.verify);
 
+router.post('/reset-attempts', [
+    check('details').not().isEmpty().withMessage('Phone/Email is required'),
+], validate, Otp.reset_attempts);
+
 module.exports = router;

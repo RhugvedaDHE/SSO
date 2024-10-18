@@ -314,60 +314,72 @@ exports.verify = async function (req, res) {
 // };
 
 exports.reset_attempts = async function (req, res) {
-  const tenMinutesAgo = new Date();
-  tenMinutesAgo.setMinutes(tenMinutesAgo.getMinutes() - 10);
+  try {
+    const tenMinutesAgo = new Date();
+    tenMinutesAgo.setMinutes(tenMinutesAgo.getMinutes() - 10);
 
-  const results = await OTP.findOne({
-    attributes: ["otp_type", "details", "attempts"],
-    where: {
-      attempts: {
-        [Op.gte]: 3, // Greater than or equal to 3
-      },
-      time: {
-        [Op.lte]: tenMinutesAgo,
-      },
-    },
-  });
-  if (results) {
-    if (results.otp_type == "email") {
-      await User.findOne({
-        where: {
-          email: results.details,
+    // Find OTP entries that match the conditions
+    const otpEntry = await OTP.findAll({
+      attributes: ["otp_type", "details", "attempts"],
+      where: {
+        attempts: {
+          [Op.gte]: 3, // Greater than or equal to 3 attempts
         },
-      })
-        .then(async (emailotp) => {
-          // if (emailotp.email_verified == false) { //uncomment later
-            await OTP.update(
-              { attempts: 0 },
-              { where: { details: results.details } }
-            );
-          // }
-        })
-        // .catch((error) => {
-        //   res.status(400).json(errorResponse(error, 400));
-        // });
-    }
-    if (results.otp_type == "phone") {
-      User.findOne({
-        where: {
-          phone: results.details,
+        time: {
+          [Op.lte]: tenMinutesAgo, // Older than 10 minutes
         },
-      })
-        .then(async (phoneotp) => {
-          if (phoneotp.phone_verified == false) {
-            await OTP.update(
-              { attempts: 0 },
-              { where: { details: results.details } }
-            );
-            console.log("**************************************************************yes zero")
-          }
-        })
-        .catch((error) => {
-          res.status(400).json(errorResponse(error, 400));
+      },
+    });
+  
+    if (otpEntry) {
+      res
+              .status(200)
+              .json(success(" verified successfully!", otpEntry));
+      otpEntry.foreach( async(otp) =>{
+        
+      // Check if it's an email OTP
+      if (otpEntry.otp_type === "email") {
+        const user = await User.findOne({
+          where: { email: otpEntry.details },
         });
+
+        if (user) { // && !user.email_verified) {
+          // Reset attempts to 0 after 10 minutes for email OTP
+          await OTP.update(
+            { attempts: 0 },
+            { where: { details: otpEntry.details } }
+          );
+          console.log("Email OTP attempts reset.")
+          return res.status(200).json({ message: "Email OTP attempts reset." });
+        }
+      }
+
+      // Check if it's a phone OTP
+      if (otpEntry.otp_type === "phone") {
+        const user = await User.findOne({
+          where: { phone: otpEntry.details },
+        });
+        
+        if (user) { // && !user.phone_verified) {
+          // Reset attempts to 0 after 10 minutes for phone OTP
+          await OTP.update(
+            { attempts: 0 },
+            { where: { details: otpEntry.details } }
+          );
+          console.log("Phone OTP attempts reset.")
+          return res.status(200).json({ message: "Phone OTP attempts reset." });
+        }
+      }
+      })
+      
+    } else {
+      // No matching OTP found
+      console.log("No OTP found to reset.")
+      return res.status(400).json({ message: "No OTP found to reset." });
     }
-  } else {
-    res.status(400).json(errorResponse("Not found!", 400));
+  } catch (error) {
+    // Handle errors
+    res.status(400).json(errorResponse(error, 400));
   }
 };
 

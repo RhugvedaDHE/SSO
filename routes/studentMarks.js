@@ -90,13 +90,13 @@ router.post(
       .withMessage("Active value is required")
       .isBoolean()
       .withMessage("Active value must contain only boolean value"),
-    check("last_qual_year")
+    check("last_qual_sem")
       .not()
       .isEmpty()
-      .withMessage("Last qualifying year value is required")
+      .withMessage("Last qualifying sem value is required")
       .isBoolean()
       .withMessage(
-        "Last qualifying year value must contain only boolean value"
+        "Last qualifying sem value must contain only boolean value"
       ),
   ],
   // validate,
@@ -173,13 +173,13 @@ router.post(
       .withMessage("Active value is required")
       .isBoolean()
       .withMessage("Active value must contain only boolean value"),
-    check("last_qual_year")
+    check("last_qual_sem")
       .not()
       .isEmpty()
-      .withMessage("Last qualifying year value is required")
+      .withMessage("Last qualifying sem value is required")
       .isBoolean()
       .withMessage(
-        "Last qualifying year value must contain only boolean value"
+        "Last qualifying sem value must contain only boolean value"
       ),
   ],
   // validate,
@@ -313,12 +313,12 @@ router.post(
       .isNumeric()
       .withMessage("Please enter marks obtained"),
 
-    check("last_qual_year")
+    check("last_qual_sem")
       .not()
       .isEmpty()
-      .withMessage("Your last qualifying year")
+      .withMessage("Your last qualifying Sem is required")
       .isBoolean()
-      .withMessage("Please select a valid last qualifying year"),
+      .withMessage("Please select a valid last qualifying sem"),
 
     check("userdoc_id")
       .not()

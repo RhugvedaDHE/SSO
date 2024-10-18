@@ -230,10 +230,16 @@ exports.deleteOnlyEnrollment = async (req, res) => {
   const id = req.body.id;
 
   await StudentEnrollment.destroy({
-    where: { id: id },
+    where: { id: id,
+     },
   }).then(async (num) => {
-    res
+    if(num){
+      res
       .status(200)
       .json(success("Student enrollment were deleted successfully!"));
-  });
+    } 
+    res
+    .status(400)
+    .json(success("Cannot delete Student enrollment!"));
+  }); 
 };

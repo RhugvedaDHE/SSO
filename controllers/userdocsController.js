@@ -24,6 +24,16 @@ const { type } = require("os");
 
 const Op = require("sequelize").Op;
 
+// File size limits (in bytes)
+const fileSizeLimits = {
+  jpeg: 500 * 1024, // 500KB for JPEG
+  jpg: 500 * 1024, // 1MB for JPG
+  png: 700 * 1024, // 1MB for PNG
+  pdf: 1 * 1024 * 1024, // 1MB for PDF
+  doc: 2 * 1024 * 1024, // 2MB for DOC
+  docx: 2 * 1024 * 1024, // 2MB for DOCX
+};
+
 // Set up storage engine
 const storage = multer.diskStorage({
   destination: "./uploads/user",
@@ -39,123 +49,116 @@ const storage = multer.diskStorage({
   },
 });
 
+// File filter to check file type and size
+function checkFileTypeAndSize(req, file, cb) {
+  const filetypes = /jpeg|jpg|png|pdf|doc|docx/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = filetypes.test(file.mimetype);
+
+  // Check if the file type is valid
+  if (!mimetype || !extname) {
+    return cb(new Error("Error: Invalid file type!"));
+  }
+
+  // Get the file extension and corresponding size limit
+  const fileExtension = path.extname(file.originalname).toLowerCase().replace(".", "");
+  const fileSizeLimit = fileSizeLimits[fileExtension];
+
+  // Check file size
+  if (file.size > fileSizeLimit) {
+    // Calculate limit in MB for clearer error messaging
+    const limitInMB = (fileSizeLimit / (1024 * 1024)).toFixed(2); // Limit in MB with two decimal places
+    return cb(new Error(`Error: ${fileExtension.toUpperCase()} files must be smaller than ${limitInMB}MB`));
+  }
+
+  cb(null, true);
+}
+
 // Initialize upload variable
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 1000000 }, // 1MB file size limit
+  // limits: { fileSize: 2000000 }, // 1MB file size limit
+
   fileFilter: (req, file, cb) => {
-    checkFileType(file, cb);
+    checkFileTypeAndSize(req, file, cb);
   },
 }).single("document"); // 'document' is the name attribute in the form
 
-// Check file type
-function checkFileType(file, cb) {
-  // Allowed file types
-  const filetypes = /jpeg|jpg|png|pdf|doc|docx/;
-  // Check ext
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  // Check mime
-  const mimetype = filetypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    return cb(null, true);
-  } else {
-    cb("Error: Invalid file type!");
-  }
-}
-
 // Controller function for uploading documents
 exports.uploadDoc = async (req, res) => {
-  console.log("here it is ", req.body);
-  // if (req.body.doc_type_id == 22) {
-  // } else if (req.body.doc_type_id == 20) {
-  // } else if (req.body.doc_type_id == 23) {
-  // } else if (
-  //   req.body.doc_type_id == 25 ||
-  //   req.body.doc_type_id == 26 ||
-  //   req.body.doc_type_id == 27
-  //   // req.body.doc_type_id == 28 ||
-  //   // req.body.doc_type_id == 29
-  // ) {
-  // } else {
-  //   res
-  //     .status(400)
-  //     .json(errorResponse(`Please enter a valid Document ID!`, 400));
-  //   return false;
-  // }
-
   upload(req, res, async (err) => {
-    if (err) {
-      return res.status(400).json({ message: err });
+    // Handle global Multer errors
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ message: `Multer error: ${err.message}` });
+    } else if (err) {
+      return res.status(400).json({ message: err.message });
     }
+
+    // Check if a file was uploaded
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded!" });
     }
 
+    // Perform size check after the file upload
+    const fileExtension = path
+      .extname(req.file.originalname)
+      .toLowerCase()
+      .replace(".", "");
+    const fileSizeLimit = fileSizeLimits[fileExtension];
+
+    // Check if the uploaded file exceeds the defined size limit
+    if (req.file.size > fileSizeLimit) {
+      // Remove the file if it exceeds the limit
+      fs.unlinkSync(req.file.path); // Optionally remove the file from the filesystem
+      return res.status(400).json({
+        message: `Error: ${fileExtension.toUpperCase()} files must be smaller than ${
+          fileSizeLimit / (1024 * 1024)
+        }MB`,
+      });
+    }
+
+    // If size check passes, proceed with further logic
     try {
       const { doc_type_id } = req.body;
       const filename = req.file.filename;
-
       let docId = Number(req.body.doc_id);
 
       if (docId) {
-        console.log("heeyyyyy heeerrrreee", docId);
-        //find the file details and unlink the existing file
-        userDocs.findByPk(docId).then(async (data) => {
-          if (data) {
-            console.log(path.resolve(__dirname, ".."));
-            const directoryPath =
-              path.resolve(__dirname, "..") + "/uploads/user/";
-            console.log(directoryPath);
+        const existingDoc = await userDocs.findByPk(docId);
+        if (existingDoc) {
+          const directoryPath =
+            path.resolve(__dirname, "..") + "/uploads/user/";
+          fs.unlink(directoryPath + existingDoc.filename, async (unlinkErr) => {
+            if (unlinkErr) throw unlinkErr;
 
-            fs.unlink(directoryPath + data.filename, async (err) => {
-              if (err) {
-                throw err;
-              }
-              const filename = req.file.filename;
+            const userDoc = {
+              user_id: req.user.id,
+              doc_type_id: Number(doc_type_id),
+              filename: filename,
+              updatedAt: new Date(),
+            };
 
-              const userDoc = {
-                user_id: req.user.id,
-                doc_type_id: req.body.doc_type_id,
-                filename: req.file.filename,
-                createdAt: new Date(),
-                updateAt: new Date(),
-              };
-
-              const docUpdated = await userDocs
-                .update(userDoc, {
-                  where: { id: docId },
-                })
-                .then((updated) => {
-                  console.log("Delete File successfully.");
-                  return res
-                    .status(200)
-                    .json({ message: "File updated successfully!" });
-                });
-            });
-          }
-        });
+            await userDocs.update(userDoc, { where: { id: docId } });
+            return res
+              .status(200)
+              .json({ message: "File updated successfully!" });
+          });
+        } else {
+          return res.status(404).json({ message: "Document not found!" });
+        }
       } else {
-        // Create or update user document based on doc_type_id
-        const userDoc = {
-          user_id: req.user.id, // Assuming you have user information in req.user
+        const newDoc = {
+          user_id: req.user.id,
           doc_type_id: Number(doc_type_id),
           filename: filename,
           createdAt: new Date(),
           updatedAt: new Date(),
         };
 
-        // Create new document record
-        console.log(
-          "YYYYYYYYYYYYYYYYYYYYYYEAAAAAAAAAAAAAAAAAAAAAAAAAAAAYYYYYYYYYYYYYYYYYYYYYYYYY careted",
-          userDoc
-        );
-        // return res.status(200).json({ message: "file uploaded!" });
-        const createdDoc = await userDocs.create(userDoc).then((created) => {
-          res
-            .status(200)
-            .json({ message: "File uploaded successfully!", data: created });
-        });
+        const createdDoc = await userDocs.create(newDoc);
+        return res
+          .status(200)
+          .json({ message: "File uploaded successfully!", data: createdDoc });
       }
     } catch (error) {
       console.error("Error uploading document:", error);
@@ -169,12 +172,13 @@ exports.findByDocTypeId = async (req, res) => {
   console.log(req.params.doc_type_id);
 
   const userId = req.user.id;
-  
 
-  const data = await userDocs.findAll({ where: {
-    user_id: userId,
-    doc_type_id: req.params.doc_type_id
-  } });
+  const data = await userDocs.findAll({
+    where: {
+      user_id: userId,
+      doc_type_id: req.params.doc_type_id,
+    },
+  });
 
   if (data) {
     var docsData = [];
@@ -237,7 +241,7 @@ exports.findAll = async (req, res) => {
       docsData.push({
         id: rm.id,
         doc_type_id: rm.doc_type_id,
-        doc_type_name: docTypeData? docTypeData.name : null,
+        doc_type_name: docTypeData ? docTypeData.name : null,
         filename: rm.filename,
         filepath: filePath,
       });

@@ -133,6 +133,8 @@ var ePramaanRouter = require("./routes/e-pramaan");
 var instProgSubRouter = require("./routes/instprogsub");
 var academicYearRouter = require("./routes/academicYear");
 var userContactRouter = require("./routes/userContact");
+var constituencyRouter = require("./routes/constituency");
+var boardUniversityRouter = require("./routes/boarduniversity");
 
 //APIs by Paresh A.
 var companyRouter = require("./routes/company");
@@ -210,6 +212,8 @@ application.use("/api/v1/e-pramaan", ePramaanRouter);
 application.use("/api/v1/fee-structure", instProgSubRouter);
 application.use("/api/v1/academicyear", academicYearRouter);
 application.use("/api/v1/usercontact", userContactRouter);
+application.use("/api/v1/constituency", constituencyRouter);
+application.use("/api/v1/board-universities", boardUniversityRouter);
 
 //APIs by Paresh A.
 application.use("/api/v1/company", companyRouter);
@@ -247,8 +251,8 @@ var task = cron.schedule(
   "*/1 * * * *",
   async () => {
     console.log("running a task every 1 minute");
-    Otp.reset_attempts();
-    Otp.resetForgotPassword_attempts();
+    // Otp.reset_attempts();
+    // Otp.resetForgotPassword_attempts();
   },
   {
     scheduled: false,

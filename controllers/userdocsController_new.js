@@ -46,7 +46,7 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     checkFileType(file, cb);
   },
-}).single("doc"); // 'doc' is the name attribute in the form
+}).single("document"); // 'document' is the name attribute in the form
 
 // Check file type
 function checkFileType(file, cb) {
@@ -66,6 +66,24 @@ function checkFileType(file, cb) {
 
 // Controller function for uploading documents
 exports.uploadDoc = async (req, res) => {
+  console.log("here it is ", req.body);
+  // if (req.body.doc_type_id == 22) {
+  // } else if (req.body.doc_type_id == 20) {
+  // } else if (req.body.doc_type_id == 23) {
+  // } else if (
+  //   req.body.doc_type_id == 25 ||
+  //   req.body.doc_type_id == 26 ||
+  //   req.body.doc_type_id == 27
+  //   // req.body.doc_type_id == 28 ||
+  //   // req.body.doc_type_id == 29
+  // ) {
+  // } else {
+  //   res
+  //     .status(400)
+  //     .json(errorResponse(`Please enter a valid Document ID!`, 400));
+  //   return false;
+  // }
+
   upload(req, res, async (err) => {
     if (err) {
       return res.status(400).json({ message: err });
@@ -79,7 +97,7 @@ exports.uploadDoc = async (req, res) => {
       const filename = req.file.filename;
 
       let docId = Number(req.body.doc_id);
-      
+
       if (docId) {
         console.log("heeyyyyy heeerrrreee", docId);
         //find the file details and unlink the existing file
@@ -109,14 +127,13 @@ exports.uploadDoc = async (req, res) => {
                   where: { id: docId },
                 })
                 .then((updated) => {
+                  console.log("Delete File successfully.");
                   return res
                     .status(200)
                     .json({ message: "File updated successfully!" });
                 });
             });
           }
-        }).catch((error) =>{
-          res.status(500).json({ message: "Failed to upload document." });
         });
       } else {
         // Create or update user document based on doc_type_id
@@ -129,12 +146,15 @@ exports.uploadDoc = async (req, res) => {
         };
 
         // Create new document record
-        console.log("YYYYYYYYYYYYYYYYYYYYYYEAAAAAAAAAAAAAAAAAAAAAAAAAAAAYYYYYYYYYYYYYYYYYYYYYYYYY careted", userDoc);
+        console.log(
+          "YYYYYYYYYYYYYYYYYYYYYYEAAAAAAAAAAAAAAAAAAAAAAAAAAAAYYYYYYYYYYYYYYYYYYYYYYYYY careted",
+          userDoc
+        );
         // return res.status(200).json({ message: "file uploaded!" });
         const createdDoc = await userDocs.create(userDoc).then((created) => {
           res
             .status(200)
-            .json({ message: "File uploaded successfully!", created });
+            .json({ message: "File uploaded successfully!", data: created });
         });
       }
     } catch (error) {
@@ -143,166 +163,53 @@ exports.uploadDoc = async (req, res) => {
     }
   });
 };
-// };
-//   console.log(
-//     "in controller user doc - upload userrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
-//     req.body
-//   );
 
-//   var storage = multer.diskStorage({
-//     destination: function (request, file, callback) {
-//       //req.body.user_id
-//       // fs.mkdir('./uploads/user/'+req.body.user_id);
-//       callback(null, "./uploads/user");
-//     },
-//     filename: async function (request, file, callback) {
-//       var temp_file_arr = file.originalname.split(".");
+// Retrieve all UserDocs of a specific doc type id.
+exports.findByDocTypeId = async (req, res) => {
+  console.log(req.params.doc_type_id);
 
-//       var temp_file_name = temp_file_arr[0];
+  const userId = req.user.id;
+  
 
-//       var temp_file_extension = temp_file_arr[1];
-//       let docTypeId = Number(request.body.doc_type_id);
+  const data = await userDocs.findAll({ where: {
+    user_id: userId,
+    doc_type_id: req.params.doc_type_id
+  } });
 
-//       if (docTypeId == 21) {
-//          callback(
-//           null,
-//           "offer_" +
-//             Date.now() +
-//             "_" +
-//             temp_file_name +
-//             "." +
-//             temp_file_extension
-//         );
-//       } else {
-//         callback(
-//           null,
-//           "user_" +
-//             Date.now() +
-//             "_" +
-//             temp_file_name +
-//             "." +
-//             temp_file_extension
-//         );
-//       }
-//     },
-//   });
+  if (data) {
+    var docsData = [];
+    for (const rm of data) {
+      //take document type details and add to array below
+      let docTypeData = await docType.findOne({
+        where: {
+          id: rm.doc_type_id,
+        },
+      });
 
-//   const maxSize = 50720; //30kb
+      //const filePath = uploadUrl+"/user/"+userId+"/"+rm.filename;
+      const filePath =
+        req.protocol + "://" + req.get("host") + "/static/user/" + rm.filename;
 
-//   var upload = multer({
-//     storage: storage,
-//     fileFilter: function (req, file, callback) {
-//       //var ext = path.extname(storage.filename);
-//       /*if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
-//                               return callback(new Error('Only images are allowed'))
-//                           }
-//                           callback(null, true);*/
+      docsData.push({
+        id: rm.id,
+        doc_type_id: rm.doc_type_id,
+        doc_type_name: docTypeData.name,
+        filename: rm.filename,
+        filepath: filePath,
+      });
+    }
 
-//       let docTypeId = Number(req.body.doc_type_id);
-//       console.log("BLA BLA:", docTypeId);
-//       console.log("BLA BLA BLA BLA BLA BLA BLA BLA:", req.body);
-//       //validations to be done here
-//       if (docTypeId == 22) {
-//       } else if (docTypeId == 20) {
-//       } else if (docTypeId == 23) {
-//       } else if (
-//         docTypeId == 25 ||
-//         docTypeId == 26 ||
-//         docTypeId == 27
-//         // docTypeId == 28 ||
-//         // docTypeId == 29
-//       ) {
-//       } else {
-//         res
-//           .status(400)
-//           .json(errorResponse(`Please enter a valid Document ID!`, 400));
-//         return false;
-//       }
-
-//       if (
-//         file.mimetype === "application/pdf" ||
-//         file.mimetype === "image/png" ||
-//         file.mimetype === "image/jpg" ||
-//         file.mimetype === "image/jpeg"
-//       ) {
-//         callback(null, true);
-//       } else {
-//         //callback(null, false);
-//       }
-
-//     },
-//     limits: { fileSize: maxSize },
-//   }).single("document");
-
-//   upload(req, res, async function (error) {
-//     if (error) {
-//       console.log(error);
-//       res.status(400).json(success("Error uploading file!"));
-//     } else {
-//       // Save UserDocs in the database
-//       docId = Number(req.body.doc_id);
-
-//       if (docId) {
-//         //find the file details and unlink the existing file
-//         userDocs.findByPk(docId).then((data) => {
-//           if (data) {
-//             console.log(__dirname);
-//             const directoryPath = baseDirectory + "/uploads/user/";
-//             console.log(directoryPath);
-
-//             fs.unlink(directoryPath + data.filename, (err) => {
-//               if (err) {
-//                 throw err;
-//               }
-
-//               console.log("Delete File successfully.");
-//             });
-//           }
-//         });
-
-//         const filename = req.file.filename;
-
-//         const userDoc = {
-//           user_id: req.user.id,
-//           doc_type_id: req.body.doc_type_id,
-//           filename: filename,
-//           createdAt: new Date(),
-//           updateAt: null,
-//         };
-
-//         const docUpdated = await userDocs.update(userDoc, {
-//           where: { id: docId },
-//         });
-
-//         if (docUpdated) {
-//           res
-//             .status(200)
-//             .json(success("Student Document added successfully!", docUpdated));
-//         }
-//       } else {
-//         console.log("Testing file name:", req.file.filename);
-//         const filename = req.file.filename;
-
-//         const userDoc = {
-//           user_id: req.user.id,
-//           doc_type_id: req.body.doc_type_id,
-//           filename: filename,
-//           createdAt: new Date(),
-//           updateAt: null,
-//         };
-//         let data = await userDocs.create(userDoc);
-//         if (data) {
-//           // res
-//           //   .status(200)
-//           //   .json(success("Student Document added successfully!", data));
-//         }
-//         // res
-//         //     .status(400)
-//         //     .json(success("Could not upload Student Document!"));
-//       }
-//     }
-//   });
-// };
+    if (docsData) {
+      res
+        .status(200)
+        .json(success("User documents fetched successfully!", docsData));
+    } else {
+      res
+        .status(400)
+        .json(errorResponse(`Cannot find Student's Documents`, 400));
+    }
+  }
+};
 
 // Retrieve all UserDocs from the database.
 exports.findAll = async (req, res) => {
@@ -330,7 +237,7 @@ exports.findAll = async (req, res) => {
       docsData.push({
         id: rm.id,
         doc_type_id: rm.doc_type_id,
-        doc_type_name: docTypeData.name,
+        doc_type_name: docTypeData? docTypeData.name : null,
         filename: rm.filename,
         filepath: filePath,
       });
