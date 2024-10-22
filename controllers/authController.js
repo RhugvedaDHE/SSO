@@ -1420,3 +1420,112 @@ exports.registerGEDCAdmin = async function (req, res) {
     });
   });
 };
+
+exports.registerbulkUsers = async function (req, res) {
+
+  const dataArray = req.body;
+
+    // Step 3: Iterate through the array
+    dataArray.forEach(entry => {
+        // Access each entry's properties
+        const { role_id, firstname, lastname, email, phone, designation_id, employmenttype_id, entity_type_id, cio_id } = entry;
+
+        // Example: Log each entry
+        console.log(`Name: ${firstname} ${lastname}, Email: ${email}, Phone: ${phone}`);
+        
+        // You can also perform operations here, such as inserting into the database
+        // insertIntoDatabase(role_id, firstname, lastname, email, phone, designation_id, employmenttype_id, entity_type_id, cio_id);
+    
+
+  var userCredentialsdata;
+  userCredentialsdata = userCredentials(email, phone);
+  var salt = bcrypt.genSaltSync(10);
+  var hash = bcrypt.hashSync(userCredentialsdata.password, salt);
+
+  User.create({
+    username: userCredentialsdata.username,
+    password: hash,
+    phone: phone,
+    email: email,
+    status: "VER",
+    is_verified: true,
+  }).then((user) => {
+    //save superAdmin Role
+    UserRole.create({
+      user_id: user.id,
+      role_id: role_id,
+      preferred_role: true,
+      is_active: true,
+    }).then((userRole) => {
+      //Save SuperAdmin Personal Details
+      UserPersonalDetails.create({
+        user_id: userRole.user_id,
+        firstname: firstname,
+        lastname: lastname,
+        phone: phone,
+        email: email,
+      }).then((UserPersonalDetails) => {
+        UserDesignation.create({
+          user_id: userRole.user_id,
+          designation_id: designation_id,
+          employementtype_id: employmenttype_id,
+        })
+          .then((UserDesignation) => {
+            EntityUser.create({
+              user_id: userRole.user_id,
+              entity_type_id: entity_type_id,
+              cio_id: cio_id,
+            })
+              .then(async (EntityUser) => {
+                console.log("call email Notification function");
+                var from = process.env.EMAIL_FROM;
+                var subject = "User Credentials";
+                var template = "welcome";
+                var response;
+
+                // response = await EmailNotification(
+                //   from,
+                //   req.body.email,
+                //   subject,
+                //   template,
+                //   req.body.firstname,
+                //   userCredentialsdata.username,
+                //   userCredentialsdata.password,
+                //   ""
+                // );
+                // if (response) {
+                res
+                  .status(200)
+                  .json(
+                    success(
+                      "User Credentials created successfully"
+                    )
+                  );
+                // } else {
+                //   res
+                //     .status(400)
+                //     .json(
+                //       errorResponse(
+                //         "Failed to Forwarded User Credentials",
+                //         400
+                //       )
+                //     );
+                // }
+              })
+              .catch((error) => {
+                res
+                  .status(400)
+                  .json(errorResponse("Failed to save Entity User", 400));
+              });
+          })
+          .catch((error) => {
+            res
+              .status(400)
+              .json(errorResponse("Failed to save Admin Designation", 400));
+          });
+      });
+    });
+  });
+});
+};
+

@@ -703,4 +703,8 @@ router.post(
   Auth.registerGEDCAdmin
 );
 
+router.post(
+  "/register-bulk-users",
+  Auth.registerbulkUsers
+);
 module.exports = router;

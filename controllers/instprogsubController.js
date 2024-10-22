@@ -49,6 +49,22 @@ exports.create = async function (req, res) {
   });
 };
 
+exports.createBulk = async function (req, res) {
+  
+  for (const item of req.body) {
+    
+    await InstituteProgrammeSubject.create({
+      institute_id: item.institute,
+      programme_id: item.programme,
+      subject_id: item.subject,
+      userdoc_id: null,
+    })    
+  }
+    
+  res.status(200).json(success("Inst-prog-subs created successfully!"));
+       
+};
+
 exports.get = async function (req, res) {
   const query = `
   SELECT "InstituteProgrammeSubject"."id", "InstituteProgrammeSubject"."programme_id", "InstituteProgrammeSubject"."institute_id", 

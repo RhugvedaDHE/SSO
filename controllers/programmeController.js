@@ -23,6 +23,37 @@ exports.create = function (req, res) {
     });
 };
 
+exports.createBulk = async function (req, res) {
+  try {
+    const programmes = req.body; // Assuming req.body contains the array of programmes
+
+
+    // Step 3: Iterate through the array
+    for (const programme of programmes) {
+        // Access each entry's properties
+        // const { name} = entry;
+        let max_sem = programme.Type === "UG" ? 12 : programme.Type == "PG" ? 6 : programme.Type == "DP" ? 8 : programme.Type == "FC" ? 4 : programme.Type == "PGD" ? 6 : 0;
+        await Programme.create({
+            name: programme.name, // Use the entry's name instead of req.body.name
+            programme_desc: programme.name,
+            max_sem: max_sem ,
+            type: programme.Type,
+            stream_id: 1,
+            order: 1,
+            doc_type_id: null,
+        });
+    }
+
+    // Respond with a success message
+    res
+        .status(200)
+        .json(success("Programmes created successfully!"));
+} catch (error) {
+    console.error('Error creating programmes:', error);
+    res.status(500).json({ error: 'An error occurred while creating the programmes.' });
+}    
+};
+
 exports.update = function (req, res) {
   Programme.update(
     { max_sem: req.body.max_sem },

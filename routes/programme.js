@@ -11,6 +11,9 @@ router.post('/create', [
     check('max_sem').not().isEmpty().withMessage('Max sememsters is required'),
 ], validate, Programme.create);
 
+
+router.post('/create-bulk', Programme.createBulk);
+
 router.post('/update', [
     check('programme_id').not().isEmpty().withMessage('Programme name is required'),
     check('duration').not().isEmpty().withMessage('Duration name is required'),

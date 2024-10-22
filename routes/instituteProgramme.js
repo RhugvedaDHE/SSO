@@ -11,6 +11,8 @@ router.post('/create', [
     check('programme_id').not().isEmpty().withMessage('Programme is required'),
 ], validate, instprogProgramme.create);
 
+router.post('/create-bulk', instprogProgramme.createBulk);
+
 router.get('/get/',  instprogProgramme.get);
 
 module.exports = router;

@@ -13,6 +13,8 @@ router.post('/create', [
     check('userdoc_id').isNumeric().withMessage('Userdoc is required'),
 ], validate, authenticate, InstProgSub.create);
 
+router.post('/create-bulk', InstProgSub.createBulk);
+
 router.post('/get/', InstProgSub.get);
 
 router.post('/get/subjects', InstProgSub.getSubjects);

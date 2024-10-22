@@ -57,7 +57,7 @@ module.exports = (sequelize, DataTypes) => {
     consolidated_total_marks: DataTypes.INTEGER,
     consolidated_marks_obtained: DataTypes.INTEGER,
     consolidated_grade_obtained: DataTypes.STRING,
-    board_university: DataTypes.STRING,
+    board_university_id: DataTypes.STRING,
     month_year: DataTypes.STRING,
     userdoc_id: DataTypes.INTEGER,
     is_active: {
