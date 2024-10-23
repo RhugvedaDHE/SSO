@@ -46,6 +46,7 @@ router.post(
   validate,
   Institute.create
 );
+router.post("/create-bulk", Institute.createBulk);
 
 router.get("/get/", Institute.get);
 

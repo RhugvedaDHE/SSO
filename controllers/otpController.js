@@ -332,45 +332,45 @@ exports.reset_attempts = async function (req, res) {
     });
   
     if (otpEntry) {
-      res
-              .status(200)
-              .json(success(" verified successfully!", otpEntry));
-      otpEntry.foreach( async(otp) =>{
-        
+      
+      for (const otp of otpEntry) {
+       
       // Check if it's an email OTP
-      if (otpEntry.otp_type === "email") {
-        const user = await User.findOne({
-          where: { email: otpEntry.details },
-        });
+      // if (otpEntry.otp_type === "email") {
+        // const user = await User.findOne({
+        //   where: { email: otpEntry.details },
+        // });
 
-        if (user) { // && !user.email_verified) {
+        // if (user) { // && !user.email_verified) {
           // Reset attempts to 0 after 10 minutes for email OTP
           await OTP.update(
             { attempts: 0 },
-            { where: { details: otpEntry.details } }
+            { where: { details: otp.details } }
           );
           console.log("Email OTP attempts reset.")
-          return res.status(200).json({ message: "Email OTP attempts reset." });
-        }
-      }
+        //   res
+        // .status(200)
+        // .json(success("Attempts reset"));
+        // }
+      // }
 
-      // Check if it's a phone OTP
-      if (otpEntry.otp_type === "phone") {
-        const user = await User.findOne({
-          where: { phone: otpEntry.details },
-        });
+      // // Check if it's a phone OTP
+      // if (otpEntry.otp_type === "phone") {
+      //   const user = await User.findOne({
+      //     where: { phone: otpEntry.details },
+      //   });
         
-        if (user) { // && !user.phone_verified) {
-          // Reset attempts to 0 after 10 minutes for phone OTP
-          await OTP.update(
-            { attempts: 0 },
-            { where: { details: otpEntry.details } }
-          );
-          console.log("Phone OTP attempts reset.")
-          return res.status(200).json({ message: "Phone OTP attempts reset." });
-        }
+      //   if (user) { // && !user.phone_verified) {
+      //     // Reset attempts to 0 after 10 minutes for phone OTP
+      //     await OTP.update(
+      //       { attempts: 0 },
+      //       { where: { details: otpEntry.details } }
+      //     );
+      //     console.log("Phone OTP attempts reset.")
+      //     return res.status(200).json({ message: "Phone OTP attempts reset." });
+      //   }
+      // }
       }
-      })
       
     } else {
       // No matching OTP found

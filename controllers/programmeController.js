@@ -27,31 +27,42 @@ exports.createBulk = async function (req, res) {
   try {
     const programmes = req.body; // Assuming req.body contains the array of programmes
 
-
     // Step 3: Iterate through the array
-    for (const programme of programmes) {
-        // Access each entry's properties
-        // const { name} = entry;
-        let max_sem = programme.Type === "UG" ? 12 : programme.Type == "PG" ? 6 : programme.Type == "DP" ? 8 : programme.Type == "FC" ? 4 : programme.Type == "PGD" ? 6 : 0;
-        await Programme.create({
-            name: programme.name, // Use the entry's name instead of req.body.name
-            programme_desc: programme.name,
-            max_sem: max_sem ,
-            type: programme.Type,
-            stream_id: 1,
-            order: 1,
-            doc_type_id: null,
-        });
+    for (const programme of req.body) {
+      // Access each entry's properties
+      // const { name} = entry;
+      let max_sem =
+        programme.Type === "UG"
+          ? 12
+          : programme.Type == "PG"
+          ? 6
+          : programme.Type == "DP"
+          ? 8
+          : programme.Type == "FC"
+          ? 4
+          : programme.Type == "PGD"
+          ? 6
+          : 0;
+          
+      await Programme.create({
+        name: programme.name, // Use the entry's name instead of req.body.name
+        programme_desc: programme.name,
+        max_sem: max_sem,
+        type: programme.Type,
+        stream_id: 1,
+        order: 1,
+        doc_type_id: null,
+      });
     }
-
+    res.status(200).json(success("Programmes created successfully!"));
+  } catch (error) {
     // Respond with a success message
+
+    console.error("Error creating programmes:", error);
     res
-        .status(200)
-        .json(success("Programmes created successfully!"));
-} catch (error) {
-    console.error('Error creating programmes:', error);
-    res.status(500).json({ error: 'An error occurred while creating the programmes.' });
-}    
+      .status(500)
+      .json({ error: "An error occurred while creating the programmes." });
+  }
 };
 
 exports.update = function (req, res) {
@@ -115,9 +126,9 @@ exports.getInstituteProgramme = async function (req, res) {
   const instituteId = req.body.institute_id;
 
   var query = `SELECT ip.*, progs.*`;
-  query+= ` FROM public."InstituteProgrammes" as ip`;
-  query+= ` INNER JOIN public."Programmes" as progs ON ip.programme_id = progs.id `;
-  query+= ` WHERE ip."institute_id" = ${instituteId}`;
+  query += ` FROM public."InstituteProgrammes" as ip`;
+  query += ` INNER JOIN public."Programmes" as progs ON ip.programme_id = progs.id `;
+  query += ` WHERE ip."institute_id" = ${instituteId}`;
   // query+= ` ORDER BY s."id" ASC`;
 
   const jsondata = await db.sequelize.query(query, {
@@ -146,21 +157,20 @@ exports.getInstituteProgramme = async function (req, res) {
   //         });
   //       });
   //     });
-      res
-        .status(200)
-        .json(success("Institute-Programmes fetched successfully!", jsondata));
-    // })
-    // .catch((error) => {
-    //   res.status(400).json(errorResponse(error, 400));
-    // });
+  res
+    .status(200)
+    .json(success("Institute-Programmes fetched successfully!", jsondata));
+  // })
+  // .catch((error) => {
+  //   res.status(400).json(errorResponse(error, 400));
+  // });
 };
-
 
 exports.getInstituteTypeProgramme = async function (req, res) {
   let name = "";
   let programmes = [];
-  console.log("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^", req.body.insttype)
-  req.body.insttype == "School" ? name = "SSC" : name = "HSSC";
+  console.log("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^", req.body.insttype);
+  req.body.insttype == "School" ? (name = "SSC") : (name = "HSSC");
   await Programme.findOne({
     where: {
       name: name,

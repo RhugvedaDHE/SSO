@@ -355,8 +355,8 @@ exports.register = async function (req, res) {
           institute_id: req.body.institute_id,
           programme_id: req.body.programme_id,
           current_class_id: req.body.class,
-          current_semester_id: req.body.current_semester,
-          subject_id: req.body.subject_id,
+          current_semester_id: null,
+          subject_id: null,
         },
         { transaction: t }
       );
@@ -433,7 +433,7 @@ exports.register = async function (req, res) {
     await t.rollback();
 
     console.error(error);
-    res.status(400).json({ error: error.message });
+    res.status(400).json(errorResponse(error.errors[0].message,400));
   }
 };
 

@@ -7,7 +7,8 @@ const State = require("../models").State;
 const District = require("../models").District;
 const Country = require("../models").Country;
 const Institute = require("../models").Institute;
-const InstituteProgrammeSubject = require("../models").InstituteProgrammeSubject;
+const InstituteProgrammeSubject =
+  require("../models").InstituteProgrammeSubject;
 const Programme = require("../models").Programme;
 const Subject = require("../models").Subject;
 const UserDocs = require("../models").UserDocs;
@@ -44,6 +45,37 @@ exports.create = function (req, res) {
     .catch((error) => {
       res.status(400).json(errorResponse(error, 400));
     });
+};
+
+exports.createBulk = function (req, res) {
+  try {
+    for (const institute of req.body) {
+      //hS=4, School 3
+      let institute_type_id = institute.includes('higher') ? 4 : (institute.includes('HIGHER') ? 4 : 3); 
+
+      Institute.create({
+        institute_type_id: institute_type_id,
+        code: null,
+        name: institute,
+        type: null,
+        address: null,
+        taluka_id: null,
+        state_id: null,
+        district_id: null,
+        village: null,
+        country_id: null,
+        pincode: null,
+        hoi_id: null,
+        contact_person_name: null,
+        contact_person_email: null,
+        mobile: null,
+      });
+    } //end for
+
+    res.status(200).json(success("Institute created successfully!"));
+  } catch (error) {
+    res.status(400).json(errorResponse(error, 400));
+  }
 };
 
 exports.get = async function (req, res) {
@@ -138,41 +170,41 @@ exports.getusers = async function (req, res) {
 
   const institutesFaculties = await db.sequelize.query(query, {
     type: db.Sequelize.QueryTypes.SELECT,
-  });  
+  });
   for (const instituteFaculty of institutesFaculties) {
-
-    console.log("IF&8********************************************************************************************! ", instituteFaculty)
+    console.log(
+      "IF&8********************************************************************************************! ",
+      instituteFaculty
+    );
     let userpersonaldetails = await UserPersonalDetails.findOne({
       where: {
         user_id: instituteFaculty.user_id,
         is_active: true,
       },
     });
-    
+
     let userRole = await UserRole.findOne({
       where: {
         user_id: instituteFaculty.user_id,
       },
-      include:[
+      include: [
         {
           model: Role,
-          attributes: ["id", "name"]
-        }
-      ]
-    })
-    console.log("userRoel", userRole)
+          attributes: ["id", "name"],
+        },
+      ],
+    });
+    console.log("userRoel", userRole);
     userArray.push({
       staff: instituteFaculty,
       userdetails: userpersonaldetails,
-      role: userRole
+      role: userRole,
     });
-
-   
 
     // console.log("USESEERSYYFYDF^DFYSFYSFFSY", allUsers)
   } //);
   allUsers.push(userArray);
- 
+
   res
     .status(200)
     .json(success("Institute-Users fetched successfully!", allUsers));
@@ -231,21 +263,21 @@ exports.getInstituteProgrammesSubjects = async function (req, res) {
     include: [
       {
         model: InstituteProgrammeSubject,
-        as: 'programmeSubjects', // Alias used in the Institute model
+        as: "programmeSubjects", // Alias used in the Institute model
         include: [
           {
             model: Programme,
-            as: 'Programme', // Alias used in the InstituteProgrammeSubject model
+            as: "Programme", // Alias used in the InstituteProgrammeSubject model
             attributes: ["id", "name", "is_active"],
           },
           {
             model: Subject,
-            as: 'Subject', // Alias used in the InstituteProgrammeSubject model
+            as: "Subject", // Alias used in the InstituteProgrammeSubject model
             attributes: ["id", "name", "is_active"],
           },
           {
             model: UserDocs,
-            as: 'UserDoc', // Alias used in the InstituteProgrammeSubject model
+            as: "UserDoc", // Alias used in the InstituteProgrammeSubject model
             // attributes: ["id", "name", "is_active"],
           },
         ],
@@ -254,19 +286,18 @@ exports.getInstituteProgrammesSubjects = async function (req, res) {
     attributes: ["id", "name", "is_active"], // Attributes to select from Institute
   });
 
-  
-  
   if (institute && institute.programmeSubjects) {
-    institute.programmeSubjects.forEach(ps => {
+    institute.programmeSubjects.forEach((ps) => {
       if (ps.UserDoc) {
-        ps.UserDoc.filename = req.protocol +
-        "://" +
-        req.get("host") +
-        "/static/user/" + ps.UserDoc.filename;
+        ps.UserDoc.filename =
+          req.protocol +
+          "://" +
+          req.get("host") +
+          "/static/user/" +
+          ps.UserDoc.filename;
       }
     });
-  
-  
+
     // var jsondata = [];
     // for (const d of data) {
     //   let userdetails = await UserPersonalDetails.findOne({
@@ -312,37 +343,37 @@ exports.getHOIId = async function (req, res) {
     include: [
       {
         model: User,
-        where: Sequelize.where(Sequelize.col('Institute.hoi_id'), '=', Sequelize.col('User.id')), 
+        where: Sequelize.where(
+          Sequelize.col("Institute.hoi_id"),
+          "=",
+          Sequelize.col("User.id")
+        ),
         // This explicitly tells Sequelize to compare these two columns
       },
     ],
   });
 
-  
-
-  if(institute){
+  if (institute) {
     const userRole = await UserRole.findOne({
       where: {
-        user_id: institute.User.id
+        user_id: institute.User.id,
       },
       include: [
         {
           model: Role,
-        }
+        },
       ],
-    })
+    });
 
     let response = {
       institute_id: institute.id,
       hoi_user_id: institute.User.id,
       role_id: userRole.Role.id,
-    }
+    };
     return res
-    .status(200)
-    .json(success("HOI and Role id fetched successfully!", response));
-  }else{
-    return res
-    .status(200)
-    .json(success("Institute Not found!"));
-  }  
+      .status(200)
+      .json(success("HOI and Role id fetched successfully!", response));
+  } else {
+    return res.status(200).json(success("Institute Not found!"));
+  }
 };

@@ -251,7 +251,7 @@ var task = cron.schedule(
   "*/1 * * * *",
   async () => {
     console.log("running a task every 1 minute");
-    // Otp.reset_attempts();
+    Otp.reset_attempts();
     // Otp.resetForgotPassword_attempts();
   },
   {
