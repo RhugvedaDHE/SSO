@@ -20,6 +20,7 @@ exports.createBulk = async function (req, res) {
 
   for (const item of req.body) {
     await Subject.create({
+      id: item.id,
       name: item.name,
     });
   }

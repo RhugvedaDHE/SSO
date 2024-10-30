@@ -5,7 +5,7 @@ const { success, errorResponse, validation } = require("../responseApi");
 exports.create = async function (req, res) {
   const userContact = {
     user_id: req.user.id,
-    type_id: req.body.type_id,
+    type_id: 1,
     address: req.body.address,
     country_id: req.body.country_id,
     state_id: req.body.state_id,
@@ -18,14 +18,14 @@ exports.create = async function (req, res) {
   let userContactData = UserContact.findOne({
     where: {
       user_id: req.user.id,
-      type_id: req.body.type_id,
+      type_id: 1,
     },
   });
   if (userContactData.length) {
     await UserContact.update(userContact, {
       where: {
         user_id: req.user.id,
-        type_id: req.body.type_id,
+        type_id: 1,
       },
     })
       .then((data) => {

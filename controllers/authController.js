@@ -303,7 +303,7 @@ exports.register = async function (req, res) {
         password: hash,
         phone: req.body.phone,
         email: req.body.email,
-        status: "REG",
+        status: "VER",
       },
       { transaction: t }
     );
