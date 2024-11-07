@@ -15,6 +15,7 @@ const Institute = require("../models").Institute;
 const InstituteType = require("../models").InstituteType;
 const EvalTypes = require("../models").EvalTypes;
 const InstituteProgramme = require("../models").InstituteProgramme;
+const Boarduniversity = require("../models").Boarduniversity;
 const { success, errorResponse, validation } = require("../responseApi");
 const e = require("express");
 
@@ -49,6 +50,15 @@ exports.findOne = (req, res) => {
       },
       {
         model: Stream,
+        // where: {
+        //   id: {
+        //     [Op.ne]: 0, // Only include if class is not zero
+        //     [Op.ne]: null, // Only include if class is not zero
+        //   },
+        // },
+      },
+      {
+        model: Boarduniversity,
         // where: {
         //   id: {
         //     [Op.ne]: 0, // Only include if class is not zero
@@ -114,7 +124,8 @@ exports.findOne = (req, res) => {
           subject_name: subjectDetails ? subjectDetails.name : null,
           stream_id: data.Stream ? data.Stream.id : null,
           stream_name: data.Stream ? data.Stream.name : null,
-          // board_univ: instituteProgramme.board_univ,
+          // board_univ: data.Boarduniversity.id,
+          // board_univ_name: data.Boarduniversity.id,
           current_semester_id: data.current_semester_id,
           current_semester_name: data.Semester ? data.Semester.name : null,
           eval_type_id: data.evaltype_id,

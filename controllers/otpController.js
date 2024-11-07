@@ -1,6 +1,7 @@
 const express = require("express");
 const OTP = require("../models").OTP;
 const User = require("../models").User;
+const UserPersonalDetails = require("../models").UserPersonalDetails;
 const {
   success,
   errorResponse,
@@ -15,7 +16,26 @@ const Op = require("sequelize").Op;
 exports.generate = async function (req, res) {
   var salt = bcrypt.genSaltSync(10);
   const otp = Math.random().toString(36).substr(2, 5);
+  // Find any user or user personal detail with matching phone or email
+  const [user, userPersonal] = await Promise.all([
+    User.findOne({
+      where: {
+        [Op.or]: [{ phone: req.body.to }, { email: req.body.to }]
+      }
+    }),
+    UserPersonalDetails.findOne({
+      where: {
+        [Op.or]: [{ phone: req.body.to }, { email: req.body.to }]
+      }
+    })
+  ]);
 
+  // Check if any record exists
+  if (user || userPersonal) {
+    return res
+      .status(200)
+      .json(success("Your " + req.body.type +" already exists!"));
+  }
   await OTP.findOne({
     where: {
       details: req.body.to,
@@ -83,7 +103,6 @@ exports.generate = async function (req, res) {
       }
     } else if (!results) {
       console.log("herwwwwwwwwwwwwwwwwwwwwwwwwwwwctAAAAAAAAAAAAAAAAAAAAAe");
-
       await OTP.create({
         otp: bcrypt.hashSync(otp, salt),
         otp_type: req.body.type,
@@ -111,10 +130,10 @@ exports.generate = async function (req, res) {
               req.body.to,
               subject,
               template,
-              otp,
               "",
               "",
-              ""
+              "",
+              otp
             );
 
             if (response) {
@@ -161,7 +180,7 @@ exports.generate = async function (req, res) {
         .status(200)
         .json(
           success(
-            "Please come back tomorrow! You have exceeded today's attempts!",
+            "You have exceeded 3 attempts. Try after 10 minutes!",
             jsondata
           )
         );

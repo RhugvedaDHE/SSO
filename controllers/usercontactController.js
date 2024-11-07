@@ -13,6 +13,7 @@ exports.create = async function (req, res) {
     taluka_id: req.body.taluka_id,
     village: req.body.village,
     pincode: req.body.pincode,
+    constituency_id: req.body.constituency_id,
   };
 
   let userContactData = UserContact.findOne({

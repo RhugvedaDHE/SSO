@@ -71,6 +71,9 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         defaultValue: 1
       },
+      death_certificate_id: {
+        type: DataTypes.INTEGER
+      },
       is_deceased: {
         type: DataTypes.BOOLEAN,
         defaultValue: 0

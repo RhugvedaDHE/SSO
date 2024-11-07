@@ -11,6 +11,6 @@ router.post('/create', [
     check('state_id').not().isEmpty().withMessage('State is required'),
 ], validate, Boarduniversity.create);
 
-router.post('/get/',  Boarduniversity.get);
+router.get('/get/',  Boarduniversity.get);
 
 module.exports = router;

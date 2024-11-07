@@ -23,6 +23,9 @@ module.exports = (sequelize, DataTypes) => {
       StudentEnrollment.belongsTo(models.Class, {
         foreignKey: 'current_class_id'
       }),
+      StudentEnrollment.belongsTo(models.Boarduniversity, {
+        foreignKey: 'board_university_id'
+      }),
       StudentEnrollment.belongsTo(models.Semester, {
         foreignKey: 'current_semester_id'
       }),
@@ -57,7 +60,7 @@ module.exports = (sequelize, DataTypes) => {
     consolidated_total_marks: DataTypes.INTEGER,
     consolidated_marks_obtained: DataTypes.INTEGER,
     consolidated_grade_obtained: DataTypes.STRING,
-    board_university_id: DataTypes.STRING,
+    board_university_id: DataTypes.INTEGER,
     month_year: DataTypes.STRING,
     userdoc_id: DataTypes.INTEGER,
     is_active: {

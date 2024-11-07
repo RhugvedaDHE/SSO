@@ -36,6 +36,7 @@ exports.create = async (req, res) => {
         annual_income: req.body.annual_income,
         gender: req.body.gender_id,
         aadhar_card_no: req.body.aadhar_card_no,
+        death_certificate_id: req.body.death_certificate_id,
         is_deceased: parseInt(req.body.is_deceased) == 1 ? true : false,
         is_employed: req.body.is_employed,
       };
@@ -164,6 +165,7 @@ exports.update = async (req, res) => {
     annual_income: req.body.annual_income,
     aadhar_card_no: req.body.aadhar_card_no,
     gender: req.body.gender_id,
+    death_certificate_id: req.body.death_certificate_id,
     is_deceased: req.body.is_deceased,
     is_employed: req.body.is_employed,
     active: req.body.active,

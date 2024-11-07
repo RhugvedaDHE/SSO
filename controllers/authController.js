@@ -815,6 +815,17 @@ exports.updateProfile = async function (req, res) {
     { where: { id: req.user.id } }
   );
 
+  let aadhar_count = await UserPersonalDetails.findAll({
+    where: {
+      aadhar: req.body.aadhar
+    }
+  })
+  
+  if(aadhar_count.length > 0){
+    res
+        .status(400)
+        .json(errorResponse("Aadhar number already exists!", 400));
+  }
   await UserPersonalDetails.update(req.body, {
     where: { user_id: req.user.id },
   })

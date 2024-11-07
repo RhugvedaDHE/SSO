@@ -17,6 +17,7 @@ const Semester = require("../models").Semester;
 const Stream = require("../models").Stream;
 const DocumentType = require("../models").DocumentType;
 const EvalTypes = require("../models").EvalTypes;
+const Boarduniversity = require("../models").Boarduniversity;
 const { success, errorResponse, validation } = require("../responseApi");
 const e = require("express");
 // const { Stream } = require("winston/lib/winston/transports");
@@ -29,6 +30,21 @@ const Op = require("sequelize").Op;
 // Create and Save a new StudentMarks
 exports.create = async (req, res) => {
   // Create a check if student has more than one pursuing
+
+  const studentProgramme = await StudentEnrollment.findAll({
+    where: {
+      user_id: req.user.id,
+      programme_id: req.body.programme_id,
+      is_active: 0,
+    },
+  });
+  
+  if(studentProgramme.length > 0){
+    res
+    .status(400)
+    .json(errorResponse("You cannot select 2 same programmes at a time!"));
+  }
+
   let pursuing = StudentEnrollment.findAll({
     attributes: ["id"],
     where: {
@@ -80,7 +96,7 @@ exports.create = async (req, res) => {
     consolidated_total_marks: req.body.consolidated_total_marks,
     consolidated_marks_obtained: req.body.consolidated_marks_obtained,
     consolidated_grade_obtained: req.body.consolidated_grade_obtained,
-    board_university: req.body.board_university,
+    board_university_id: req.body.board_university,
     month_year: req.body.month_year,
     userdoc_id: req.body.userdoc_id,
     is_active: req.body.pursuing,
@@ -193,6 +209,20 @@ exports.create = async (req, res) => {
 // // Create and Save a new StudentMarks
 exports.createEnrollment = async (req, res) => {
   try {
+    const studentProgramme = await StudentEnrollment.findAll({
+      where: {
+        user_id: req.user.id,
+        programme_id: req.body.programme_id,
+        is_active: 0,
+      },
+    });
+    
+    if(studentProgramme.length > 0){
+      return res
+      .status(400)
+      .json(errorResponse("You cannot select 2 same programmes at a time!"));
+    }
+
     const studentenroll = await StudentEnrollment.findAll({
       where: {
         user_id: req.user.id,
@@ -202,7 +232,7 @@ exports.createEnrollment = async (req, res) => {
       },
     });
   
-    if (studentenroll.length > 1) {
+    if (studentenroll.length > 0) {
       return res.status(400).json(errorResponse("Cannot pursue 2 courses at a time!", 400));
     }
 
@@ -224,7 +254,7 @@ exports.createEnrollment = async (req, res) => {
       consolidated_total_marks: req.body.consolidated_total_marks,
       consolidated_marks_obtained: req.body.consolidated_marks_obtained,
       consolidated_grade_obtained: req.body.consolidated_grade_obtained,
-      board_university: req.body.board_university,
+      board_university_id: req.body.board_university,
       month_year: req.body.month_year,
       is_active: req.body.pursuing, // Ensure this is a boolean value
     };
@@ -419,6 +449,16 @@ exports.findAll = async (req, res) => {
           },
         },
       },
+      {
+        model: Boarduniversity,
+        attributes: ["id", "name"],
+        required: false, // This makes the join optional
+        where: {
+          id: {
+            [Op.ne]: null, // Only include if semester_id is not zero
+          },
+        },
+      },
     ],
   });
   if (studentEnrollments) {
@@ -586,7 +626,8 @@ exports.findAll = async (req, res) => {
         enrollment_id: studentEnrollment ? studentEnrollment.id : null,
         program_id: programmeDetails ? programmeDetails.id : null,
         program_title: programmeDetails ? programmeDetails.name : null,
-        board_university: studentEnrollment.board_university,
+        board_university_id: studentEnrollment.Boarduniversity ? studentEnrollment.Boarduniversity.id : null,
+        board_university_name: studentEnrollment.Boarduniversity ? studentEnrollment.Boarduniversity.name : null,
         institute_type_id: instituteDetails
           ? instituteDetails.institute_type_id
           : null,
@@ -631,7 +672,8 @@ exports.findAll = async (req, res) => {
           studentEnrollment.consolidated_marks_obtained,
         consolidated_grade_obtained:
           studentEnrollment.consolidated_grade_obtained,
-        board_university: studentEnrollment.board_university,
+        board_university_id: studentEnrollment.Boarduniversity ? studentEnrollment.Boarduniversity.id : null,
+        board_university_name: studentEnrollment.Boarduniversity ? studentEnrollment.Boarduniversity.name : null,
         month_year: studentEnrollment.month_year,
         is_active: studentEnrollment.is_active,
         doc_type_id: userDoctypeId ? userDoctypeId : null,
@@ -812,9 +854,9 @@ exports.updateMarks = async (req, res) => {
 
   if (pursuing.length) {
     res
-      .status(200)
+      .status(400)
       .json(
-        success(
+        errorResponse(
           "A student cannot be enrolled in more than one degree program at a time!"
         )
       );

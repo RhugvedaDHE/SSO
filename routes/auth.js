@@ -604,6 +604,11 @@ router.post(
       .withMessage("Phone number must be 10 digits")
       .isNumeric()
       .withMessage("Phone number must contain only numeric digits"),
+    check("aadhar")
+      .matches(/^[0-9]{12}$/)
+      .withMessage("Aadhar number must be 12 digits")
+      .isNumeric()
+      .withMessage("Aadhar number must contain only numeric digits"),
       // check('dob')
       //   .isDate().withMessage('Please select a valid Date of birth')
         // .custom((value) => {

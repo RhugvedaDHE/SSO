@@ -16,7 +16,7 @@ exports.create = function (req, res) {
     });
 };
 
-exports.get = async function (req, res) {
+exports.getStateSpecific = async function (req, res) {
   await Boarduniversity.findAll({
     where: {
       is_active: true,
@@ -38,6 +38,28 @@ exports.get = async function (req, res) {
       res
         .status(404)
         .json(success("No board universities found!", boarduniversities));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};
+
+exports.get = async function (req, res) {
+  await Boarduniversity.findAll({
+    where: {
+      is_active: true,
+    },
+    include: [
+      {
+        model: State,
+        attributes: ["name", "is_active"],
+      },
+    ],
+  })
+    .then((boarduniversities) => {
+        res
+        .status(200)
+        .json(success("board universities fetched successfully!", boarduniversities));     
     })
     .catch((error) => {
       res.status(400).json(errorResponse(error, 400));
