@@ -10,7 +10,7 @@ router.post('/create', [
     check('institute_id').isNumeric().withMessage('Institute name is required'),
     check('programme_id').isNumeric().withMessage('Programme name is required'),
     check('subject_id').isNumeric().withMessage('Subject name is required'),
-    check('userdoc_id').isNumeric().withMessage('Userdoc is required'),
+    // check('userdoc_id').isNumeric().withMessage('Userdoc is required'),
 ], validate, authenticate, InstProgSub.create);
 
 router.post('/create-bulk', InstProgSub.createBulk);

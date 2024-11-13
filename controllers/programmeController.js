@@ -124,12 +124,13 @@ exports.getProgSems = async function (req, res) {
 
 exports.getInstituteProgramme = async function (req, res) {
   const instituteId = req.body.institute_id;
-
-  var query = `SELECT ip.*, progs.*`;
-  query += ` FROM public."InstituteProgrammes" as ip`;
-  query += ` INNER JOIN public."Programmes" as progs ON ip.programme_id = progs.id `;
-  query += ` WHERE ip."institute_id" = ${instituteId}`;
-  // query+= ` ORDER BY s."id" ASC`;
+  var query = `SELECT DISTINCT ip.*, progs.*, CONCAT(progs.name, ' ', subs.name) AS pname `;
+  query += `FROM public."InstituteProgrammeSubjects" AS ip `;
+  query += `INNER JOIN public."Programmes" AS progs ON ip.programme_id = progs.id `;
+  query += `INNER JOIN public."Subjects" AS subs ON ip.subject_id = subs.id `;
+  query += `WHERE ip.institute_id = ${instituteId} `;
+  query += `GROUP BY ip.id, progs.id, subs.name`;
+  query+= ` ORDER BY pname ASC`;
 
   const jsondata = await db.sequelize.query(query, {
     type: db.Sequelize.QueryTypes.SELECT,

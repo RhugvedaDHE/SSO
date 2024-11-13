@@ -105,6 +105,9 @@ exports.get = async function (req, res) {
         attributes: ["name", "is_active"],
       },
     ],
+    order: [
+      [Sequelize.literal('LEFT("Institute"."name", 1)'), 'ASC'], // Use Sequelize.literal to avoid ambiguity
+    ],
   })
     .then((institutes) => {
       res
@@ -144,8 +147,15 @@ exports.gettype = async function (req, res) {
         attributes: ["name", "is_active"],
       },
     ],
+    order: [
+      [Sequelize.literal('LEFT("Institute"."name", 1)'), 'ASC'], // Use Sequelize.literal to avoid ambiguity
+    ],
   })
     .then((institutes) => {
+      // institutes.sort((a, b) => {
+      //   return a.name[0].localeCompare(b.name[0]);
+      // });
+
       res
         .status(200)
         .json(success("Institutes fetched successfully!", institutes));
