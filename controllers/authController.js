@@ -28,7 +28,7 @@ const OTP = require("../models").OTP;
 const tokenList = {};
 
 const Sequelize = require("sequelize");
-const sequelize = require('../models').sequelize;
+const sequelize = require("../models").sequelize;
 // const { sequelize } = require("../sequelize/models");
 const Op = Sequelize.Op;
 const {
@@ -72,6 +72,7 @@ exports.getUserDetails = function (req, res) {
         ],
       })
         .then(async (userRole) => {
+          
           let user_roles = [];
           //if not student
           let cio_name_ur;
@@ -82,7 +83,7 @@ exports.getUserDetails = function (req, res) {
                   user_id: req.user.id,
                 },
               });
-
+              
               let institute = await Institute.findOne({
                 where: {
                   id: student.institute_id,
@@ -97,7 +98,7 @@ exports.getUserDetails = function (req, res) {
                 },
                 attributes: ["cio_id"],
               };
-             
+
               if (ur.Role.type == "dept") {
                 queryOptions.include = ["Department"];
               } else if (ur.Role.type == "company") {
@@ -131,7 +132,7 @@ exports.getUserDetails = function (req, res) {
               cio_name: cio_name_ur,
             });
           } //for userRole
-
+         
           UserContact.findOne({
             where: {
               user_id: req.user.id,
@@ -249,16 +250,16 @@ exports.getUserDetails = function (req, res) {
                   ? cio.Department.name
                   : selectedRole.type == "company"
                   ? cio.Company.name
-                  : selectedRole.type == "institute" 
-                  &&ur.Role.name != "Student"
+                  : selectedRole.type == "institute" &&
+                    ur.Role.name != "Student"
                   ? cio.Institute.name
                   : selectedRole.type == "service"
                   ? cio.Service.name
                   : null;
-                        
+
               response.type = cio;
             } //else closed
-           
+
             response.selected_role = {
               id: selectedRole.id,
               name: selectedRole.name,
@@ -293,7 +294,7 @@ exports.register = async function (req, res) {
       { where: { id: req.body.role_id } }
     );
     if (!role) {
-      throw new Error('Role not found');
+      throw new Error("Role not found");
     }
 
     // Create user
@@ -345,7 +346,7 @@ exports.register = async function (req, res) {
       });
 
       if (!instprog) {
-        throw new Error('Institute Programme not found');
+        throw new Error("Institute Programme not found");
       }
 
       // Create student enrollment
@@ -374,14 +375,16 @@ exports.register = async function (req, res) {
       );
 
       res.status(200).json(success("Student-User created successfully"));
-                            
-    } 
+    }
     // Check if role is staff or non-teaching (role_id == 6 or role_id == 2)
     else if (req.body.role_id == 6 || req.body.role_id == 2) {
-      const staff = await Staff.create({ user_id: user.id }, { transaction: t });
+      const staff = await Staff.create(
+        { user_id: user.id },
+        { transaction: t }
+      );
 
       if (!req.body.institute_type_id || !req.body.institute_id) {
-        throw new Error('Select valid Institute and programme!');
+        throw new Error("Select valid Institute and programme!");
       }
 
       const instituteStaff = await InstituteStaff.create(
@@ -427,13 +430,12 @@ exports.register = async function (req, res) {
 
     // Commit the transaction if everything succeeds
     await t.commit();
-
   } catch (error) {
     // Rollback the transaction in case of an error
     await t.rollback();
 
     console.error(error);
-    res.status(400).json(errorResponse(error.errors[0].message,400));
+    res.status(400).json(errorResponse(error.errors[0].message, 400));
   }
 };
 
@@ -817,14 +819,12 @@ exports.updateProfile = async function (req, res) {
 
   let aadhar_count = await UserPersonalDetails.findAll({
     where: {
-      aadhar: req.body.aadhar
-    }
-  })
-  
-  if(aadhar_count.length > 0){
-    res
-        .status(400)
-        .json(errorResponse("Aadhar number already exists!", 400));
+      aadhar: req.body.aadhar,
+    },
+  });
+
+  if (aadhar_count.length > 1) {
+    res.status(400).json(errorResponse("Aadhar number already exists!", 400));
   }
   await UserPersonalDetails.update(req.body, {
     where: { user_id: req.user.id },
@@ -834,19 +834,17 @@ exports.updateProfile = async function (req, res) {
         where: { user_id: req.user.id },
       }).then((response) => {
         if (response == 1) {
-          res.send({
-            message: "User profile was updated successfully.",
-          });
+          return res
+            .status(200)
+            .json(success("User profile was updated successfully!"));
         } else {
-          res.send({
-            message: "Could not update User profile!",
-          });
+          return res.status(400).json(errorResponse("Could not update!", 400));
         }
       });
     })
     .catch((error) => {
       console.log(error);
-      res.status(400).json(errorResponse("Please check your details!", 400));
+      res.status(400).json(errorResponse(error.errors[0].message, 400));
     });
 };
 
@@ -1224,7 +1222,6 @@ exports.createUserDetailsForEpramaan = async function (req, res) {
       ],
     },
   }).then((user) => {
-    
     if (user) {
       tokendata = {
         username: user.username,
@@ -1449,7 +1446,9 @@ exports.registerbulkUsers = async function (req, res) {
         cio_id,
       } = entry;
 
-      console.log(`Name: ${firstname} ${lastname}, Email: ${email}, Phone: ${phone}`);
+      console.log(
+        `Name: ${firstname} ${lastname}, Email: ${email}, Phone: ${phone}`
+      );
 
       // Generate user credentials
       const userCredentialsdata = userCredentials(email, phone);
@@ -1501,7 +1500,6 @@ exports.registerbulkUsers = async function (req, res) {
       console.log("call email Notification function");
 
       // Example: await emailNotificationFunction();
-
     }
 
     res.status(200).json(success("All users registered successfully"));
@@ -1522,10 +1520,9 @@ exports.registerbulkUsers = async function (req, res) {
 
 //         // Example: Log each entry
 //         console.log(`Name: ${firstname} ${lastname}, Email: ${email}, Phone: ${phone}`);
-        
+
 //         // You can also perform operations here, such as inserting into the database
 //         // insertIntoDatabase(role_id, firstname, lastname, email, phone, designation_id, employmenttype_id, entity_type_id, cio_id);
-    
 
 //   var userCredentialsdata;
 //   userCredentialsdata = userCredentials(email, phone);
@@ -1613,4 +1610,3 @@ exports.registerbulkUsers = async function (req, res) {
 //   });
 // });
 // };
-

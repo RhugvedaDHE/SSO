@@ -40,8 +40,8 @@ exports.create = async (req, res) => {
     },
   });
 
-  if (studentProgramme.length > 1) {
-    res
+  if (studentProgramme.length >= 1) {
+    return res
       .status(400)
       .json(errorResponse("You cannot select 2 same programmes at a time!"));
   }
@@ -55,27 +55,7 @@ exports.create = async (req, res) => {
   });
   let last_qual_sem = {};
   let count_last_qual_sem = 0;
-  // if (pursuing.length <= 1) {
-  // //check if student has already selected last qualifying exam
-  // count_last_qual_year = StudentMarks.findAll({
-  //   where: {
-  //     student_enrollment_id: pursuing.id,
-  //     last_qual_sem: true,
-  //   },
-  // });
-  // res
-  //   .status(200)
-  //   .json(
-  //     success(
-  //       "A student cannot be enrolled in more than one degree program at a time!"
-  //     )
-  //   );
-  // }
-  // if (count_last_qual_year.length) {
-  //   res
-  //     .status(200)
-  //     .json(success("A student can only complete one semester at a time!"));
-  // } else {
+ 
   let instituteProgramme = await InstituteProgramme.findOne({
     attributes: ["id", "institute_id", "programme_id"],
     where: {
@@ -99,7 +79,7 @@ exports.create = async (req, res) => {
     consolidated_grade_obtained: req.body.consolidated_grade_obtained,
     board_university_id: req.body.board_university,
     month_year: req.body.month_year,
-    userdoc_id: req.body.userdoc_id,
+    // userdoc_id: req.body.userdoc_id,
     is_active: req.body.pursuing,
   };
 
@@ -221,7 +201,7 @@ exports.createEnrollment = async (req, res) => {
       },
     });
 
-    if (studentProgramme.length > 1) {
+    if (studentProgramme.length >= 1 && !req.body.enrollment_id) {
       return res
         .status(400)
         .json(errorResponse("You cannot select 2 same programmes at a time!"));
@@ -235,6 +215,19 @@ exports.createEnrollment = async (req, res) => {
         is_active: 1, // Use boolean instead of 1
       },
     });
+
+    //if pursing and there is no enrollment id provided, create not allowed
+    if (studentenroll.length >= 1 && !req.body.enrollment_id && req.body.pursuing == 1) {
+      return res
+        .status(400)
+        .json(errorResponse("Cannot pursue 2 courses at a time!", 400));
+    }
+    //completed to pursuing not allowed if student is already pursuing
+    if (studentenroll.length >= 1 && req.body.enrollment_id && req.body.pursuing == 1 && studentenroll.is_active == 0) {
+      return res
+        .status(400)
+        .json(errorResponse("Only one course can be set to 'Pursuing' at a time!", 400));
+    }
 
     let studentEnrollment = {
       user_id: req.user.id,
@@ -257,26 +250,23 @@ exports.createEnrollment = async (req, res) => {
       board_university_id: req.body.board_university,
       month_year: req.body.month_year,
       is_active: req.body.pursuing, // Ensure this is a boolean value
+      last_completed_qualification: req.body.last_completed_qualification ? req.body.last_completed_qualification : false
     };
-
     
-    //if pursing and there is no enrollment id provided, create not allowed
-    if (studentenroll.length >= 1 && !req.body.enrollment_id) {
-      return res
-        .status(400)
-        .json(errorResponse("Cannot pursue 2 courses at a time!", 400));
-    }
-
     if (req.body.enrollment_id) {
       const [updatedRowsCount, dataEnroll] = await StudentEnrollment.update(
         {
           user_id: req.user.id,
+          institute_id: req.body.institute_id,
           evaltype_id: req.body.eval_type_id,
           stream_id: req.body.stream_id,
           subject_id: req.body.subject_id,
           academic_year_id: req.body.academic_year,
           current_semester_id: req.body.current_semester_id,
           current_class_id: req.body.current_class_id,
+          board_university_id: req.body.board_university,
+          other_institute_name: req.body.other_institute_name,
+          other_programme_name: req.body.other_programme_name,
           other_subject_name: req.body.other_subject_name,
           consolidated_total_marks: req.body.consolidated_total_marks,
           consolidated_marks_obtained: req.body.consolidated_marks_obtained,
@@ -317,6 +307,33 @@ exports.createEnrollment = async (req, res) => {
 // Create and Save a new StudentMarks
 exports.createMarks = async (req, res) => {
   console.log("in controller studentMarks");
+  let studentMarksCount = await StudentMarks.findAll({
+    where: {
+      active: true,
+      student_enrollment_id: req.body.enrollment_id,
+      semester_id: req.body.semester_id,
+    },
+  });
+
+  if(studentMarksCount.length && !req.body.marks_id){
+    return res
+        .status(400)
+        .json(errorResponse("Cannot add same semester twice!", 400));
+  }
+
+  let studentEnrollment = await StudentEnrollment.findOne({
+    where: {
+      id: req.body.enrollment_id,
+    },
+  });
+   
+  if(studentEnrollment){
+    if(studentEnrollment.programme_id == 71 || studentEnrollment.programme_id == 72){
+      return res
+        .status(400)
+        .json(errorResponse("Cannot add semesters for SSC or HSSC!", 400));
+    }
+  }
 
   const studentMarks = {
     student_enrollment_id: req.body.enrollment_id,
@@ -339,24 +356,24 @@ exports.createMarks = async (req, res) => {
       },
     })
       .then((data) => {
-        res
+        return res
           .status(200)
           .json(success("Student-Marks updated successfully!", data));
       })
 
       .catch((err) => {
-        res.status(400).json(errorResponse(err, 400));
+        return res.status(400).json(errorResponse(err, 400));
       });
   } else {
     //create a new one
     await StudentMarks.create(studentMarks)
       .then((data) => {
-        res
+        return res
           .status(200)
           .json(success("Student-marks created successfully!", data));
       })
       .catch((err) => {
-        res.status(400).json(errorResponse(err, 400));
+        return res.status(400).json(errorResponse(err, 400));
       });
   }
 };
@@ -433,6 +450,7 @@ exports.findAll = async (req, res) => {
     let userdocMark;
     let filePathMark = (filePathEnrollment = null);
     for (const studentEnrollment of studentEnrollments) {
+      finalMarksData = [];
       let evalType = null;
       if (studentEnrollment.evaltype_id) {
         evalType = await EvalTypes.findOne({
@@ -509,7 +527,7 @@ exports.findAll = async (req, res) => {
         });
 
         if (studentMarks) {
-          finalMarksData = [];
+          
           for (const smark of studentMarks) {
             if (smark.userdoc_id) {
               userdocMark = await UserDocs.findOne({
@@ -585,7 +603,7 @@ exports.findAll = async (req, res) => {
           // userDoctypeId = userdocMark ? userdocMark.doc_type_id : null;
         }
       } // hasmarks
-
+      
       finalData.push({
         // id: d.id,
 
