@@ -55,7 +55,7 @@ exports.create = async (req, res) => {
   });
   let last_qual_sem = {};
   let count_last_qual_sem = 0;
- 
+
   let instituteProgramme = await InstituteProgramme.findOne({
     attributes: ["id", "institute_id", "programme_id"],
     where: {
@@ -210,23 +210,47 @@ exports.createEnrollment = async (req, res) => {
     const studentenroll = await StudentEnrollment.findAll({
       where: {
         user_id: req.user.id,
-        // institute_id: req.body.institute_id,
-        // programme_id: req.body.programme_id,
         is_active: 1, // Use boolean instead of 1
       },
     });
 
     //if pursing and there is no enrollment id provided, create not allowed
-    if (studentenroll.length >= 1 && !req.body.enrollment_id && req.body.pursuing == 1) {
+    if (
+      studentenroll.length >= 1 &&
+      !req.body.enrollment_id &&
+      req.body.pursuing == 1
+    ) {
       return res
         .status(400)
         .json(errorResponse("Cannot pursue 2 courses at a time!", 400));
     }
     //completed to pursuing not allowed if student is already pursuing
-    if (studentenroll.length >= 1 && req.body.enrollment_id && req.body.pursuing == 1 && studentenroll.is_active == 0) {
-      return res
-        .status(400)
-        .json(errorResponse("Only one course can be set to 'Pursuing' at a time!", 400));
+
+    if (
+      studentenroll.length >= 1 &&
+      req.body.enrollment_id &&
+      req.body.pursuing == 1
+    ) {
+      const studentenrollment = await StudentEnrollment.findOne({
+        where: {
+          user_id: req.user.id,
+          id: req.body.enrollment_id,
+          is_active: 1, // Use boolean instead of 1
+        },
+      });
+
+      if (studentenrollment) {
+        if (studentenrollment.is_active == 0) {
+          return res
+            .status(400)
+            .json(
+              errorResponse(
+                "Only one course can be set to 'Pursuing' at a time!",
+                400
+              )
+            );
+        }
+      }
     }
 
     let studentEnrollment = {
@@ -250,9 +274,11 @@ exports.createEnrollment = async (req, res) => {
       board_university_id: req.body.board_university,
       month_year: req.body.month_year,
       is_active: req.body.pursuing, // Ensure this is a boolean value
-      last_completed_qualification: req.body.last_completed_qualification ? req.body.last_completed_qualification : false
+      last_completed_qualification: req.body.last_completed_qualification
+        ? req.body.last_completed_qualification
+        : false,
     };
-    
+
     if (req.body.enrollment_id) {
       const [updatedRowsCount, dataEnroll] = await StudentEnrollment.update(
         {
@@ -272,7 +298,7 @@ exports.createEnrollment = async (req, res) => {
           consolidated_marks_obtained: req.body.consolidated_marks_obtained,
           consolidated_grade_obtained: req.body.consolidated_grade_obtained,
           month_year: req.body.month_year,
-          is_active: req.body.pursuing, 
+          is_active: req.body.pursuing,
         },
         {
           where: {
@@ -315,10 +341,10 @@ exports.createMarks = async (req, res) => {
     },
   });
 
-  if(studentMarksCount.length && !req.body.marks_id){
+  if (studentMarksCount.length && !req.body.marks_id) {
     return res
-        .status(400)
-        .json(errorResponse("Cannot add same semester twice!", 400));
+      .status(400)
+      .json(errorResponse("Cannot add same semester twice!", 400));
   }
 
   let studentEnrollment = await StudentEnrollment.findOne({
@@ -326,9 +352,12 @@ exports.createMarks = async (req, res) => {
       id: req.body.enrollment_id,
     },
   });
-   
-  if(studentEnrollment){
-    if(studentEnrollment.programme_id == 71 || studentEnrollment.programme_id == 72){
+
+  if (studentEnrollment) {
+    if (
+      studentEnrollment.programme_id == 71 ||
+      studentEnrollment.programme_id == 72
+    ) {
       return res
         .status(400)
         .json(errorResponse("Cannot add semesters for SSC or HSSC!", 400));
@@ -527,7 +556,6 @@ exports.findAll = async (req, res) => {
         });
 
         if (studentMarks) {
-          
           for (const smark of studentMarks) {
             if (smark.userdoc_id) {
               userdocMark = await UserDocs.findOne({
@@ -603,7 +631,7 @@ exports.findAll = async (req, res) => {
           // userDoctypeId = userdocMark ? userdocMark.doc_type_id : null;
         }
       } // hasmarks
-      
+
       finalData.push({
         // id: d.id,
 

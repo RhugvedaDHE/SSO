@@ -8,7 +8,7 @@ const Programme = require('../controllers/programmeController');
 
 router.post('/create', [
     check('name').not().isEmpty().withMessage('Programme name is required'),
-    check('max_sem').not().isEmpty().withMessage('Max sememsters is required'),
+    // check('max_sem').not().isEmpty().withMessage('Max sememsters is required'),
 ], validate, Programme.create);
 
 

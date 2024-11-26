@@ -21,4 +21,7 @@ router.post('/reset-attempts', [
     check('details').not().isEmpty().withMessage('Phone/Email is required'),
 ], validate, Otp.reset_attempts);
 
+router.post('/test-sms', Otp.testSMS);
+
+
 module.exports = router;

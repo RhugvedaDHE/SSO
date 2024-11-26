@@ -336,18 +336,18 @@ exports.register = async function (req, res) {
 
     // Check if role is student (role_id == 7)
     if (req.body.role_id == 7) {
-      const instprog = await InstituteProgramme.findOne({
-        attributes: ["id"],
-        where: {
-          institute_id: req.body.institute_id,
-          programme_id: req.body.programme_id,
-        },
-        transaction: t,
-      });
+      // const instprog = await InstituteProgramme.findOne({
+      //   attributes: ["id"],
+      //   where: {
+      //     institute_id: req.body.institute_id,
+      //     programme_id: req.body.programme_id,
+      //   },
+      //   transaction: t,
+      // });
 
-      if (!instprog) {
-        throw new Error("Institute Programme not found");
-      }
+      // if (!instprog) {
+      //   throw new Error("Institute Programme not found");
+      // }
 
       // Create student enrollment
       await StudentEnrollment.create(
@@ -363,7 +363,8 @@ exports.register = async function (req, res) {
       );
 
       // Send SMS notification
-      const template = `Hello ${req.body.firstname}! Your application has been successfully submitted on the SUGAM Portal! Your profile is pending verification. -Directorate of Higher Education.`;
+      // const template = `Hello ${req.body.firstname}! Your application has been successfully submitted on the SUGAM Portal! Your profile is pending verification. -Directorate of Higher Education.`;
+      const template = `Hello ${req.body.firstname}! Your account has been successfully created! You can login and access various services on SUGAM portal - Directorate of Higher Education  `;
       SMSNotification(req.body.phone, template);
 
       // Create notification
@@ -415,7 +416,8 @@ exports.register = async function (req, res) {
 
       await EntityUser.create(staffData, { transaction: t });
 
-      const template = `Hello ${req.body.firstname}! Your application has been successfully submitted on the SUGAM Portal! Your profile is pending for verification. -Directorate of Higher Education.`;
+      const template = `Hello ${req.body.firstname}! Your account has been successfully created! You can login and access various services on SUGAM portal - Directorate of Higher Education  `;
+      
       SMSNotification(req.body.phone, template);
 
       await notificationController.createNotification(
@@ -481,18 +483,15 @@ exports.registerHSStudent = async function (req, res) {
             StudentEnrollment.create({
               user_id: user.id,
               institute_id: req.body.institute_id,
-              programme_id: null,
+              programme_id: req.body.programme_id,
               current_class_id: req.body.class,
               current_semester_id: null,
               subject_id: null,
               stream_id: req.body.stream_id,
             })
               .then((studentEnrollment) => {
-                const template =
-                  "Hello " +
-                  req.body.firstname +
-                  "! Your application has been successfully submitted on SUGAM Portal! " +
-                  "Your profile is pending for verification.-Directorate of Higher Education.";
+                const template = `Hello ${req.body.firstname}! Your account has been successfully created! You can login and access various services on SUGAM portal - Directorate of Higher Education  `;
+
 
                 var responseSMS = SMSNotification(req.body.phone, template);
 

@@ -424,3 +424,16 @@ exports.resetForgotPassword_attempts = async function (req, res) {
   } else {
   }
 };
+
+
+exports.testSMS = async function (req, res) {
+  // const template = `Hello bleh! Your account has been successfully created on SUGAM portal! You can log in and edit your profile at our website URL - DHE`;
+  const template = `Hello bleh! Your account has been successfully created! You can login and access various services on SUGAM portal - Directorate of Higher Education  `;
+  const test = SMSNotification(req.body.phone, template);
+
+      return res
+        .status(200)
+        .json(success(" tested successfully!", test));
+
+
+}

@@ -18,9 +18,9 @@ router.post(
     check("account_number")
       .not()
       .isEmpty()
-      .withMessage("Account Number is required")
-      .isNumeric()
-      .withMessage("Account Number should be a number"),
+      .withMessage("Account Number is required"),
+      // .isNumeric()
+      // .withMessage("Account Number should be a number"),
     check("ifsc_code")
       .not()
       .isEmpty()
@@ -57,9 +57,9 @@ router.post(
     check("account_number")
       .not()
       .isEmpty()
-      .withMessage("Account Number is required")
-      .isNumeric()
-      .withMessage("Account Number Should be a number"),
+      .withMessage("Account Number is required"),
+      // .isNumeric()
+      // .withMessage("Account Number Should be a number"),
     check("ifsc_code")
       .not()
       .isEmpty()

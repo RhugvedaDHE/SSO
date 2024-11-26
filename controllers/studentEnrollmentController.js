@@ -73,7 +73,16 @@ exports.findOne = (req, res) => {
     },
   })
     .then(async (datas) => {
-      
+      if(!datas.length){
+        res
+        .status(400)
+        .json(
+          errorResponse(
+            "There are no active (Pursuing) courses at the moment!",
+            400
+          )
+        );
+      }
       let finalData = [];
       if (datas.length) {
         for (const data of datas) {

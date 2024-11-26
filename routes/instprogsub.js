@@ -17,6 +17,11 @@ router.post('/create-bulk', InstProgSub.createBulk);
 
 router.post('/get/', InstProgSub.get);
 
+router.post('/delete/programme', InstProgSub.deleteProgramme);
+router.post('/delete/subject', InstProgSub.deleteSubject);
+
+router.get('/get-all/', InstProgSub.getAll);
+
 router.post('/get/subjects', InstProgSub.getSubjects);
 
 module.exports = router;
