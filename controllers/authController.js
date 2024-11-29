@@ -72,7 +72,6 @@ exports.getUserDetails = function (req, res) {
         ],
       })
         .then(async (userRole) => {
-          
           let user_roles = [];
           //if not student
           let cio_name_ur;
@@ -83,7 +82,7 @@ exports.getUserDetails = function (req, res) {
                   user_id: req.user.id,
                 },
               });
-              
+
               let institute = await Institute.findOne({
                 where: {
                   id: student.institute_id,
@@ -132,7 +131,7 @@ exports.getUserDetails = function (req, res) {
               cio_name: cio_name_ur,
             });
           } //for userRole
-         
+
           UserContact.findOne({
             where: {
               user_id: req.user.id,
@@ -204,6 +203,7 @@ exports.getUserDetails = function (req, res) {
               let student = await StudentEnrollment.findOne({
                 where: {
                   user_id: req.user.id,
+                  is_active: 1,
                 },
               });
               institute = await Institute.findOne({
@@ -364,7 +364,7 @@ exports.register = async function (req, res) {
 
       // Send SMS notification
       // const template = `Hello ${req.body.firstname}! Your application has been successfully submitted on the SUGAM Portal! Your profile is pending verification. -Directorate of Higher Education.`;
-      const template = `Hello ${req.body.firstname}! Your account has been successfully created! You can login and access various services on SUGAM portal - Directorate of Higher Education  `;
+      let template = `Hello ${req.body.firstname}! Your account has been successfully created! You can login and access various services on SUGAM portal - Directorate of Higher Education  `;
       SMSNotification(req.body.phone, template);
 
       // Create notification
@@ -373,6 +373,18 @@ exports.register = async function (req, res) {
         userRole.id,
         "Registration",
         "Your Registration has been created Successfully!"
+      );
+
+      //send Email
+      await EmailNotification(
+        process.env.EMAIL_FROM,
+        req.body.email,
+        "Successful registraion",
+        "register",
+        "",
+        "",
+        "",
+        ""
       );
 
       res.status(200).json(success("Student-User created successfully"));
@@ -417,7 +429,7 @@ exports.register = async function (req, res) {
       await EntityUser.create(staffData, { transaction: t });
 
       const template = `Hello ${req.body.firstname}! Your account has been successfully created! You can login and access various services on SUGAM portal - Directorate of Higher Education  `;
-      
+
       SMSNotification(req.body.phone, template);
 
       await notificationController.createNotification(
@@ -453,7 +465,7 @@ exports.registerHSStudent = async function (req, res) {
         id: req.body.role_id,
       },
     }
-  ).then((role) => {
+  ).then(async (role) => {
     console.log(role);
     User.create({
       username: req.body.username,
@@ -489,9 +501,8 @@ exports.registerHSStudent = async function (req, res) {
               subject_id: null,
               stream_id: req.body.stream_id,
             })
-              .then((studentEnrollment) => {
+              .then(async (studentEnrollment) => {
                 const template = `Hello ${req.body.firstname}! Your account has been successfully created! You can login and access various services on SUGAM portal - Directorate of Higher Education  `;
-
 
                 var responseSMS = SMSNotification(req.body.phone, template);
 
@@ -500,6 +511,18 @@ exports.registerHSStudent = async function (req, res) {
                   userRole.id,
                   "Registration",
                   "Your Resgistration has been created Successfully! "
+                );
+
+                //send Email
+                await EmailNotification(
+                  process.env.EMAIL_FROM,
+                  req.body.email,
+                  "Successful registraion",
+                  "register",
+                  "",
+                  "",
+                  "",
+                  ""
                 );
                 console.log(response);
                 res

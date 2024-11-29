@@ -66,6 +66,10 @@ module.exports = (sequelize, DataTypes) => {
     is_active: {
       type: DataTypes.INTEGER,
       defaultValue: 1
+    },
+    lateral_entry: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     }
   }, {
     sequelize,

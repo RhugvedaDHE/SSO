@@ -23,22 +23,17 @@ exports.create = function (req, res) {
 exports.createBulk = async function (req, res) {
   console.log(req.body);
 
-  for (const item of req.body) {
-        
-  await InstituteProgramme.create({
-    institute_id: item.institutes,
-    programme_id: item.programmes,
-  })
-
-}
-    // .then((instituteprogrammes) => {
-      res
-        .status(200)
-        .json(success("Institute-Programme created successfully!"));
-    // })
-    // .catch((error) => {
-    //   res.status(400).json(errorResponse(error, 400));
-    // });
+  try {
+    for (const item of req.body) {
+      await InstituteProgramme.create({
+        institute_id: item.institutes,
+        programme_id: item.programmes,
+      });
+    }
+    res.status(200).json(success("Institute-Programme created successfully!"));
+  } catch (error) {
+    res.status(400).json(errorResponse(error.errors[0].message, 400));
+  }
 };
 
 exports.get = async function (req, res) {

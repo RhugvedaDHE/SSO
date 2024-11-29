@@ -188,3 +188,23 @@ exports.getInstituteTypeProgramme = async function (req, res) {
       res.status(400).json(errorResponse(error, 400));
     });
 };
+
+// Delete a programme
+exports.delete = async (req, res) => {
+  await Programme.destroy({
+    where: {
+      id: req.body.programme_id,
+    },
+  })
+    .then(async (num) => {
+      res
+        .status(200)
+        .json(success("Programme deleted successfully!"));
+    })
+
+    .catch((err) => {
+      res
+        .status(400)
+        .json(errorResponse(err + ` Cannot delete Programme!`, 400));
+    });
+};

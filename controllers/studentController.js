@@ -404,7 +404,7 @@ exports.getStudentDetails = async function (req, res) {
           institute_programme_course_subject_id:
           m.institute_programme_course_subject_id,
           eval_type_id: m.eval_type_id,
-          eval_type_name: evalTypeDetails.name,
+          eval_type_name: evalTypeDetails ? evalTypeDetails.name : null,
           total_marks: m.total_marks,
           marks_obtained: m.marks_obtained,
           grade_obtained: m.grade_obtained,

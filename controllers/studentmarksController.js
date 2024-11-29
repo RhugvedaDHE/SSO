@@ -193,6 +193,7 @@ exports.createEnrollment = async (req, res) => {
         ? 5
         : req.body.qual_type_id;
 
+    //get completed programmes    
     const studentProgramme = await StudentEnrollment.findAll({
       where: {
         user_id: req.user.id,
@@ -207,6 +208,7 @@ exports.createEnrollment = async (req, res) => {
         .json(errorResponse("You cannot select 2 same programmes at a time!"));
     }
 
+    //get pursuing records
     const studentenroll = await StudentEnrollment.findAll({
       where: {
         user_id: req.user.id,
@@ -224,82 +226,124 @@ exports.createEnrollment = async (req, res) => {
         .status(400)
         .json(errorResponse("Cannot pursue 2 courses at a time!", 400));
     }
-    //completed to pursuing not allowed if student is already pursuing
 
+    let studentenrollment;
+    if (req.body.enrollment_id) {
+      studentenrollment = await StudentEnrollment.findOne({
+        where: {
+          // user_id: req.user.id,
+          id: req.body.enrollment_id,
+          // is_active: 1, // Use boolean instead of 1
+        },
+      });
+    }
+    //completed to pursuing not allowed if student is already pursuing
     if (
       studentenroll.length >= 1 &&
       req.body.enrollment_id &&
       req.body.pursuing == 1
     ) {
-      const studentenrollment = await StudentEnrollment.findOne({
-        where: {
-          user_id: req.user.id,
-          id: req.body.enrollment_id,
-          is_active: 1, // Use boolean instead of 1
-        },
-      });
-
-      if (studentenrollment) {
-        if (studentenrollment.is_active == 0) {
-          return res
-            .status(400)
-            .json(
-              errorResponse(
-                "Only one course can be set to 'Pursuing' at a time!",
-                400
-              )
-            );
+        if (studentenrollment) {
+          if (studentenrollment.is_active == 0) {
+            return res
+              .status(400)
+              .json(
+                errorResponse(
+                  "Only one course can be set to 'Pursuing' at a time!",
+                  400
+                )
+              );
+          }
         }
       }
-    }
 
-    let studentEnrollment = {
-      user_id: req.user.id,
-      qual_type_id: qual_type_id,
-      evaltype_id: req.body.eval_type_id,
-      stream_id: req.body.stream_id,
-      institute_id: req.body.institute_id,
-      programme_id: req.body.programme_id,
-      subject_id: req.body.subject_id,
-      userdoc_id: req.body.userdoc_id,
-      academic_year_id: req.body.academic_year,
-      current_semester_id: req.body.current_semester_id,
-      current_class_id: req.body.current_class_id,
-      other_institute_name: req.body.other_institute_name,
-      other_programme_name: req.body.other_programme_name,
-      other_subject_name: req.body.other_subject_name,
-      consolidated_total_marks: req.body.consolidated_total_marks,
-      consolidated_marks_obtained: req.body.consolidated_marks_obtained,
-      consolidated_grade_obtained: req.body.consolidated_grade_obtained,
-      board_university_id: req.body.board_university,
-      month_year: req.body.month_year,
-      is_active: req.body.pursuing, // Ensure this is a boolean value
-      last_completed_qualification: req.body.last_completed_qualification
-        ? req.body.last_completed_qualification
-        : false,
-    };
+      //create data
+      let studentEnrollment = {
+        user_id: req.user.id,
+        qual_type_id: qual_type_id,
+        evaltype_id: req.body.eval_type_id,
+        stream_id: req.body.stream_id,
+        institute_id: req.body.institute_id,
+        programme_id: req.body.programme_id,
+        subject_id: req.body.subject_id,
+        userdoc_id: req.body.userdoc_id,
+        academic_year_id: req.body.academic_year,
+        current_semester_id: req.body.current_semester_id,
+        current_class_id: req.body.current_class_id,
+        other_institute_name: req.body.other_institute_name,
+        other_programme_name: req.body.other_programme_name,
+        other_subject_name: req.body.other_subject_name,
+        consolidated_total_marks: req.body.consolidated_total_marks,
+        consolidated_marks_obtained: req.body.consolidated_marks_obtained,
+        consolidated_grade_obtained: req.body.consolidated_grade_obtained,
+        board_university_id: req.body.board_university,
+        month_year: req.body.month_year,
+        is_active: req.body.pursuing, // Ensure this is a boolean value
+        last_completed_qualification: req.body.last_completed_qualification
+          ? req.body.last_completed_qualification
+          : false,
+      };
+
+      let studentEnrollmentUpdate;
+
+      if(studentenrollment){
+        if(studentenrollment.is_active == 1){
+          //edit only marks data
+          studentEnrollmentUpdate = {
+            user_id: req.user.id,
+            qual_type_id: qual_type_id,
+            evaltype_id: req.body.eval_type_id,
+            subject_id: req.body.subject_id,
+            stream_id: req.body.stream_id,
+            userdoc_id: req.body.userdoc_id,
+            academic_year_id: req.body.academic_year,
+            current_semester_id: req.body.current_semester_id,
+            current_class_id: req.body.current_class_id,
+            consolidated_total_marks: req.body.consolidated_total_marks,
+            consolidated_marks_obtained: req.body.consolidated_marks_obtained,
+            consolidated_grade_obtained: req.body.consolidated_grade_obtained,
+            board_university_id: req.body.board_university,
+            month_year: req.body.month_year,
+            is_active: req.body.pursuing, // Ensure this is a boolean value
+            last_completed_qualification: req.body.last_completed_qualification
+              ? req.body.last_completed_qualification
+              : false,
+          };
+        }
+        else if(studentenrollment.is_active == 0){
+          //edit everything data
+          studentEnrollmentUpdate = {
+            user_id: req.user.id,
+            qual_type_id: qual_type_id,
+            evaltype_id: req.body.eval_type_id,
+            stream_id: req.body.stream_id,
+            institute_id: req.body.institute_id,
+            programme_id: req.body.programme_id,
+            subject_id: req.body.subject_id,
+            userdoc_id: req.body.userdoc_id,
+            academic_year_id: req.body.academic_year,
+            current_semester_id: req.body.current_semester_id,
+            current_class_id: req.body.current_class_id,
+            other_institute_name: req.body.other_institute_name,
+            other_programme_name: req.body.other_programme_name,
+            other_subject_name: req.body.other_subject_name,
+            consolidated_total_marks: req.body.consolidated_total_marks,
+            consolidated_marks_obtained: req.body.consolidated_marks_obtained,
+            consolidated_grade_obtained: req.body.consolidated_grade_obtained,
+            board_university_id: req.body.board_university,
+            month_year: req.body.month_year,
+            is_active: req.body.pursuing, // Ensure this is a boolean value
+            last_completed_qualification: req.body.last_completed_qualification
+              ? req.body.last_completed_qualification
+              : false,
+          };
+        }
+      }
+    
 
     if (req.body.enrollment_id) {
       const [updatedRowsCount, dataEnroll] = await StudentEnrollment.update(
-        {
-          user_id: req.user.id,
-          institute_id: req.body.institute_id,
-          evaltype_id: req.body.eval_type_id,
-          stream_id: req.body.stream_id,
-          subject_id: req.body.subject_id,
-          academic_year_id: req.body.academic_year,
-          current_semester_id: req.body.current_semester_id,
-          current_class_id: req.body.current_class_id,
-          board_university_id: req.body.board_university,
-          other_institute_name: req.body.other_institute_name,
-          other_programme_name: req.body.other_programme_name,
-          other_subject_name: req.body.other_subject_name,
-          consolidated_total_marks: req.body.consolidated_total_marks,
-          consolidated_marks_obtained: req.body.consolidated_marks_obtained,
-          consolidated_grade_obtained: req.body.consolidated_grade_obtained,
-          month_year: req.body.month_year,
-          is_active: req.body.pursuing,
-        },
+        studentEnrollmentUpdate,
         {
           where: {
             id: req.body.enrollment_id,
