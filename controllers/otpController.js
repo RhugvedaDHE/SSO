@@ -31,10 +31,12 @@ exports.generate = async function (req, res) {
   ]);
 
   // Check if any record exists
-  if (user || userPersonal) {
-    return res
-      .status(200)
-      .json(success("Your " + req.body.type +" already exists!"));
+  if(req.body.type != "forgot_password"){
+    if (user || userPersonal) {
+      return res
+        .status(200)
+        .json(success("Your " + req.body.type +" already exists!"));
+    }
   }
   await OTP.findOne({
     where: {

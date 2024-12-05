@@ -5,6 +5,8 @@ const { check } = require("express-validator");
 const validate = require("../middlewares/validate");
 const Auth = require("../controllers/authController");
 const authenticate = require("../middlewares/authenticate");
+const SECRET_KEY = process.env.CRYPTOJS_SECRET;
+const CryptoJS = require("crypto-js");
 
 router.post(
   "/register",
@@ -29,21 +31,44 @@ router.post(
       .withMessage(
         "Password should Contain Atleast 1 uppercase, Atleast 1 lowercase, Atleast 1 special character and should be 8 chars long."
       ),
-    check("password")
-      .exists()
-      .custom((value) => {
-        if (value.includes(" ")) {
-          console.log("Password:", value);
-          throw new Error("Password must not contain spaces");
+      check("password")
+      .exists({ checkFalsy: true })
+      .withMessage("Password is required")
+      .custom((encryptedPassword) => {
+        try {
+          // Decrypt password
+          const bytes = CryptoJS.AES.decrypt(encryptedPassword, SECRET_KEY);
+          const password = bytes.toString(CryptoJS.enc.Utf8);
+  
+          if (!password || password.includes(" ")) {
+            throw new Error("Password must not contain spaces");
+          }
+          return true;
+        } catch (error) {
+          throw new Error(error);
         }
-        return true;
       }),
-    check(
-      "passwordConfirmation",
-      "passwordConfirmation field must have the same value as the password field"
-    )
-      .exists()
-      .custom((value, { req }) => value === req.body.password),
+  
+    check("passwordConfirmation")
+      .exists({ checkFalsy: true })
+      .withMessage("Password confirmation is required")
+      .custom((encryptedPasswordConfirmation, { req }) => {
+        try {
+          // Decrypt password and passwordConfirmation
+          const passwordBytes = CryptoJS.AES.decrypt(req.body.password, SECRET_KEY);
+          const decryptedPassword = passwordBytes.toString(CryptoJS.enc.Utf8);
+  
+          const confirmationBytes = CryptoJS.AES.decrypt(encryptedPasswordConfirmation, SECRET_KEY);
+          const decryptedPasswordConfirmation = confirmationBytes.toString(CryptoJS.enc.Utf8);
+  
+          if (decryptedPassword !== decryptedPasswordConfirmation) {
+            throw new Error("Password confirmation must match the password");
+          }
+          return true;
+        } catch (error) {
+          throw new Error(error);
+        }
+      }),
 
     check("role_id")
       .not()
@@ -124,21 +149,44 @@ router.post(
       .withMessage(
         "Password should Contain Atleast 1 uppercase, Atleast 1 lowercase, Atleast 1 special character and should be 8 chars long."
       ),
-    check("password")
-      .exists()
-      .custom((value) => {
-        if (value.includes(" ")) {
-          console.log("Password:", value);
-          throw new Error("Password must not contain spaces");
+      check("password")
+      .exists({ checkFalsy: true })
+      .withMessage("Password is required")
+      .custom((encryptedPassword) => {
+        try {
+          // Decrypt password
+          const bytes = CryptoJS.AES.decrypt(encryptedPassword, SECRET_KEY);
+          const password = bytes.toString(CryptoJS.enc.Utf8);
+  
+          if (!password || password.includes(" ")) {
+            throw new Error("Password must not contain spaces");
+          }
+          return true;
+        } catch (error) {
+          throw new Error(error);
         }
-        return true;
       }),
-    check(
-      "passwordConfirmation",
-      "passwordConfirmation field must have the same value as the password field"
-    )
-      .exists()
-      .custom((value, { req }) => value === req.body.password),
+  
+    check("passwordConfirmation")
+      .exists({ checkFalsy: true })
+      .withMessage("Password confirmation is required")
+      .custom((encryptedPasswordConfirmation, { req }) => {
+        try {
+          // Decrypt password and passwordConfirmation
+          const passwordBytes = CryptoJS.AES.decrypt(req.body.password, SECRET_KEY);
+          const decryptedPassword = passwordBytes.toString(CryptoJS.enc.Utf8);
+  
+          const confirmationBytes = CryptoJS.AES.decrypt(encryptedPasswordConfirmation, SECRET_KEY);
+          const decryptedPasswordConfirmation = confirmationBytes.toString(CryptoJS.enc.Utf8);
+  
+          if (decryptedPassword !== decryptedPasswordConfirmation) {
+            throw new Error("Password confirmation must match the password");
+          }
+          return true;
+        } catch (error) {
+          throw new Error(error);
+        }
+      }),
 
     check("role_id")
       .not()
@@ -296,21 +344,44 @@ router.post(
       .withMessage(
         "Password should Contain Atleast 1 uppercase, Atleast 1 lowercase, Atleast 1 special character and should be 8 chars long."
       ),
-    check("password")
-      .exists()
-      .custom((value) => {
-        if (value.includes(" ")) {
-          console.log("Password:", value);
-          throw new Error("Password must not contain spaces");
+      check("password")
+      .exists({ checkFalsy: true })
+      .withMessage("Password is required")
+      .custom((encryptedPassword) => {
+        try {
+          // Decrypt password
+          const bytes = CryptoJS.AES.decrypt(encryptedPassword, SECRET_KEY);
+          const password = bytes.toString(CryptoJS.enc.Utf8);
+  
+          if (!password || password.includes(" ")) {
+            throw new Error("Password must not contain spaces");
+          }
+          return true;
+        } catch (error) {
+          throw new Error(error);
         }
-        return true;
       }),
-    check(
-      "passwordConfirmation",
-      "passwordConfirmation field must have the same value as the password field"
-    )
-      .exists()
-      .custom((value, { req }) => value === req.body.password),
+  
+    check("passwordConfirmation")
+      .exists({ checkFalsy: true })
+      .withMessage("Password confirmation is required")
+      .custom((encryptedPasswordConfirmation, { req }) => {
+        try {
+          // Decrypt password and passwordConfirmation
+          const passwordBytes = CryptoJS.AES.decrypt(req.body.password, SECRET_KEY);
+          const decryptedPassword = passwordBytes.toString(CryptoJS.enc.Utf8);
+  
+          const confirmationBytes = CryptoJS.AES.decrypt(encryptedPasswordConfirmation, SECRET_KEY);
+          const decryptedPasswordConfirmation = confirmationBytes.toString(CryptoJS.enc.Utf8);
+  
+          if (decryptedPassword !== decryptedPasswordConfirmation) {
+            throw new Error("Password confirmation must match the password");
+          }
+          return true;
+        } catch (error) {
+          throw new Error(error);
+        }
+      }),
   ],
   validate,
   authenticate,
@@ -342,28 +413,52 @@ router.post(
       .withMessage(
         "Password should Contain Atleast 1 uppercase, Atleast 1 lowercase, Atleast 1 special character and should be 8 chars long."
       ),
-    check("password")
-      .exists()
-      .custom((value) => {
-        if (value.includes(" ")) {
-          l;
-          console.log("Password:", value);
-          throw new Error("Password must not contain spaces");
+      check("password")
+      .exists({ checkFalsy: true })
+      .withMessage("Password is required")
+      .custom((encryptedPassword) => {
+        try {
+          // Decrypt password
+          const bytes = CryptoJS.AES.decrypt(encryptedPassword, SECRET_KEY);
+          const password = bytes.toString(CryptoJS.enc.Utf8);
+  
+          if (!password || password.includes(" ")) {
+            throw new Error("Password must not contain spaces");
+          }
+          return true;
+        } catch (error) {
+          throw new Error(error);
         }
-        return true;
       }),
-    check(
-      "passwordConfirmation",
-      "passwordConfirmation field must have the same value as the password field"
-    )
-      .exists()
-      .custom((value, { req }) => value === req.body.password),
+  
+    check("passwordConfirmation")
+      .exists({ checkFalsy: true })
+      .withMessage("Password confirmation is required")
+      .custom((encryptedPasswordConfirmation, { req }) => {
+        try {
+          // Decrypt password and passwordConfirmation
+          const passwordBytes = CryptoJS.AES.decrypt(req.body.password, SECRET_KEY);
+          const decryptedPassword = passwordBytes.toString(CryptoJS.enc.Utf8);
+  
+          const confirmationBytes = CryptoJS.AES.decrypt(encryptedPasswordConfirmation, SECRET_KEY);
+          const decryptedPasswordConfirmation = confirmationBytes.toString(CryptoJS.enc.Utf8);
+  
+          if (decryptedPassword !== decryptedPasswordConfirmation) {
+            throw new Error("Password confirmation must match the password");
+          }
+          return true;
+        } catch (error) {
+          throw new Error(error);
+        }
+      }),
   ],
   validate,
   Auth.forgotPassword
 );
 
 router.get("/get-user-details", authenticate, Auth.getUserDetails);
+
+router.get("/get-hoi-details", Auth.getlistOfHois);
 
 router.post(
   "/switch-user",

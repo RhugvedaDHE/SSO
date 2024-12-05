@@ -4,6 +4,8 @@ const Programme = require("../models").Programme;
 const Subject = require("../models").Subject;
 const InstituteProgrammeSubject =
   require("../models").InstituteProgrammeSubject;
+  const InstituteProgramme =
+  require("../models").InstituteProgramme;
 const UserDocs = require("../models").UserDocs;
 const { success, errorResponse, validation } = require("../responseApi");
 const Op = require("sequelize").Op;

@@ -387,3 +387,38 @@ exports.getHOIId = async function (req, res) {
     return res.status(200).json(success("Institute Not found!"));
   }
 };
+
+// Update a Gender by the id in the request
+exports.update = (req, res) => {
+  const id = req.body.id;
+
+  Institute.update({    
+      institute_type_id: req.body.institute_type_id,
+      code: req.body.code,
+      name: req.body.name,
+      type: req.body.type,
+      address: req.body.address,
+      taluka_id: req.body.taluka_id,
+      state_id: req.body.state_id,
+      district_id: req.body.district_id,
+      village: req.body.village,
+      country_id: req.body.country_id,
+      pincode: req.body.pincode,
+      hoi_id: req.body.hoi_id,
+      contact_person_name: req.body.contact_person_name,
+      contact_person_email: req.body.contact_person_email,
+      mobile: req.body.mobile,   
+  }, {
+    where: { id: id }
+  })
+    .then(num => {
+      if (num == 1) {
+        res.status(200).json(success("Institute updated successfully.!"));
+      } else {
+        res.status(400).json(errorResponse("Cannot update Institute!", 400));
+      }
+    })
+    .catch(error => {
+        res.status(400).json(errorResponse(error, 400));
+    });
+};

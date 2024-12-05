@@ -26,6 +26,7 @@ const EntityUser = require("../models").EntityUser;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const OTP = require("../models").OTP;
 const tokenList = {};
+const CryptoJS = require("crypto-js");
 
 const Sequelize = require("sequelize");
 const sequelize = require("../models").sequelize;
@@ -286,8 +287,8 @@ exports.register = async function (req, res) {
   try {
     // Hash password
     const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(req.body.password, salt);
-
+    const hash = bcrypt.hashSync(CryptoJS.AES.decrypt(req.body.password, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8), salt);
+    
     // Find role
     const role = await Role.findOne(
       { attributes: ["id", "name"] },
@@ -456,7 +457,7 @@ exports.register = async function (req, res) {
 exports.registerHSStudent = async function (req, res) {
   // const result = await sequelize.transaction(async (t) => {
   var salt = bcrypt.genSaltSync(10);
-  var hash = bcrypt.hashSync(req.body.password, salt);
+  const hash = bcrypt.hashSync(CryptoJS.AES.decrypt(req.body.password, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8), salt);
 
   Role.findOne(
     { attributes: ["id", "name"] },
@@ -904,20 +905,46 @@ exports.updateAcademics = async function (req, res) {
 //updatePassword
 exports.updatePassword = function (req, res) {
   User.findOne({
-    where: { id: req.user.id },
+    where: { email: req.body.email },
   })
     .then((user) => {
-      var salt = bcrypt.genSaltSync(10);
-      user.password = bcrypt.hashSync(req.body.password, salt);
-      user.save();
+      if (user) {
+        var salt = bcrypt.genSaltSync(10);
+        user.password =  bcrypt.hashSync(CryptoJS.AES.decrypt(req.body.password, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8), salt);
+        user.save();
 
-      res.status(200).json(success("User Password updated successfully!"));
+        res.status(200).json(success("User Password updated successfully!"));
+      } else {
+        res
+          .status(400)
+          .json(
+            errorResponse(
+              { username: "User Not found! Please register first" },
+              400
+            )
+          );
+      }
     })
     .catch((error) => {
       res
         .status(400)
         .json(errorResponse("User Password not changed successsfully!", 400));
     });
+  // User.findOne({
+  //   where: { id: req.user.id },
+  // })
+  //   .then((user) => {
+  //     var salt = bcrypt.genSaltSync(10);
+  //     user.password = bcrypt.hashSync(CryptoJS.AES.decrypt(req.body.password, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8), salt);
+  //     user.save();
+
+  //     res.status(200).json(success("User Password updated successfully!"));
+  //   })
+  //   .catch((error) => {
+  //     res
+  //       .status(400)
+  //       .json(errorResponse("User Password not changed successsfully!", 400));
+  //   });
 };
 
 //forgotPassword
@@ -928,7 +955,7 @@ exports.forgotPassword = function (req, res) {
     .then((user) => {
       if (user) {
         var salt = bcrypt.genSaltSync(10);
-        user.password = bcrypt.hashSync(req.body.password, salt);
+        user.password =  bcrypt.hashSync(CryptoJS.AES.decrypt(req.body.password, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8), salt);
         user.save();
 
         res.status(200).json(success("User Password updated successfully!"));
@@ -1632,3 +1659,58 @@ exports.registerbulkUsers = async function (req, res) {
 //   });
 // });
 // };
+
+//Function to get list of all HOIs
+//change the function. make generic. if the type is institute, fetch institute details. if user belongs to dept, fetch dept details. if the user belongs to service,
+//fetch his
+exports.getlistOfHois = function (req, res) {
+  let queryOptions = {};
+  var hois = [];
+
+  UserRole.findAll({
+    attributes: [],
+    where: {
+      role_id: 18, //hoi role id
+    },
+    include: [
+      {
+        model: Role,
+        attributes: ["id", "name", "type"],
+      },
+      {
+        model: User,
+        attributes: ["id", "username", "email"],
+      },
+    ],
+  }).then(async (userRole) => {
+    for (ur of userRole) {
+      let userpersonaldetails = await UserPersonalDetails.findOne({
+        // attributes: ["name"],
+        where: {
+          user_id: ur.User.id, //hoi role id
+        },
+      });
+
+      let entityuser = await EntityUser.findOne({
+        // attributes: ["name"],
+        where: {
+          user_id: ur.User.id, //hoi role id
+        },
+        include: [
+          {
+            model: Institute,
+            attributes: ["id", "name"],
+          },
+        ],
+      });
+
+      let hoi = {
+        name: userpersonaldetails,
+        institute: entityuser.Institute.name,
+      };
+      hois.push(hoi);
+    }
+
+    res.status(200).json(success("User Details fetched successfully", hois));
+  });
+};
