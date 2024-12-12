@@ -12,6 +12,10 @@ router.post('/create', [
 
 router.post('/create-bulk', Subject.createBulk);
 
+router.post('/update', Subject.update);
+
+router.post('/delete', Subject.delete);
+
 router.get('/get/', Subject.get);
 
 module.exports = router;

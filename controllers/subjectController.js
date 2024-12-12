@@ -44,15 +44,32 @@ exports.get = async function (req, res) {
     });
 };
 
-exports.get = async function (req, res) {
+exports.update = async function (req, res) {
   console.log("fdsbghdrbghghghgs");
-  await Subject.findAll({
+  await Subject.update({
+    name: req.body.name,
+  },{
     where: {
-      is_active: true,
+      id: req.body.subject_id,
     },
   })
     .then((subjects) => {
-      res.status(200).json(success("Subjects fetched successfully!", subjects));
+      res.status(200).json(success("Subjects updated successfully!", subjects));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};
+
+exports.delete = async function (req, res) {
+  console.log("fdsbghdrbghghghgs");
+  await Subject.destroy({
+    where: {
+      id: req.body.subject_id,
+    },
+  })
+    .then((subjects) => {
+      res.status(200).json(success("Subjects deleted successfully!", subjects));
     })
     .catch((error) => {
       res.status(400).json(errorResponse(error, 400));

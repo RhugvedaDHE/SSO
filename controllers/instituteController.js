@@ -20,6 +20,7 @@ const UserRole = require("../models").UserRole;
 
 const { success, errorResponse, validation } = require("../responseApi");
 const userpersonaldetails = require("../models/userpersonaldetails");
+const sequelize = require("../models").sequelize;
 
 exports.create = function (req, res) {
   Institute.create({
@@ -421,4 +422,36 @@ exports.update = (req, res) => {
     .catch(error => {
         res.status(400).json(errorResponse(error, 400));
     });
+};
+
+exports.delete = async (req, res) => {
+  const t = await sequelize.transaction();
+
+  try {
+    // Delete institute
+    await Institute.destroy({
+      where: { id: req.body.id },
+      transaction: t
+    });
+
+    // Delete institute programmes
+    await InstituteProgramme.destroy({
+      where: { institute_id: req.body.id },
+      transaction: t
+    });
+
+    // Delete institute programme subjects
+    await InstituteProgrammeSubject.destroy({
+      where: { institute_id: req.body.id },
+      transaction: t
+    });
+
+    // Commit transaction if all operations succeed
+    await t.commit();
+    return res.status(200).json(success("Institute and associated mappings deleted successfully!"));
+  } catch (error) {
+    // Rollback transaction in case of error
+    await t.rollback();
+    return res.status(400).json(errorResponse("An error occurred while deleting the institute and its mappings!", 400));
+  }
 };

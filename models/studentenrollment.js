@@ -68,8 +68,8 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 1
     },
     lateral_entry: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
+      type: DataTypes.INTEGER,
+      defaultValue: 0
     }
   }, {
     sequelize,

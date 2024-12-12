@@ -19,11 +19,17 @@ router.post('/update', [
     check('duration').not().isEmpty().withMessage('Duration name is required'),
 ], validate, Programme.update);
 
+router.post('/update-prog', [
+    check('programme_id').not().isEmpty().withMessage('Programme name is required'),
+], validate, Programme.updateProg);
+
 router.get('/get/',  Programme.get);
 
 router.post('/get/institute',  Programme.getInstituteProgramme);
 router.post('/get/programme-semesters',  Programme.getProgSems);
 
 router.post('/get/insttype',  Programme.getInstituteTypeProgramme);
+
+router.post('/delete',  Programme.delete);
 
 module.exports = router;

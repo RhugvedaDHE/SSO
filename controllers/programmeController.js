@@ -80,6 +80,26 @@ exports.update = function (req, res) {
     });
 };
 
+exports.updateProg = function (req, res) {
+  console.log(req.body);
+  Programme.update({
+    name: req.body.name,
+    programme_desc: req.body.programme_desc,
+    max_sem: req.body.max_sem,
+    type: req.body.type,
+    stream_id: req.body.stream_id,
+    order: req.body.order,
+    doc_type_id: req.body.doc_type_id,
+  },
+  { where: { id: req.body.programme_id } })
+    .then((programmes) => {
+      res.status(200).json(success("Programme updated successfully!"));
+    })
+    .catch((error) => {
+      res.status(400).json(errorResponse(error, 400));
+    });
+};
+
 exports.get = async function (req, res) {
   await Programme.findAll({
     where: {

@@ -40,7 +40,7 @@ router.post(
           const bytes = CryptoJS.AES.decrypt(encryptedPassword, SECRET_KEY);
           const password = bytes.toString(CryptoJS.enc.Utf8);
   
-          if (!password || password.includes(" ")) {
+          if (password.includes(" ")) {
             throw new Error("Password must not contain spaces");
           }
           return true;
