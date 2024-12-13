@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     otp_type: DataTypes.STRING,
     otp: DataTypes.STRING,
     attempts: DataTypes.INTEGER,
+    verify_attempts: DataTypes.INTEGER,
     details: DataTypes.STRING,
     is_active: {
       type: DataTypes.BOOLEAN,
@@ -25,6 +26,9 @@ module.exports = (sequelize, DataTypes) => {
     time:{
       type: DataTypes.DATE, 
       defaultValue: DataTypes.NOW 
+    },
+    verify_attempts_time:{
+      type: DataTypes.DATE, 
     }
   }, {
     sequelize,

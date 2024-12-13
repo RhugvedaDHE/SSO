@@ -20,22 +20,22 @@ exports.generate = async function (req, res) {
   const [user, userPersonal] = await Promise.all([
     User.findOne({
       where: {
-        [Op.or]: [{ phone: req.body.to }, { email: req.body.to }]
-      }
+        [Op.or]: [{ phone: req.body.to }, { email: req.body.to }],
+      },
     }),
     UserPersonalDetails.findOne({
       where: {
-        [Op.or]: [{ phone: req.body.to }, { email: req.body.to }]
-      }
-    })
+        [Op.or]: [{ phone: req.body.to }, { email: req.body.to }],
+      },
+    }),
   ]);
 
   // Check if any record exists
-  if(req.body.type != "forgot_password"){
+  if (req.body.type != "forgot_password") {
     if (user || userPersonal) {
       return res
         .status(200)
-        .json(success("Your " + req.body.type +" already exists!"));
+        .json(success("Your " + req.body.type + " already exists!"));
     }
   }
   await OTP.findOne({
@@ -74,7 +74,7 @@ exports.generate = async function (req, res) {
           process.env.EMAIL_FROM,
           req.body.to,
           subject,
-          template,          
+          template,
           "",
           "",
           "",
@@ -199,7 +199,7 @@ exports.verify = async function (req, res) {
     const otpResult = await OTP.findOne({
       where: {
         details: req.body.details,
-        otp_type: req.body.type
+        otp_type: req.body.type,
       },
     });
 
@@ -210,15 +210,27 @@ exports.verify = async function (req, res) {
     const timeStart = otpResult.time.getTime();
     const timeEnd = Date.now();
     const validity = (timeEnd - timeStart) / 60 / 1000; // in minutes
-    
+
     if (validity > 10) {
       return res
         .status(400)
         .json(errorResponse("Time's up! Please try again!", 400));
     }
 
+    if (otpResult.verify_attempts >= 3) { 
+      await OTP.update({ verify_attempts_time:  Date.now()}, { where: { details: otpResult.details } });     
+      return res
+        .status(400)
+        .json(
+          errorResponse(
+            "You have exceeded the maximum number of OTP verification attempts. Please wait 10 minutes before trying again!",
+            400
+          )
+        );
+    }
     const isOtpValid = bcrypt.compareSync(req.body.otp, otpResult.otp);
     if (!isOtpValid) {
+      await OTP.update({ verify_attempts: otpResult.verify_attempts + 1 }, { where: { details: otpResult.details } });
       return res.status(400).json(errorResponse("Enter a correct OTP!", 400));
     }
 
@@ -228,9 +240,9 @@ exports.verify = async function (req, res) {
       // });
 
       // if (user) {
-        // user.phone_verified = true;
-        // await user.save({ fields: ["phone_verified"] });
-        phone_verified = true;
+      // user.phone_verified = true;
+      // await user.save({ fields: ["phone_verified"] });
+      phone_verified = true;
       // }
     } else if (req.body.type === "email") {
       // const user = await User.findOne({
@@ -238,9 +250,9 @@ exports.verify = async function (req, res) {
       // });
 
       // if (user) {
-        // user.email_verified = true;
-        // await user.save({ fields: ["email_verified"] });
-        email_verified = true;
+      // user.email_verified = true;
+      // await user.save({ fields: ["email_verified"] });
+      email_verified = true;
       // }
     } else {
       otp_verified = true; // For forgot password case
@@ -250,89 +262,17 @@ exports.verify = async function (req, res) {
       return res
         .status(200)
         .json(success(req.body.type + " verified successfully!"));
-    } else {
+    } else {      
       return res
         .status(400)
-        .json(errorResponse(req.body.type + " not verified successfully!", 400));
+        .json(
+          errorResponse(req.body.type + " not verified successfully!", 400)
+        );
     }
   } catch (error) {
     return res.status(400).json(errorResponse(error.message, 400));
   }
 };
-
-// exports.verify = async function (req, res) {
-//   let email_verified = false;
-//   let phone_verified = false;
-//   let otp_verified = false;
-//   await OTP.findOne({
-//     where: {
-//       details: req.body.details,
-//     },
-//   })
-//     .then((results) => {
-//       var timeStart = results.time.getTime();
-//       var timeEnd = Date.now();
-
-//       var validity = (timeEnd - timeStart) / 60 / 1000; //in minutes
-//       if (validity <= 10) {
-//         if (bcrypt.compareSync(req.body.otp, results.otp)) {
-//           if (req.body.type == "phone") {
-//             User.findOne({
-//               where: {
-//                 phone: req.body.details,
-//               },
-//             }).then((user) => {
-//               // if (!user.phone_verified) {
-//               //   user.phone_verified = true;
-//               //   // user.save({ fields: ["phone_verified"] });
-//               // }
-//               phone_verified = true;
-//             });
-//             phone_verified = true;
-//           } else if (req.body.type == "email") {
-//             User.findOne({
-//               where: {
-//                 email: req.body.details,
-//               },
-//             }).then((user) => {
-//               // if (!user.email_verified) {
-//               //   user.email_verified = true;
-//               //   // user.save({ fields: ["email_verified"] });
-//               // }
-//               email_verified = true;
-//             });
-//             email_verified = true;
-//           } else {
-//             //forgot password
-//             otp_verified = true;
-//           }
-//           if (email_verified || phone_verified || otp_verified) {
-//             res
-//               .status(200)
-//               .json(success(req.body.type + " verified successfully!"));
-//           } else {
-//             res
-//               .status(400)
-//               .json(
-//                 errorResponse(
-//                   req.body.type + " not verified successfully!",
-//                   400
-//                 )
-//               );
-//           }
-//         } else {
-//           res.status(400).json(errorResponse("Enter a correct OTP!", 400));
-//         }
-//       } else {
-//         res
-//           .status(400)
-//           .json(errorResponse("Time's up! Please try again!", 400));
-//       }
-//     })
-//     .catch((error) => {
-//       res.status(400).json(errorResponse(error, 400));
-//     });
-// };
 
 exports.reset_attempts = async function (req, res) {
   try {
@@ -351,51 +291,49 @@ exports.reset_attempts = async function (req, res) {
         },
       },
     });
-  
+
     if (otpEntry) {
-      
       for (const otp of otpEntry) {
-       
-      // Check if it's an email OTP
-      // if (otpEntry.otp_type === "email") {
-        // const user = await User.findOne({
-        //   where: { email: otpEntry.details },
-        // });
-
-        // if (user) { // && !user.email_verified) {
-          // Reset attempts to 0 after 10 minutes for email OTP
-          await OTP.update(
-            { attempts: 0 },
-            { where: { details: otp.details } }
-          );
-          console.log("Email OTP attempts reset.")
-        //   res
-        // .status(200)
-        // .json(success("Attempts reset"));
-        // }
-      // }
-
-      // // Check if it's a phone OTP
-      // if (otpEntry.otp_type === "phone") {
-      //   const user = await User.findOne({
-      //     where: { phone: otpEntry.details },
-      //   });
-        
-      //   if (user) { // && !user.phone_verified) {
-      //     // Reset attempts to 0 after 10 minutes for phone OTP
-      //     await OTP.update(
-      //       { attempts: 0 },
-      //       { where: { details: otpEntry.details } }
-      //     );
-      //     console.log("Phone OTP attempts reset.")
-      //     return res.status(200).json({ message: "Phone OTP attempts reset." });
-      //   }
-      // }
+        await OTP.update({ attempts: 0 }, { where: { details: otp.details } });
+        console.log("Email OTP attempts reset.");
       }
-      
     } else {
       // No matching OTP found
-      console.log("No OTP found to reset.")
+      console.log("No OTP found to reset.");
+      return res.status(400).json({ message: "No OTP found to reset." });
+    }
+  } catch (error) {
+    // Handle errors
+    res.status(400).json(errorResponse(error, 400));
+  }
+};
+
+exports.reset_verify_attempts = async function (req, res) {
+  try {
+    const tenMinutesAgo = new Date();
+    tenMinutesAgo.setMinutes(tenMinutesAgo.getMinutes() - 10);
+
+    // Find OTP entries that match the conditions
+    const otpEntry = await OTP.findAll({
+      attributes: ["otp_type", "details", "verify_attempts"],
+      where: {
+        verify_attempts: {
+          [Op.gte]: 3, // Greater than or equal to 3 attempts
+        },
+        verify_attempts_time: {
+          [Op.lte]: tenMinutesAgo, // Older than 10 minutes
+        },
+      },
+    });
+
+    if (otpEntry) {
+      for (const otp of otpEntry) {
+        await OTP.update({ verify_attempts: 0 }, { where: { details: otp.details } });
+        console.log("verify OTP attempts reset.");
+      }
+    } else {
+      // No matching OTP found
+      console.log("No OTP found to reset.");
       return res.status(400).json({ message: "No OTP found to reset." });
     }
   } catch (error) {
@@ -427,15 +365,10 @@ exports.resetForgotPassword_attempts = async function (req, res) {
   }
 };
 
-
 exports.testSMS = async function (req, res) {
   // const template = `Hello bleh! Your account has been successfully created on SUGAM portal! You can log in and edit your profile at our website URL - DHE`;
   const template = `Hello bleh! Your account has been successfully created! You can login and access various services on SUGAM portal - Directorate of Higher Education  `;
   const test = SMSNotification(req.body.phone, template);
 
-      return res
-        .status(200)
-        .json(success(" tested successfully!", test));
-
-
-}
+  return res.status(200).json(success(" tested successfully!", test));
+};

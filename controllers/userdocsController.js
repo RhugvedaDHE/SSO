@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const db = require("../models");
 //const uploadFile = require("../middleware/upload");
 const User = require("../models").User;
+const UserPersonalDetails = require("../models").UserPersonalDetails;
 const userDocs = require("../models").UserDocs;
 const docType = require("../models").DocumentType;
 const UserDocs = require("../models").UserDocs;
@@ -21,6 +22,7 @@ const path = require("path");
 const url = require("url");
 const fs = require("fs");
 const { type } = require("os");
+const userpersonaldetails = require("../models/userpersonaldetails");
 
 const Op = require("sequelize").Op;
 
@@ -61,14 +63,21 @@ function checkFileTypeAndSize(req, file, cb) {
   }
 
   // Get the file extension and corresponding size limit
-  const fileExtension = path.extname(file.originalname).toLowerCase().replace(".", "");
+  const fileExtension = path
+    .extname(file.originalname)
+    .toLowerCase()
+    .replace(".", "");
   const fileSizeLimit = fileSizeLimits[fileExtension];
 
   // Check file size
   if (file.size > fileSizeLimit) {
     // Calculate limit in MB for clearer error messaging
     const limitInMB = (fileSizeLimit / (1024 * 1024)).toFixed(2); // Limit in MB with two decimal places
-    return cb(new Error(`Error: ${fileExtension.toUpperCase()} files must be smaller than ${limitInMB}MB`));
+    return cb(
+      new Error(
+        `Error: ${fileExtension.toUpperCase()} files must be smaller than ${limitInMB}MB`
+      )
+    );
   }
 
   cb(null, true);
@@ -423,46 +432,68 @@ exports.deleteAll = (req, res) => {
 };
 
 exports.createUndertakingPdf = async function (req, res) {
-  let fileName = "user_" + Date.now() + "." + "pdf";
-  let jsondata = [];
-  let pdfDoc = new PDFDocument();
-  pdfDoc.pipe(
-    fs.createWriteStream(
-      "C:/Users/admin/new-sequelize/uploads/user/" + fileName
-    )
-  );
-  pdfDoc.text(
-    "BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH BLAH"
-  );
-  pdfDoc.end();
+  await UserPersonalDetails.findOne({
+    where: {
+      user_id: req.user.id,
+    },
+  }).then(async (user) => {
+    let fileName = "user_" + Date.now() + "." + "pdf";
+    let jsondata = [];
+    let pdfDoc = new PDFDocument();
+    pdfDoc.pipe(
+      fs.createWriteStream(
+        "D:/sso/uploads/user/" + fileName
+      )
+    );
+    pdfDoc.text(
+      "UNDERTAKING \n \n  I, Mr./Miss." + user.firstname + " " + user.lastname
+        +", hereby, undertake that I have made myself aware of the terms and conditions" +
+        "of the Goa Government Scheme for financial assistance for higher education/technical education under" +
+        "SANT SOHIROBANATH AMBIYE DNYANVRUDDHI SHISHYAVRUTTI (BURSARY SCHEME) \n and I" +
+        "promise to abide by them. I further state that the above information given herein is true to the best of my" +
+        "knowledge and belief. I have not suppressed any relevant information in respect of my application. In the" +
+        "event of any information furnished by me herein, is found to be false or incorrect and/or in the event of any" +
+        "suppression of relevant/ necessary data proved against me, I have noted that I would be disqualified from the" +
+        "scheme and the amount disbursed to me shall become repayable, immediately." +
+        "I further declare that I am not availing any Financial Assistance from the Government under any other" +
+        "scheme through the institution.\n \n \n " +
+        "Dated: \n" + new Date() + "\n \n \n" +
+        "Signature of the Applicant\n\n \n \n" +
+        user.firstname + " " + user.lastname
+    );
+    pdfDoc.end();
 
-  const query = `INSERT INTO public."UserDocs" ("user_id", "doc_type_id", "filename", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5) ON CONFLICT ("user_id", "doc_type_id") DO UPDATE SET "filename" = $3,"updatedAt" = $5;`;
+    const query = `INSERT INTO public."UserDocs" ("user_id", "doc_type_id", "filename", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5) ;`;
 
-  // Execute the raw query
-  const response = await db.sequelize.query(query, {
-    bind: [req.user.id, 22, fileName, new Date(), new Date()],
-    type: db.Sequelize.QueryTypes.UPSERT,
+    // Execute the raw query
+    const response = await db.sequelize.query(query, {
+      bind: [req.user.id, 22, fileName, new Date(), new Date()],
+      type: db.Sequelize.QueryTypes.UPSERT,
+    });
+
+    if (response) {
+      let userDoc = await UserDocs.findOne({
+        where: {
+          user_id: req.user.id,
+          doc_type_id: 22,
+        },
+      });
+
+      jsondata.push({
+        filename: fileName,
+        fileurl:
+          req.protocol + "://" + req.get("host") + "/static/user/" + fileName,
+      });
+      res
+        .status(200)
+        .json(
+          success(
+            "Student Undertaking document created successfully!",
+            jsondata
+          )
+        );
+    }
   });
-
-  if (response) {
-    let userDoc = await UserDocs.findOne({
-      where: {
-        user_id: req.user.id,
-        doc_type_id: 22,
-      },
-    });
-
-    jsondata.push({
-      filename: fileName,
-      fileurl:
-        req.protocol + "://" + req.get("host") + "/static/user/" + fileName,
-    });
-    res
-      .status(200)
-      .json(
-        success("Student Undertaking document created successfully!", jsondata)
-      );
-  }
 };
 
 // exports.uploadUndertakingPdf = async function (req, res) {

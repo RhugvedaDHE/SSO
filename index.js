@@ -9,11 +9,15 @@ var path = require("path");
 const morgan = require('morgan');
 const winston = require('winston');
 const cors = require("cors");
+const helmet = require('helmet');
 application.use(
   cors({
     origin: "*",
   })
 );
+
+//use helmet
+application.use(helmet());
 
 // Create a write stream (in append mode)
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
@@ -252,6 +256,7 @@ var task = cron.schedule(
   async () => {
     console.log("running a task every 1 minute");
     Otp.reset_attempts();
+    Otp.reset_verify_attempts();
     // Otp.resetForgotPassword_attempts();
   },
   {
