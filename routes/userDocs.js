@@ -40,7 +40,7 @@ router.get(
 );
 
 // Retrieve all user docs
-router.get("/all/:id", userDocs.findAll);
+router.get("/all/:id", authenticate, userDocs.findAll);
 
 //create a undertaking doc
 router.get("/create", authenticate, userDocs.createUndertakingPdf);
@@ -48,11 +48,14 @@ router.get("/create", authenticate, userDocs.createUndertakingPdf);
 // router.post("/showfile", userDocs.showImage);
 
 // Retrieve a single  with id
-router.post("/get/:id", userDocs.findOne);
+router.get("/get/:id", authenticate, userDocs.findOne);
 
 // Delete a  with id
 router.post("/delete/docs", authenticate, userDocs.delete);
 
 // Create a new
 router.delete("/", userDocs.deleteAll);
+
+//check file ownership
+router.get("/static/user/:filename", authenticate, userDocs.getFile);
 module.exports = router;

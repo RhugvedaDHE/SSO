@@ -25,8 +25,10 @@ const UserDesignation = require("../models").UserDesignation;
 const EntityUser = require("../models").EntityUser;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const OTP = require("../models").OTP;
+const Session = require("../models").Session;
 const tokenList = {};
 const CryptoJS = require("crypto-js");
+const axios = require("axios");
 
 const Sequelize = require("sequelize");
 const sequelize = require("../models").sequelize;
@@ -287,8 +289,14 @@ exports.register = async function (req, res) {
   try {
     // Hash password
     const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(CryptoJS.AES.decrypt(req.body.password, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8), salt);
-    
+    const hash = bcrypt.hashSync(
+      CryptoJS.AES.decrypt(
+        req.body.password,
+        process.env.CRYPTOJS_SECRET
+      ).toString(CryptoJS.enc.Utf8),
+      salt
+    );
+
     // Find role
     const role = await Role.findOne(
       { attributes: ["id", "name"] },
@@ -457,7 +465,13 @@ exports.register = async function (req, res) {
 exports.registerHSStudent = async function (req, res) {
   // const result = await sequelize.transaction(async (t) => {
   var salt = bcrypt.genSaltSync(10);
-  const hash = bcrypt.hashSync(CryptoJS.AES.decrypt(req.body.password, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8), salt);
+  const hash = bcrypt.hashSync(
+    CryptoJS.AES.decrypt(
+      req.body.password,
+      process.env.CRYPTOJS_SECRET
+    ).toString(CryptoJS.enc.Utf8),
+    salt
+  );
 
   Role.findOne(
     { attributes: ["id", "name"] },
@@ -755,7 +769,7 @@ exports.login = function (req, res) {
           preferred_role: true,
         },
       })
-        .then((role) => {
+        .then(async (role) => {
           console.log(role);
           tokendata = {
             username: user.username,
@@ -775,32 +789,48 @@ exports.login = function (req, res) {
           const result = bcrypt.compareSync(req.body.password, user.password);
 
           if (result) {
-            // var refreshToken = jwt.sign(
-            //   JSON.parse(JSON.stringify(tokendata)),
-            //   process.env.REFRESH_TOKEN_SECRET,
-            //   {
-            //     expiresIn: process.env.REFRESH_TOKEN_LIFE,
-            //   }
-            // );
+
+            // Step 2: Check if an existing session exists for this user
+            const existingSession = await Session.findOne({ where: { user_id: user.id } });
+            if (existingSession) {
+              // Invalidate or delete the existing session (log the user out from previous session)
+              await Session.destroy({ where: { user_id: user.id } });
+            }
 
             var token = jwt.sign(
               JSON.parse(JSON.stringify(tokendata)),
               process.env.JWT_SECRET,
               {
-                expiresIn: "10m",
+                expiresIn: "1h",
               }
             );
-            // jwt.verify(token, process.env.JWT_SECRET, function (err, data) {
-            //   // console.log(err, data);
-            // });
-            // const response = {
-            //   "token": token,
-            //   "refreshToken": refreshToken
-            // }
-            // tokenList[refreshToken] = response;
+
+            // Generate Refresh Token
+            const refreshToken = jwt.sign(
+              JSON.parse(JSON.stringify(tokendata)),
+              process.env.REFRESH_TOKEN_SECRET,
+              {
+                expiresIn: "7d", // Longer-lived
+              }
+            );
+
+            // Save session in database
+            const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+            await Session.create({
+              user_id: user.id,
+              token,
+              expires_at: expiresAt,
+              refresh_token: refreshToken,
+            });
+
             res
               .status(200)
-              .json(success("User logged in successfully!", token));
+              .json(
+                success("User logged in successfully!", {
+                  token: token,
+                  refreshToken: refreshToken,
+                })
+              );
           } else {
             res
               .status(400)
@@ -905,12 +935,18 @@ exports.updateAcademics = async function (req, res) {
 //updatePassword
 exports.updatePassword = function (req, res) {
   User.findOne({
-    where: { email: req.body.email },
+    where: { id: req.user.id },
   })
     .then((user) => {
       if (user) {
         var salt = bcrypt.genSaltSync(10);
-        user.password =  bcrypt.hashSync(CryptoJS.AES.decrypt(req.body.password, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8), salt);
+        user.password = bcrypt.hashSync(
+          CryptoJS.AES.decrypt(
+            req.body.password,
+            process.env.CRYPTOJS_SECRET
+          ).toString(CryptoJS.enc.Utf8),
+          salt
+        );
         user.save();
 
         res.status(200).json(success("User Password updated successfully!"));
@@ -930,21 +966,6 @@ exports.updatePassword = function (req, res) {
         .status(400)
         .json(errorResponse("User Password not changed successsfully!", 400));
     });
-  // User.findOne({
-  //   where: { id: req.user.id },
-  // })
-  //   .then((user) => {
-  //     var salt = bcrypt.genSaltSync(10);
-  //     user.password = bcrypt.hashSync(CryptoJS.AES.decrypt(req.body.password, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8), salt);
-  //     user.save();
-
-  //     res.status(200).json(success("User Password updated successfully!"));
-  //   })
-  //   .catch((error) => {
-  //     res
-  //       .status(400)
-  //       .json(errorResponse("User Password not changed successsfully!", 400));
-  //   });
 };
 
 //forgotPassword
@@ -955,7 +976,13 @@ exports.forgotPassword = function (req, res) {
     .then((user) => {
       if (user) {
         var salt = bcrypt.genSaltSync(10);
-        user.password =  bcrypt.hashSync(CryptoJS.AES.decrypt(req.body.password, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8), salt);
+        user.password = bcrypt.hashSync(
+          CryptoJS.AES.decrypt(
+            req.body.password,
+            process.env.CRYPTOJS_SECRET
+          ).toString(CryptoJS.enc.Utf8),
+          salt
+        );
         user.save();
 
         res.status(200).json(success("User Password updated successfully!"));
@@ -1033,54 +1060,60 @@ exports.switchUserRole = function (req, res) {
 };
 
 //refresh the token
-exports.refreshToken = function (req, res) {
-  User.findOne({
-    where: {
-      id: req.body.user_id,
-    },
-  }).then((user) => {
-    // refresh the damn token
-    UserRole.findOne({
-      where: {
-        user_id: user.id,
-      },
-    })
-      .then((role) => {
-        const postData = req.body;
-        // if refresh token exists
-        if (postData.refresh_token && postData.refresh_token in tokenList) {
-          console.log("inside here");
-          const tokendata = {
-            username: user.username,
-            userId: user.id,
-            userRole: role.role_id,
-          };
-          const token = jwt.sign(tokendata, process.env.JWT_SECRET, {
-            expiresIn: process.env.TOKEN_LIFE,
-          });
-          // const response = {
-          //     "token": token,
-          // }
-          // update the token in the list
-          console.log("inside reached on top here");
-          tokenList[postData.refresh_token].token = token;
-          console.log("inside reached here");
-          res
-            .status(200)
-            .json(success("User Role changed successfully!", token));
-        } else {
-          console.log("inside else");
-          res
-            .status(404)
-            .json(
-              success({ username: "User Not found! Please register first" })
-            );
-        }
-      })
-      .catch((error) => {
-        res.status(400).json(errorResponse(error, 400));
-      });
-  });
+exports.refreshAccessToken = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(400).json({ error: "Refresh token is required" });
+  }
+
+  try {
+    // Verify the refresh token
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    
+    // Check if the refresh token exists in the database
+    const session = await Session.findOne({ where: { refresh_token: refreshToken } });
+    if (!session) {
+      return res.status(401).json({ error: "Invalid refresh token" });
+    }
+
+    
+
+    await User.findOne({
+      where: 
+        
+          { id: decoded.userId }
+    }).then(async (user) => {
+      
+      if (user) {
+        tokendata = {
+          username: decoded.username,
+          userId: decoded.userId,
+          userRole: decoded.userRole,
+        };
+
+        var newToken = jwt.sign(
+          JSON.parse(JSON.stringify(tokendata)),
+          process.env.JWT_SECRET,
+          {
+            expiresIn: 120000,
+          }
+        );
+
+        // Generate a new access token
+
+        // Update session with the new access token
+        session.token = newToken;
+        session.expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+        await session.save();
+
+        res.status(200).json({ token: newToken });
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(401).json({ error: "Invalid or expired refresh token" });
+  }
 };
 
 //is_verified status
@@ -1713,4 +1746,70 @@ exports.getlistOfHois = function (req, res) {
 
     res.status(200).json(success("User Details fetched successfully", hois));
   });
+};
+
+//Function to verify google captcha
+exports.verifyGoogleCaptcha = async (req, res) => {
+  try {
+    // Make a request to Google's captcha verification endpoint
+    const response = await axios.post(
+      `https://www.google.com/recaptcha/api/siteverify`,
+      null,
+      {
+        params: {
+          secret: process.env.CAPTCHA_SECRET,
+          response: req.body.token,
+        },
+      }
+    );
+    // Send only relevant parts of the response
+    if (response.data.success) {
+      res.status(200).json(
+        success("Google captcha verified successfully", {
+          success: response.data.success,
+          challenge_ts: response.data.challenge_ts,
+          hostname: response.data,
+        })
+      );
+    } else {
+      res.status(400).json(
+        errorResponse(
+          {
+            success: response.data.success,
+            challenge_ts: response.data.challenge_ts,
+            hostname: response.data,
+          },
+          400
+        )
+      );
+    }
+  } catch (error) {
+    // Handle Axios errors gracefully
+    console.log(error);
+    res.status(400).json(errorResponse("Failed to verify", 400));
+    res.status(error.response?.status || 500).json({
+      message: error.message,
+      data: error.response?.data, // Include server response data if available
+    });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    // Attempt to delete the session
+    const deletedCount = await Session.destroy({
+      where: { user_id: req.user.id },
+    });
+
+    if (deletedCount === 0) {
+      return res
+        .status(404)
+        .json({ error: "Session not found or already logged out" });
+    }
+
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };

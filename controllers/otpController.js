@@ -31,7 +31,7 @@ exports.generate = async function (req, res) {
   ]);
 
   // Check if any record exists
-  if (req.body.type != "forgot_password") {
+  if (req.body.type != "forgot_password" && req.body.type != "update_password") {
     if (user || userPersonal) {
       return res
         .status(200)
@@ -87,7 +87,22 @@ exports.generate = async function (req, res) {
         } else {
           res.status(400).json(errorResponse("Failed to Forward OTP", 400));
         }
-      } else {
+      } else if (req.body.type == "update_password"){
+        const template =
+          "Hello! OTP To update password is " +
+          otp +
+          ". OTP is valid for 10 minutes.-Directorate of Higher Education.";
+
+        response = SMSNotification(req.body.to, template);
+
+        if (response) {
+          res
+            .status(200)
+            .json(success("OTP generated successfully!", jsondata));
+        } else {
+          res.status(400).json(errorResponse("Failed to Forward OTP", 400));
+        }
+      }else{
         const template =
           "Hello! OTP To verify Phone is " +
           otp +
@@ -137,6 +152,29 @@ exports.generate = async function (req, res) {
               "",
               otp
             );
+
+            if (response) {
+              res
+                .status(200)
+                .json(success("OTP generated successfully!", jsondata));
+            } else {
+              res.status(400).json(errorResponse("Failed to Forward OTP", 400));
+            }
+          }
+          else if(type == "update_password"){
+            var jsondata = [];
+            jsondata.push({
+              attempts: 1,
+              otp: otp,
+            });
+
+            //send OTP to phone
+            const template =
+              "Hello! OTP To update password is " +
+              otp +
+              ". OTP is valid for 10 minutes.-Directorate of Higher Education.";
+
+            response = await SMSNotification(req.body.to, template);
 
             if (response) {
               res
@@ -254,7 +292,10 @@ exports.verify = async function (req, res) {
       // await user.save({ fields: ["email_verified"] });
       email_verified = true;
       // }
-    } else {
+    } else if (req.body.type == "update_password"){
+      otp_verified = true; // For forgot password case
+    }
+    else{
       otp_verified = true; // For forgot password case
     }
 
@@ -362,6 +403,31 @@ exports.resetForgotPassword_attempts = async function (req, res) {
       { where: { details: results.details, otp_type: results.otp_type } }
     );
   } else {
+  }
+};
+
+exports.resetUpdatePassword_attempts = async function (req, res) {
+  const thirtyMinutesAgo = new Date();
+  thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
+
+  const results = await OTP.findOne({
+    attributes: ["otp_type", "details", "attempts"],
+    where: {
+      attempts: 3,
+      otp_type: "update_password",
+      time: {
+        [Op.lte]: thirtyMinutesAgo,
+      },
+    },
+  });
+  if (results) {
+    await OTP.update(
+      { attempts: 0 },
+      { where: { details: results.details, otp_type: results.otp_type } }
+    );
+
+    console.log("update password attempts set to 0")
+  } else {    
   }
 };
 

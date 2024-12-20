@@ -31,7 +31,7 @@ router.post(
       .withMessage(
         "Password should Contain Atleast 1 uppercase, Atleast 1 lowercase, Atleast 1 special character and should be 8 chars long."
       ),
-      check("password")
+    check("password")
       .exists({ checkFalsy: true })
       .withMessage("Password is required")
       .custom((encryptedPassword) => {
@@ -39,7 +39,7 @@ router.post(
           // Decrypt password
           const bytes = CryptoJS.AES.decrypt(encryptedPassword, SECRET_KEY);
           const password = bytes.toString(CryptoJS.enc.Utf8);
-  
+
           if (password.includes(" ")) {
             throw new Error("Password must not contain spaces");
           }
@@ -48,19 +48,27 @@ router.post(
           throw new Error(error);
         }
       }),
-  
+
     check("passwordConfirmation")
       .exists({ checkFalsy: true })
       .withMessage("Password confirmation is required")
       .custom((encryptedPasswordConfirmation, { req }) => {
         try {
           // Decrypt password and passwordConfirmation
-          const passwordBytes = CryptoJS.AES.decrypt(req.body.password, SECRET_KEY);
+          const passwordBytes = CryptoJS.AES.decrypt(
+            req.body.password,
+            SECRET_KEY
+          );
           const decryptedPassword = passwordBytes.toString(CryptoJS.enc.Utf8);
-  
-          const confirmationBytes = CryptoJS.AES.decrypt(encryptedPasswordConfirmation, SECRET_KEY);
-          const decryptedPasswordConfirmation = confirmationBytes.toString(CryptoJS.enc.Utf8);
-  
+
+          const confirmationBytes = CryptoJS.AES.decrypt(
+            encryptedPasswordConfirmation,
+            SECRET_KEY
+          );
+          const decryptedPasswordConfirmation = confirmationBytes.toString(
+            CryptoJS.enc.Utf8
+          );
+
           if (decryptedPassword !== decryptedPasswordConfirmation) {
             throw new Error("Password confirmation must match the password");
           }
@@ -104,12 +112,9 @@ router.post(
       .not()
       .isEmpty()
       .withMessage("Your First name is required"),
-      // .isAlpha()
-      // .withMessage("First name must have only alphabets"),
-    check("lastname")
-      .not()
-      .isEmpty()
-      .withMessage("Your Last name is required"),
+    // .isAlpha()
+    // .withMessage("First name must have only alphabets"),
+    check("lastname").not().isEmpty().withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -149,7 +154,7 @@ router.post(
       .withMessage(
         "Password should Contain Atleast 1 uppercase, Atleast 1 lowercase, Atleast 1 special character and should be 8 chars long."
       ),
-      check("password")
+    check("password")
       .exists({ checkFalsy: true })
       .withMessage("Password is required")
       .custom((encryptedPassword) => {
@@ -157,7 +162,7 @@ router.post(
           // Decrypt password
           const bytes = CryptoJS.AES.decrypt(encryptedPassword, SECRET_KEY);
           const password = bytes.toString(CryptoJS.enc.Utf8);
-  
+
           if (!password || password.includes(" ")) {
             throw new Error("Password must not contain spaces");
           }
@@ -166,19 +171,27 @@ router.post(
           throw new Error(error);
         }
       }),
-  
+
     check("passwordConfirmation")
       .exists({ checkFalsy: true })
       .withMessage("Password confirmation is required")
       .custom((encryptedPasswordConfirmation, { req }) => {
         try {
           // Decrypt password and passwordConfirmation
-          const passwordBytes = CryptoJS.AES.decrypt(req.body.password, SECRET_KEY);
+          const passwordBytes = CryptoJS.AES.decrypt(
+            req.body.password,
+            SECRET_KEY
+          );
           const decryptedPassword = passwordBytes.toString(CryptoJS.enc.Utf8);
-  
-          const confirmationBytes = CryptoJS.AES.decrypt(encryptedPasswordConfirmation, SECRET_KEY);
-          const decryptedPasswordConfirmation = confirmationBytes.toString(CryptoJS.enc.Utf8);
-  
+
+          const confirmationBytes = CryptoJS.AES.decrypt(
+            encryptedPasswordConfirmation,
+            SECRET_KEY
+          );
+          const decryptedPasswordConfirmation = confirmationBytes.toString(
+            CryptoJS.enc.Utf8
+          );
+
           if (decryptedPassword !== decryptedPasswordConfirmation) {
             throw new Error("Password confirmation must match the password");
           }
@@ -222,10 +235,7 @@ router.post(
       .not()
       .isEmpty()
       .withMessage("Your First name is required"),
-    check("lastname")
-      .not()
-      .isEmpty()
-      .withMessage("Your Last name is required"),
+    check("lastname").not().isEmpty().withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -298,12 +308,8 @@ router.post(
     check("firstname")
       .not()
       .isEmpty()
-      .withMessage("Your First name is required")
-      ,
-    check("lastname")
-      .not()
-      .isEmpty()
-      .withMessage("Your Last name is required"),
+      .withMessage("Your First name is required"),
+    check("lastname").not().isEmpty().withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -320,7 +326,7 @@ router.post(
   Auth.createUserDetailsForEpramaan
 );
 
-router.post("/refresh-token", Auth.refreshToken);
+router.post("/refresh-token", Auth.refreshAccessToken);
 
 router.post(
   "/update-password",
@@ -344,7 +350,7 @@ router.post(
       .withMessage(
         "Password should Contain Atleast 1 uppercase, Atleast 1 lowercase, Atleast 1 special character and should be 8 chars long."
       ),
-      check("password")
+    check("password")
       .exists({ checkFalsy: true })
       .withMessage("Password is required")
       .custom((encryptedPassword) => {
@@ -352,7 +358,7 @@ router.post(
           // Decrypt password
           const bytes = CryptoJS.AES.decrypt(encryptedPassword, SECRET_KEY);
           const password = bytes.toString(CryptoJS.enc.Utf8);
-  
+
           if (!password || password.includes(" ")) {
             throw new Error("Password must not contain spaces");
           }
@@ -361,19 +367,27 @@ router.post(
           throw new Error(error);
         }
       }),
-  
+
     check("passwordConfirmation")
       .exists({ checkFalsy: true })
       .withMessage("Password confirmation is required")
       .custom((encryptedPasswordConfirmation, { req }) => {
         try {
           // Decrypt password and passwordConfirmation
-          const passwordBytes = CryptoJS.AES.decrypt(req.body.password, SECRET_KEY);
+          const passwordBytes = CryptoJS.AES.decrypt(
+            req.body.password,
+            SECRET_KEY
+          );
           const decryptedPassword = passwordBytes.toString(CryptoJS.enc.Utf8);
-  
-          const confirmationBytes = CryptoJS.AES.decrypt(encryptedPasswordConfirmation, SECRET_KEY);
-          const decryptedPasswordConfirmation = confirmationBytes.toString(CryptoJS.enc.Utf8);
-  
+
+          const confirmationBytes = CryptoJS.AES.decrypt(
+            encryptedPasswordConfirmation,
+            SECRET_KEY
+          );
+          const decryptedPasswordConfirmation = confirmationBytes.toString(
+            CryptoJS.enc.Utf8
+          );
+
           if (decryptedPassword !== decryptedPasswordConfirmation) {
             throw new Error("Password confirmation must match the password");
           }
@@ -413,7 +427,7 @@ router.post(
       .withMessage(
         "Password should Contain Atleast 1 uppercase, Atleast 1 lowercase, Atleast 1 special character and should be 8 chars long."
       ),
-      check("password")
+    check("password")
       .exists({ checkFalsy: true })
       .withMessage("Password is required")
       .custom((encryptedPassword) => {
@@ -421,7 +435,7 @@ router.post(
           // Decrypt password
           const bytes = CryptoJS.AES.decrypt(encryptedPassword, SECRET_KEY);
           const password = bytes.toString(CryptoJS.enc.Utf8);
-  
+
           if (!password || password.includes(" ")) {
             throw new Error("Password must not contain spaces");
           }
@@ -430,19 +444,27 @@ router.post(
           throw new Error(error);
         }
       }),
-  
+
     check("passwordConfirmation")
       .exists({ checkFalsy: true })
       .withMessage("Password confirmation is required")
       .custom((encryptedPasswordConfirmation, { req }) => {
         try {
           // Decrypt password and passwordConfirmation
-          const passwordBytes = CryptoJS.AES.decrypt(req.body.password, SECRET_KEY);
+          const passwordBytes = CryptoJS.AES.decrypt(
+            req.body.password,
+            SECRET_KEY
+          );
           const decryptedPassword = passwordBytes.toString(CryptoJS.enc.Utf8);
-  
-          const confirmationBytes = CryptoJS.AES.decrypt(encryptedPasswordConfirmation, SECRET_KEY);
-          const decryptedPasswordConfirmation = confirmationBytes.toString(CryptoJS.enc.Utf8);
-  
+
+          const confirmationBytes = CryptoJS.AES.decrypt(
+            encryptedPasswordConfirmation,
+            SECRET_KEY
+          );
+          const decryptedPasswordConfirmation = confirmationBytes.toString(
+            CryptoJS.enc.Utf8
+          );
+
           if (decryptedPassword !== decryptedPasswordConfirmation) {
             throw new Error("Password confirmation must match the password");
           }
@@ -478,10 +500,7 @@ router.post(
       .not()
       .isEmpty()
       .withMessage("Your First name is required"),
-    check("lastname")
-      .not()
-      .isEmpty()
-      .withMessage("Your Last name is required"),
+    check("lastname").not().isEmpty().withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -503,10 +522,7 @@ router.post(
       .not()
       .isEmpty()
       .withMessage("Your First name is required"),
-    check("lastname")
-      .not()
-      .isEmpty()
-      .withMessage("Your Last name is required"),
+    check("lastname").not().isEmpty().withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -528,10 +544,7 @@ router.post(
       .not()
       .isEmpty()
       .withMessage("Your First name is required"),
-    check("lastname")
-      .not()
-      .isEmpty()
-      .withMessage("Your Last name is required"),
+    check("lastname").not().isEmpty().withMessage("Your Last name is required"),
     check("email")
       .isEmail()
       .withMessage("Please provide a valid email address"),
@@ -704,25 +717,25 @@ router.post(
       .withMessage("Aadhar number must be 12 digits")
       .isNumeric()
       .withMessage("Aadhar number must contain only numeric digits"),
-      // check('dob')
-      //   .isDate().withMessage('Please select a valid Date of birth')
-        // .custom((value) => {
-        //     const dob = new Date(value);
-        //     console.log(dob)
-        //     const today = new Date();
-        //     let age = today.getFullYear() - dob.getFullYear();
-        //     const monthDifference = today.getMonth() - dob.getMonth();
-        //     const dayDifference = today.getDate() - dob.getDate();
+    // check('dob')
+    //   .isDate().withMessage('Please select a valid Date of birth')
+    // .custom((value) => {
+    //     const dob = new Date(value);
+    //     console.log(dob)
+    //     const today = new Date();
+    //     let age = today.getFullYear() - dob.getFullYear();
+    //     const monthDifference = today.getMonth() - dob.getMonth();
+    //     const dayDifference = today.getDate() - dob.getDate();
 
-        //     if (
-        //         age > 25 ||
-        //         (age === 25 && (monthDifference > 0 || (monthDifference === 0 && dayDifference >= 0)))
-        //     ) {
-        //         throw new Error('Age must not exceed 25 years');
-        //     }
+    //     if (
+    //         age > 25 ||
+    //         (age === 25 && (monthDifference > 0 || (monthDifference === 0 && dayDifference >= 0)))
+    //     ) {
+    //         throw new Error('Age must not exceed 25 years');
+    //     }
 
-        //     return true;
-        // })
+    //     return true;
+    // })
     check("physically_disabled")
       .isBoolean()
       .withMessage("Please specify if the person is specially abled or not"),
@@ -754,9 +767,13 @@ router.post(
       .isNumeric()
       .withMessage("Please enter a valid Gender"),
     check("state_id").isNumeric().withMessage("Please select a valid State"),
-    check("district_id").isNumeric().withMessage("Please select a valid District"),
+    check("district_id")
+      .isNumeric()
+      .withMessage("Please select a valid District"),
     check("taluka_id").isNumeric().withMessage("Please select a valid Taluka"),
-    check("country_id").isNumeric().withMessage("Please select a valid Country"),
+    check("country_id")
+      .isNumeric()
+      .withMessage("Please select a valid Country"),
     check("village").isAlpha().withMessage("Please select a valid Village"),
     check("pincode")
       .matches(/^[0-9]{6}$/)
@@ -798,13 +815,20 @@ router.post(
   Auth.checkIfUndertakingSigned
 );
 
-router.post(
-  "/register-GEDCadmin",
-  Auth.registerGEDCAdmin
-);
+router.post("/register-GEDCadmin", Auth.registerGEDCAdmin);
+
+router.post("/register-bulk-users", Auth.registerbulkUsers);
+module.exports = router;
 
 router.post(
-  "/register-bulk-users",
-  Auth.registerbulkUsers
+  "/verify-captcha",
+  [check("token").not().isEmpty().withMessage("Please send a valid Token")],
+  validate,
+  Auth.verifyGoogleCaptcha
 );
-module.exports = router;
+
+router.get(
+  "/logout",
+  authenticate,
+  Auth.logout
+);

@@ -19,7 +19,7 @@ router.post('/verify', [
 
 router.post('/reset-attempts', [
     check('details').not().isEmpty().withMessage('Phone/Email is required'),
-], validate, Otp.reset_attempts);
+], validate, Otp.resetUpdatePassword_attempts);
 
 router.post('/test-sms', Otp.testSMS);
 

@@ -85,7 +85,7 @@ const {
 } = require(path.resolve(__dirname, "./responseApi.js"));
 
 //Used for static file path eg uploaded images etc:Paresh
-application.use("/static", express.static("uploads"));
+// application.use("/static", express.static("uploads"));
 
 //setting flash
 // application.use(flash());
@@ -139,6 +139,7 @@ var academicYearRouter = require("./routes/academicYear");
 var userContactRouter = require("./routes/userContact");
 var constituencyRouter = require("./routes/constituency");
 var boardUniversityRouter = require("./routes/boarduniversity");
+var staticRouter = require("./routes/static");
 
 //APIs by Paresh A.
 var companyRouter = require("./routes/company");
@@ -218,6 +219,7 @@ application.use("/api/v1/academicyear", academicYearRouter);
 application.use("/api/v1/usercontact", userContactRouter);
 application.use("/api/v1/constituency", constituencyRouter);
 application.use("/api/v1/board-universities", boardUniversityRouter);
+application.use("/static", staticRouter);
 
 //APIs by Paresh A.
 application.use("/api/v1/company", companyRouter);
@@ -257,7 +259,8 @@ var task = cron.schedule(
     console.log("running a task every 1 minute");
     Otp.reset_attempts();
     Otp.reset_verify_attempts();
-    // Otp.resetForgotPassword_attempts();
+    Otp.resetForgotPassword_attempts();
+    Otp.resetUpdatePassword_attempts();
   },
   {
     scheduled: false,

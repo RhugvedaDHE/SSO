@@ -1,31 +1,28 @@
-const passport = require("passport");
-require("dotenv").config();
+const passport = require('passport');
+const { Session } = require('../models'); // Adjust the path to your Session model
 
-module.exports = (req, res, next) => {
-    // console.log("request", req)
-    passport.authenticate('jwt', function(err, user, info) {
-        if (err) return next(err);
+module.exports = async (req, res, next) => {
+  passport.authenticate('jwt', async function (err, user, info) {
+    if (err) return next(err);
 
-        if (!user) return res.status(401).json({message: "Unauthorized Access - No Token Provided!"});
-        
-        req.user = user;
+    if (!user) {
+      return res.status(401).json({ message: 'Unauthorized Access - No Token Provided!' });
+    }
 
-        // Check if the token is close to expiring
-        const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
-        const timeRemaining = user.exp - currentTime;
-        console.log("timeRemainingggggggggggggggggggggggggggggggggggggggggggggggggggggggg", req.user);
-        if (timeRemaining < 30) { // If less than 30 seconds remain
-            console.log("herrreeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
-        // Generate a refresh token
-        const refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, {
-            expiresIn: "1h", // Refresh token valid for 1 hour
-        });
+    req.user = user;
 
-        console.log(refreshToken);
-            // Send the new refresh token in the response header
-            res.setHeader("x-refresh-token", refreshToken);
-        }
-        next();
+    try {
+      // Check if the session exists in the database
+      const session = await Session.findOne({ where: { token: req.headers.authorization.split(' ')[1], user_id: user.id } });
 
-    })(req, res, next);
+      if (!session || new Date(session.expiresAt) < new Date()) {
+        return res.status(401).json({ error: 'Session expired or invalid' });
+      }
+
+      next();
+    } catch (error) {
+      console.error('Error checking session:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  })(req, res, next);
 };

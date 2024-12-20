@@ -29,17 +29,16 @@ const Op = require("sequelize").Op;
 // File size limits (in bytes)
 const fileSizeLimits = {
   jpeg: 500 * 1024, // 500KB for JPEG
-  jpg: 500 * 1024, // 500KB for JPG
-  png: 700 * 1024, // 700KB for PNG
+  jpg: 500 * 1024, // 1MB for JPG
+  png: 700 * 1024, // 1MB for PNG
   pdf: 1 * 1024 * 1024, // 1MB for PDF
+  // doc: 2 * 1024 * 1024, // 2MB for DOC
+  // docx: 2 * 1024 * 1024, // 2MB for DOCX
 };
 
-// Whitelisted file extensions
-const allowedExtensions = ["jpeg", "jpg", "png", "pdf"];
-
-// Storage configuration
+// Set up storage engine
 const storage = multer.diskStorage({
-  destination: "./uploads/user", // Ensure the folder permissions are non-executable
+  destination: "./uploads/user",
   filename: (req, file, cb) => {
     let docTypeId = Number(req.body.doc_type_id);
     let prefix = docTypeId === 21 ? "offer_" : "user_";
@@ -52,39 +51,31 @@ const storage = multer.diskStorage({
   },
 });
 
-// Function to validate file type and size
-function validateFile(req, file, cb) {
+// File filter to check file type and size
+function checkFileTypeAndSize(req, file, cb) {
+  const filetypes = /jpeg|jpg|png|pdf/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = filetypes.test(file.mimetype);
+
+  // Check if the file type is valid
+  if (!mimetype || !extname) {
+    return cb(new Error("Error: Invalid file type!"));
+  }
+
+  // Get the file extension and corresponding size limit
   const fileExtension = path
     .extname(file.originalname)
     .toLowerCase()
     .replace(".", "");
-  const fileName = file.originalname;
-
-  // Check for allowed extensions
-  if (!allowedExtensions.includes(fileExtension)) {
-    return cb(
-      new Error(
-        "Invalid file type! Only JPEG, JPG, PNG, and PDF files are allowed."
-      )
-    );
-  }
-
-  // Check for double extensions or unusual characters
-  if (/\.\w+\./.test(fileName) || /[;/\\]/.test(fileName)) {
-    return cb(
-      new Error(
-        "Invalid file name! Double extensions or unusual characters are not allowed."
-      )
-    );
-  }
+  const fileSizeLimit = fileSizeLimits[fileExtension];
 
   // Check file size
-  const fileSizeLimit = fileSizeLimits[fileExtension];
   if (file.size > fileSizeLimit) {
-    const limitInMB = (fileSizeLimit / (1024 * 1024)).toFixed(2);
+    // Calculate limit in MB for clearer error messaging
+    const limitInMB = (fileSizeLimit / (1024 * 1024)).toFixed(2); // Limit in MB with two decimal places
     return cb(
       new Error(
-        `File size exceeds limit! ${fileExtension.toUpperCase()} files must be smaller than ${limitInMB}MB.`
+        `Error: ${fileExtension.toUpperCase()} files must be smaller than ${limitInMB}MB`
       )
     );
   }
@@ -92,10 +83,15 @@ function validateFile(req, file, cb) {
   cb(null, true);
 }
 
+// Initialize upload variable
 const upload = multer({
   storage: storage,
-  fileFilter: validateFile,
-}).single("document");
+  // limits: { fileSize: 2000000 }, // 1MB file size limit
+
+  fileFilter: (req, file, cb) => {
+    checkFileTypeAndSize(req, file, cb);
+  },
+}).single("document"); // 'document' is the name attribute in the form
 
 // Controller function for uploading documents
 exports.uploadDoc = async (req, res) => {
@@ -272,39 +268,6 @@ exports.findAll = async (req, res) => {
   }
 };
 
-// Controller function to handle the request for file access
-exports.getFile = async (req, res, next) => {
-  const { filename } = req.params;
-  const userId = req.user.id; // Assuming `req.user.id` is set by authentication middleware
-
-  try {
-    // Check if the file exists and belongs to the logged-in user
-    const file = await userDocs.findOne({ where: { filename } });
-
-    if (!file) {
-      return res.status(404).send("File not found");
-    }
-
-    if (file.user_id !== userId) {
-      return res.status(403).send("Access denied");
-    }
-
-    // Construct file path
-    const filePath = path.join(__dirname, "..", "uploads", "user", filename);
-
-    // Serve the file
-    res.sendFile(filePath, (err) => {
-      if (err) {
-        console.error("Error serving file:", err);
-        next(err);
-      }
-    });
-  } catch (error) {
-    console.error("Error accessing file:", error);
-    res.status(500).send("Server error");
-  }
-};
-
 //this API is not in use: paresh
 exports.showImage = (req, res) => {
   const userId = req.body.user_id;
@@ -360,12 +323,7 @@ exports.findOne = (req, res) => {
   const user_id = req.user.id;
 
   userDocs
-    .findOne({
-      where: {
-        id: req.params.id,
-        user_id: req.user.id,
-      },
-    })
+    .findByPk(id)
     .then((data) => {
       if (data) {
         var docsData = [];
@@ -382,19 +340,18 @@ exports.findOne = (req, res) => {
           doc_type_name: data.name,
           filename: data.filename,
           filepath: filePath,
-          valid: true
         });
 
         res
           .status(200)
           .json(
-            success("Student Document fetched successfully!", docsData[0])
+            success("Student Documents fetched successfully!", docsData[0])
           );
       } else {
         res
           .status(400)
           .json(
-            errorResponse({"message": "Document Not found", "valid": false}, 400)
+            errorResponse(`Cannot find Student Documents with id=${id}.`, 400)
           );
       }
     })
@@ -484,13 +441,14 @@ exports.createUndertakingPdf = async function (req, res) {
     let fileName = "user_" + Date.now() + "." + "pdf";
     let jsondata = [];
     let pdfDoc = new PDFDocument();
-    pdfDoc.pipe(fs.createWriteStream("D:/sso/uploads/user/" + fileName));
+    pdfDoc.pipe(
+      fs.createWriteStream(
+        "D:/sso/uploads/user/" + fileName
+      )
+    );
     pdfDoc.text(
-      "UNDERTAKING \n \n  I, Mr./Miss." +
-        user.firstname +
-        " " +
-        user.lastname +
-        ", hereby, undertake that I have made myself aware of the terms and conditions" +
+      "UNDERTAKING \n \n  I, Mr./Miss." + user.firstname + " " + user.lastname
+        +", hereby, undertake that I have made myself aware of the terms and conditions" +
         "of the Goa Government Scheme for financial assistance for higher education/technical education under" +
         "SANT SOHIROBANATH AMBIYE DNYANVRUDDHI SHISHYAVRUTTI (BURSARY SCHEME) \n and I" +
         "promise to abide by them. I further state that the above information given herein is true to the best of my" +
@@ -500,13 +458,9 @@ exports.createUndertakingPdf = async function (req, res) {
         "scheme and the amount disbursed to me shall become repayable, immediately." +
         "I further declare that I am not availing any Financial Assistance from the Government under any other" +
         "scheme through the institution.\n \n \n " +
-        "Dated: \n" +
-        new Date() +
-        "\n \n \n" +
+        "Dated: \n" + new Date() + "\n \n \n" +
         "Signature of the Applicant\n\n \n \n" +
-        user.firstname +
-        " " +
-        user.lastname
+        user.firstname + " " + user.lastname
     );
     pdfDoc.end();
 
