@@ -13,4 +13,6 @@ console.log("In static routes");
 
 //check file ownership
 router.get("/user/:filename", authenticate, userDocs.getFile);
+router.get("/notoken/user/:filename", userDocs.getFileNoToken);
+// router.get("/user/:filename", userDocs.getFile);
 module.exports = router;

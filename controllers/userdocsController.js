@@ -305,6 +305,39 @@ exports.getFile = async (req, res, next) => {
   }
 };
 
+// Controller function to handle the request for file access
+exports.getFileNoToken = async (req, res, next) => {
+  const { filename } = req.params;
+  // const userId = req.user.id; // Assuming `req.user.id` is set by authentication middleware
+
+  try {
+    // Check if the file exists and belongs to the logged-in user
+    const file = await userDocs.findOne({ where: { filename } });
+
+    if (!file) {
+      return res.status(404).send("File not found");
+    }
+
+    // if (file.user_id !== userId) {
+    //   return res.status(403).send("Access denied");
+    // }
+
+    // Construct file path
+    const filePath = path.join(__dirname, "..", "uploads", "user", filename);
+
+    // Serve the file
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error("Error serving file:", err);
+        next(err);
+      }
+    });
+  } catch (error) {
+    console.error("Error accessing file:", error);
+    res.status(500).send("Server error");
+  }
+};
+
 //this API is not in use: paresh
 exports.showImage = (req, res) => {
   const userId = req.body.user_id;

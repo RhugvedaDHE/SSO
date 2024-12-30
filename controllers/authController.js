@@ -789,9 +789,10 @@ exports.login = function (req, res) {
           const result = bcrypt.compareSync(req.body.password, user.password);
 
           if (result) {
-
             // Step 2: Check if an existing session exists for this user
-            const existingSession = await Session.findOne({ where: { user_id: user.id } });
+            const existingSession = await Session.findOne({
+              where: { user_id: user.id },
+            });
             if (existingSession) {
               // Invalidate or delete the existing session (log the user out from previous session)
               await Session.destroy({ where: { user_id: user.id } });
@@ -801,7 +802,7 @@ exports.login = function (req, res) {
               JSON.parse(JSON.stringify(tokendata)),
               process.env.JWT_SECRET,
               {
-                expiresIn: "1h",
+                expiresIn: "1h", //10s 1h
               }
             );
 
@@ -816,6 +817,7 @@ exports.login = function (req, res) {
 
             // Save session in database
             const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+            // const expiresAt = new Date(Date.now() + 120 * 1000); // 10 s //2m
             await Session.create({
               user_id: user.id,
               token,
@@ -823,14 +825,12 @@ exports.login = function (req, res) {
               refresh_token: refreshToken,
             });
 
-            res
-              .status(200)
-              .json(
-                success("User logged in successfully!", {
-                  token: token,
-                  refreshToken: refreshToken,
-                })
-              );
+            res.status(200).json(
+              success("User logged in successfully!", {
+                token: token,
+                refreshToken: refreshToken,
+              })
+            );
           } else {
             res
               .status(400)
@@ -841,7 +841,7 @@ exports.login = function (req, res) {
         })
         .catch((error) => {
           console.log(
-            "errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrorrrrrrrrrrrrrrrrrrrrr",
+            "erorrrrrrrrrrrrrrrrrrrrr",
             error
           );
           res.status(400).json(errorResponse(error, 400));
@@ -1070,21 +1070,18 @@ exports.refreshAccessToken = async (req, res) => {
   try {
     // Verify the refresh token
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    
+
     // Check if the refresh token exists in the database
-    const session = await Session.findOne({ where: { refresh_token: refreshToken } });
+    const session = await Session.findOne({
+      where: { refresh_token: refreshToken },
+    });
     if (!session) {
       return res.status(401).json({ error: "Invalid refresh token" });
     }
 
-    
-
     await User.findOne({
-      where: 
-        
-          { id: decoded.userId }
+      where: { id: decoded.userId },
     }).then(async (user) => {
-      
       if (user) {
         tokendata = {
           username: decoded.username,
@@ -1811,5 +1808,30 @@ exports.logout = async (req, res) => {
   } catch (error) {
     console.error("Logout error:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+exports.expiryCheck = async (req, res) => {
+  try {
+    // Check token expiration
+    const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET);
+    
+    if (decoded.exp) {
+      const date = new Date(decoded.exp * 1000); // Multiply by 1000 to convert seconds to milliseconds 
+      
+      
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (decoded.exp < currentTime) {
+        res.status(400).json(errorResponse({ expired: true }, "Token Expired!"));
+      } else {
+        res.status(200).json(success("Token is still valid! Token will Expire at " + date.toLocaleTimeString(), { expired: false, expiryAt: date.toLocaleTimeString() }));
+      }
+    } else {
+      res.status(400).json(errorResponse({ expired: true }, "Token Expired!"));
+    }
+    
+  } catch (error) {
+    console.error("expiry error:", error);
+    res.status(500).json({ error: "Expiry Internal server error" });
   }
 };

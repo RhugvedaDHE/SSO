@@ -8,7 +8,6 @@ module.exports = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized Access - No Token Provided!' });
     }
-
     req.user = user;
 
     try {
@@ -16,6 +15,7 @@ module.exports = async (req, res, next) => {
       const session = await Session.findOne({ where: { token: req.headers.authorization.split(' ')[1], user_id: user.id } });
 
       if (!session || new Date(session.expiresAt) < new Date()) {
+        return res.status(401).json({ expired: true });
         return res.status(401).json({ error: 'Session expired or invalid' });
       }
 

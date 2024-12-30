@@ -832,3 +832,8 @@ router.get(
   authenticate,
   Auth.logout
 );
+
+router.post(
+  "/token-expiry-check", authenticate,
+  Auth.expiryCheck
+);

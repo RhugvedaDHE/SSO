@@ -56,6 +56,8 @@ router.post("/delete/docs", authenticate, userDocs.delete);
 // Create a new
 router.delete("/", userDocs.deleteAll);
 
-//check file ownership
+//check file ownership 
+//not in use
 router.get("/static/user/:filename", authenticate, userDocs.getFile);
+
 module.exports = router;
