@@ -1843,3 +1843,14 @@ exports.expiryCheck = async (req, res) => {
     res.status(500).json({ error: "Expiry Internal server error" });
   }
 };
+
+exports.encryptpassword = async (req, res) => {
+  // Hash password
+  const salt = bcrypt.genSaltSync(10);
+  const encryptedPassword = CryptoJS.AES.encrypt(
+    req.body.password,
+    process.env.CRYPTOJS_SECRET
+  ).toString();
+
+  res.status(200).json(success("Encrypted password created successfully! ", encryptedPassword));
+}

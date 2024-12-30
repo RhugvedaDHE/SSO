@@ -846,3 +846,8 @@ router.post(
   "/token-expiry-check", authenticate,
   Auth.expiryCheck
 );
+
+router.post(
+  "/encrypt-password",
+  Auth.encryptpassword
+);
