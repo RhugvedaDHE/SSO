@@ -786,8 +786,16 @@ exports.login = function (req, res) {
                 )
               );
           }
-          const result = bcrypt.compareSync(req.body.password, user.password);
 
+          //decrypt sent encrypted password
+          // Hash password
+          const decryptedPassword = CryptoJS.AES.decrypt(
+            req.body.password,
+            process.env.CRYPTOJS_SECRET
+          ).toString(CryptoJS.enc.Utf8);          
+
+          const result = bcrypt.compareSync(decryptedPassword, user.password);
+         
           if (result) {
             // Step 2: Check if an existing session exists for this user
             const existingSession = await Session.findOne({

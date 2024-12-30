@@ -257,10 +257,19 @@ router.post(
   [
     check("username").not().isEmpty().withMessage("Your username is required"),
     check("password")
-      .not()
-      .isEmpty()
-      .isLength({ min: 8 })
-      .withMessage("Must be at least 8 chars long"),
+      .exists({ checkFalsy: true })
+      .withMessage("Password is required")
+      .custom((encryptedPassword) => {
+        try {
+          // Decrypt password
+          const bytes = CryptoJS.AES.decrypt(encryptedPassword, SECRET_KEY);
+          const password = bytes.toString(CryptoJS.enc.Utf8);
+
+          return true;
+        } catch (error) {
+          throw new Error(error);
+        }
+      }),
   ],
   validate,
   Auth.login
