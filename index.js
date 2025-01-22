@@ -19,6 +19,24 @@ application.use(
 //use helmet
 application.use(helmet());
 
+// Disable OPTIONS method
+application.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return res.status(405).send('Method Not Allowed');  // 405 - Method Not Allowed
+  }
+  next();
+})
+
+// Set security headers globally
+application.use((req, res, next) => {
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('Content-Security-Policy', "default-src 'self'");
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
 // Create a write stream (in append mode)
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
 
@@ -253,6 +271,7 @@ application.listen(PORT, () => console.log("hello:" + PORT + "/"));
 
 //cron job
 const Otp = require('./controllers/otpController');
+const Auth = require('./controllers/authController');
 var task = cron.schedule(
   "*/1 * * * *",
   async () => {
@@ -261,6 +280,7 @@ var task = cron.schedule(
     Otp.reset_verify_attempts();
     Otp.resetForgotPassword_attempts();
     Otp.resetUpdatePassword_attempts();
+    // Auth.deleteExpiredTokens();
   },
   {
     scheduled: false,

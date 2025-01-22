@@ -1,6 +1,11 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+const axios = require("axios");
+const clamav = require("clamav.js");
+const NodeClam = require("clamscan");
+const clam = new NodeClam().init();
+
 const bcrypt = require("bcryptjs");
 const db = require("../models");
 //const uploadFile = require("../middleware/upload");
@@ -8,7 +13,8 @@ const User = require("../models").User;
 const UserPersonalDetails = require("../models").UserPersonalDetails;
 const userDocs = require("../models").UserDocs;
 const docType = require("../models").DocumentType;
-const UserDocs = require("../models").UserDocs;
+const StudentMarks = require("../models").StudentMarks;
+const StudentEnrollment = require("../models").StudentEnrollment;
 
 var multer = require("multer");
 const { success, errorResponse, validation } = require("../responseApi");
@@ -25,7 +31,7 @@ const { type } = require("os");
 const userpersonaldetails = require("../models/userpersonaldetails");
 
 const Op = require("sequelize").Op;
-
+const sequelize = require("../models").sequelize;
 // File size limits (in bytes)
 const fileSizeLimits = {
   jpeg: 500 * 1024, // 500KB for JPEG
@@ -51,6 +57,71 @@ const storage = multer.diskStorage({
     );
   },
 });
+
+// Function to scan file for malicious content
+// const scanFileForMaliciousContent = async (filePath) => {
+//   const scanResult = await clamscan.scan("C:\\Users\\DELL\\Downloads\\test.jpg");
+//   console.log(scanResult); // Check if the file is infected
+
+//   const { isInfected, viruses } = await clam.scanFile(filePath);
+//   if (isInfected) {
+//       console.log(`File is infected with ${viruses}`);
+//   } else {
+//       console.log('File is clean');
+//   }
+// };
+
+// function scanFileForMaliciousContent(filePath) {
+//   const API_KEY = 'ee498d56f24e3ec6383870365ea950c596b0a5ef1daaaaaab8a59f587ec36763';
+// const scanFileForMaliciousContent = async (file) => {
+//     const formData = new FormData();
+//     formData.append('file', file);
+
+//     try {
+//         const response = await axios.post(
+//             'https://www.virustotal.com/api/v3/files',
+//             formData,
+//             {
+//                 headers: {
+//                     'x-apikey': API_KEY,
+//                     'Content-Type': 'multipart/form-data',
+//                 },
+//             }
+//         );
+//         console.log('File scan response:', response.data);
+//     } catch (error) {
+//         console.error('Error uploading file:', error);
+//     }
+// };
+
+// console.log("***********************************************here")
+// return new Promise((resolve, reject) => {
+//   const CLAMAV_PORT = 3310; // Default ClamAV port
+//   const CLAMAV_HOST = 'localhost'; // ClamAV host
+
+//   try {
+//     // Create a scanner instance
+//     const scanner = clamav.createScanner(CLAMAV_PORT, CLAMAV_HOST);
+//     console.log(scanner);
+//     // Open file stream
+//     const fileStream = fs.createReadStream(filePath);
+
+//     // Scan the file
+//     scanner.scan(fileStream, (err, result) => {
+//       if (err) {
+//         console.log(err);
+//         reject(new Error('Scanning failed: ' + err.message));
+//       } else if (result.isInfected) {
+//         reject(new Error(`Malicious content detected: ${result.viruses}`));
+//       } else {
+//         resolve('File is clean');
+//       }
+//     });
+//   } catch (error) {
+//     reject(error);
+//   }
+// });
+// }
 
 // Function to validate file type and size
 function validateFile(req, file, cb) {
@@ -111,6 +182,16 @@ exports.uploadDoc = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded!" });
     }
+
+    // //check for malicious content
+    // // Perform malware scanning
+    // try {
+    //   await scanFileForMaliciousContent(req.file);
+    // } catch (scanErr) {
+    //   // Remove the file if malicious content is detected
+    //   fs.unlinkSync(req.file.path);
+    //   return res.status(400).json({ message: scanErr.message });
+    // }
 
     // Perform size check after the file upload
     const fileExtension = path
@@ -415,19 +496,17 @@ exports.findOne = (req, res) => {
           doc_type_name: data.name,
           filename: data.filename,
           filepath: filePath,
-          valid: true
+          valid: true,
         });
 
         res
           .status(200)
-          .json(
-            success("Student Document fetched successfully!", docsData[0])
-          );
+          .json(success("Student Document fetched successfully!", docsData[0]));
       } else {
         res
           .status(400)
           .json(
-            errorResponse({"message": "Document Not found", "valid": false}, 400)
+            errorResponse({ message: "Document Not found", valid: false }, 400)
           );
       }
     })
@@ -444,45 +523,108 @@ exports.findOne = (req, res) => {
 };
 
 // Delete a UserDocs with the specified id in the request
-exports.delete = (req, res) => {
-  console.log("heyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy", req.user);
+exports.delete = async (req, res) => {
   const user_id = req.user.id;
   const id = req.body.doc_id;
-  console.log(user_id);
-  userDocs
-    .destroy({
-      where: {
-        id: id,
-        user_id: user_id,
-      },
-    })
-    .then((num) => {
-      if (num == 1) {
-        res
-          .status(200)
-          .json(success("Student Documents was deleted successfully!"));
-      } else {
-        res
-          .status(400)
-          .json(
-            errorResponse(
-              ` Cannot delete UserDocs with id=${id}. Maybe Student Documents was not found!`,
-              400
-            )
-          );
-      }
-    })
-    .catch((err) => {
-      res
-        .status(400)
-        .json(
-          errorResponse(
-            err + ` Cannot delete Student Documents with id=${id}`,
-            400
-          )
-        );
+
+  const transaction = await sequelize.transaction();
+
+  try {
+    // Delete the user document
+    const num = await userDocs.destroy({
+      where: { id, user_id },
+      transaction,
     });
+
+    if (num === 1) {
+      // Reset userdoc_id for associated StudentMarks
+      const marks = await StudentMarks.findAll({ where: { userdoc_id: id }, transaction });
+      for (const mark of marks) {
+        mark.userdoc_id = 0;
+        await mark.save({ transaction });
+      }
+
+      // Reset userdoc_id for associated StudentEnrollment
+      const enrollments = await StudentEnrollment.findAll({ where: { userdoc_id: id }, transaction });
+      for (const enrollment of enrollments) {
+        enrollment.userdoc_id = 0;
+        await enrollment.save({ transaction });
+      }
+
+      // Commit the transaction
+      await transaction.commit();
+
+      return res.status(200).json(success("Student Document was deleted successfully!", { marks, enrollments }));
+    } else {
+      // Rollback the transaction if no document was deleted
+      await transaction.rollback();
+      return res.status(400).json(errorResponse(`Cannot delete UserDocs with id=${id}. Maybe it was not found!`, 400));
+    }
+  } catch (err) {
+    // Rollback the transaction in case of an error
+    await transaction.rollback();
+    return res.status(400).json(errorResponse(`Error: ${err.message}`, 400));
+  }
 };
+// exports.delete = (req, res) => {
+//   const user_id = req.user.id;
+//   const id = req.body.doc_id;
+  
+//   userDocs
+//     .destroy({
+//       where: {
+//         id: id,
+//         user_id: user_id,
+//       },
+//     })
+//     .then(async (num) => {
+//       if (num == 1) {
+//         await StudentMarks.findAll({
+//           where: {
+//             userdoc_id: req.body.doc_id,
+//           }
+//         }).then(async (marks) => {
+//           res
+//               .status(200)
+//               .json(success("Student Documents was deleted successfully!", marks));
+//           marks.userdoc_id = 0;
+//           marks.save();
+
+//           await StudentEnrollment.findAll({
+//             where: {
+//               userdoc_id: req.body.doc_id,
+//             },
+//           }).then((studentEnrollments) => {
+//             studentEnrollments.userdoc_id = 0;
+//             studentEnrollments.save();
+
+//             res
+//               .status(200)
+//               .json(success("Student Documents was deleted successfully!"));
+//           });
+//         });
+//       } else {
+//         res
+//           .status(400)
+//           .json(
+//             errorResponse(
+//               ` Cannot delete UserDocs with id=${id}. Maybe Student Documents was not found!`,
+//               400
+//             )
+//           );
+//       }
+//     })
+//     .catch((err) => {
+//       res
+//         .status(400)
+//         .json(
+//           errorResponse(
+//             err + ` Cannot delete Student Documents with id=${id}`,
+//             400
+//           )
+//         );
+//     });
+// };
 
 // Delete all UserDocs from the database.
 exports.deleteAll = (req, res) => {

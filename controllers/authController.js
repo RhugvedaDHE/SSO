@@ -29,6 +29,9 @@ const Session = require("../models").Session;
 const tokenList = {};
 const CryptoJS = require("crypto-js");
 const axios = require("axios");
+const moment = require("moment-timezone");
+// Define the timezone
+const timezone = "Asia/Kolkata";
 
 const Sequelize = require("sequelize");
 const sequelize = require("../models").sequelize;
@@ -751,6 +754,8 @@ exports.registerSuperadmin = function (req, res) {
 };
 
 exports.login = function (req, res) {
+  let existing = false;
+
   User.findOne({
     where: {
       [Op.or]: [
@@ -792,25 +797,27 @@ exports.login = function (req, res) {
           const decryptedPassword = CryptoJS.AES.decrypt(
             req.body.password,
             process.env.CRYPTOJS_SECRET
-          ).toString(CryptoJS.enc.Utf8);          
+          ).toString(CryptoJS.enc.Utf8);
 
           const result = bcrypt.compareSync(decryptedPassword, user.password);
-         
+
           if (result) {
             // Step 2: Check if an existing session exists for this user
+            
             const existingSession = await Session.findOne({
               where: { user_id: user.id },
             });
             if (existingSession) {
               // Invalidate or delete the existing session (log the user out from previous session)
               await Session.destroy({ where: { user_id: user.id } });
+              existing = true;
             }
 
             var token = jwt.sign(
               JSON.parse(JSON.stringify(tokendata)),
               process.env.JWT_SECRET,
               {
-                expiresIn: "1h", //10s 1h
+                expiresIn: "1h", //10s 4m
               }
             );
 
@@ -822,10 +829,15 @@ exports.login = function (req, res) {
                 expiresIn: "7d", // Longer-lived
               }
             );
+            const expiresAt = moment()
+              .tz(timezone)
+              // .add(1, "hour") // Add 1 hour
+              .add(1, "hour") // Add 5 minute
+              .toDate(); // Convert to JavaScript Date object
 
             // Save session in database
-            const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-            // const expiresAt = new Date(Date.now() + 120 * 1000); // 10 s //2m
+            // const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+            // const expiresAt = new Date(Date.now() + 180 * 1000); // 10 s //2m
             await Session.create({
               user_id: user.id,
               token,
@@ -833,8 +845,10 @@ exports.login = function (req, res) {
               refresh_token: refreshToken,
             });
 
+            let message = "";
+            existing ? message = "The previous session has been logged out!" : message = "User logged in successfully!" ;
             res.status(200).json(
-              success("User logged in successfully!", {
+              success(message, {
                 token: token,
                 refreshToken: refreshToken,
               })
@@ -848,10 +862,7 @@ exports.login = function (req, res) {
           }
         })
         .catch((error) => {
-          console.log(
-            "erorrrrrrrrrrrrrrrrrrrrr",
-            error
-          );
+          console.log("erorrrrrrrrrrrrrrrrrrrrr", error);
           res.status(400).json(errorResponse(error, 400));
         });
     })
@@ -1051,20 +1062,57 @@ exports.addStatus = async function (req, res) {
 };
 
 //switch the user role
-exports.switchUserRole = function (req, res) {
+exports.switchUserRole = async function (req, res) {
   tokendata = {
     username: req.user.username,
     userId: req.user.id,
     userRole: req.body.role_id,
   };
+  
   var token = jwt.sign(
     JSON.parse(JSON.stringify(tokendata)),
     process.env.JWT_SECRET,
     {
-      expiresIn: 1200,
+      expiresIn: "1h", //10s 4m
     }
   );
-  res.status(200).json(success("User role switched successfully!", token));
+
+  // Generate Refresh Token
+  const refreshToken = jwt.sign(
+    JSON.parse(JSON.stringify(tokendata)),
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: "7d", // Longer-lived
+    }
+  );
+  const expiresAt = moment()
+    .tz(timezone)
+    // .add(1, "hour") // Add 1 hour
+    .add(1, "hour") // Add 5 minute
+    .toDate(); // Convert to JavaScript Date object
+
+  // Update session in database
+
+  const session = await Session.findOne({
+    where: { token: req.body.token },
+  });
+  if (!session) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  // Update session with the new access token
+  session.token = token;
+  session.refresh_token = refreshToken;
+  session.expiresAt = expiresAt; // 1 hr
+  await session.save();
+
+   res.status(200).json(
+    success("User role switched successfully!", {
+      token: token,
+      refreshToken: refreshToken,
+    })
+  );
+
 };
 
 //refresh the token
@@ -1823,21 +1871,34 @@ exports.expiryCheck = async (req, res) => {
   try {
     // Check token expiration
     const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET);
-    
+
     if (decoded.exp) {
-      const date = new Date(decoded.exp * 1000); // Multiply by 1000 to convert seconds to milliseconds 
-      
-      
+      const date = new Date(decoded.exp * 1000); // Multiply by 1000 to convert seconds to milliseconds
+
+      // Format expiration time in the desired timezone using moment-timezone
+      const formattedExpirationTime = moment(date)
+        .tz(timezone) // Convert to the specific timezone
+        .format("YYYY-MM-DD HH:mm:ss"); // Customize the format as needed
+
       const currentTime = Math.floor(Date.now() / 1000);
       if (decoded.exp < currentTime) {
-        res.status(400).json(errorResponse({ expired: true }, "Token Expired!"));
+        res
+          .status(400)
+          .json(errorResponse({ expired: true }, "Token Expired!"));
       } else {
-        res.status(200).json(success("Token is still valid! Token will Expire at " + date.toLocaleTimeString(), { expired: false, expiryAt: date.toLocaleTimeString() }));
+        // res.status(200).json(success("Token is still valid! Token will Expire at " + date.toLocaleTimeString(), { expired: false, expiryAt: date.toLocaleTimeString() }));formattedExpirationTime
+        res
+          .status(200)
+          .json(
+            success(
+              "Token is still valid! Token will Expire at " +
+                formattedExpirationTime, { expired: false, expiryAt: formattedExpirationTime }
+            )
+          );
       }
     } else {
       res.status(400).json(errorResponse({ expired: true }, "Token Expired!"));
     }
-    
   } catch (error) {
     console.error("expiry error:", error);
     res.status(500).json({ error: "Expiry Internal server error" });
@@ -1852,5 +1913,31 @@ exports.encryptpassword = async (req, res) => {
     process.env.CRYPTOJS_SECRET
   ).toString();
 
-  res.status(200).json(success("Encrypted password created successfully! ", encryptedPassword));
-}
+  res
+    .status(200)
+    .json(
+      success("Encrypted password created successfully! ", encryptedPassword)
+    );
+};
+
+exports.deleteExpiredTokens = async (req, res) => {
+  try {
+    // Get the current timestamp
+    const currentTime = new Date();
+
+    // Delete expired tokens
+    const deletedRows = await Session.destroy({
+      where: {
+        expires_at: {
+          [Op.lt]: currentTime, // Find sessions where expires_at is less than the current time
+        },
+      },
+    });
+
+    console.log(`Successfully deleted ${deletedRows} expired tokens.`);
+    return deletedRows;
+  } catch (error) {
+    console.error('Error deleting expired tokens:', error);
+    throw error;
+  }
+};

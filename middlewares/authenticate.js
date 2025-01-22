@@ -6,7 +6,7 @@ module.exports = async (req, res, next) => {
     if (err) return next(err);
 
     if (!user) {
-      return res.status(401).json({ message: 'Unauthorized Access - No Token Provided!' });
+      return res.status(401).json({ message: 'Unauthorized Access - No Token Provided!', expired: true });
     }
     req.user = user;
 

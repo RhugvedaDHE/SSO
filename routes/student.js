@@ -22,7 +22,7 @@ router.get("/list/all/:offset", student.getStudentList);
 router.get("/all/verified/:id", student.getVerifiedInstituteStudentList);
 
 // Retrieve a single Student with id
-router.get("/:id", student.getStudentDetails);
+router.get("/:id", authenticate, student.getStudentDetails);
 router.put("/verify", authenticate, student.verifyStudent);
 
 // Retrieve all published student

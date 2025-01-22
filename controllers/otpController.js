@@ -161,7 +161,7 @@ exports.generate = async function (req, res) {
               res.status(400).json(errorResponse("Failed to Forward OTP", 400));
             }
           }
-          else if(type == "update_password"){
+          else if(req.body.type == "update_password"){
             var jsondata = [];
             jsondata.push({
               attempts: 1,
