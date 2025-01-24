@@ -817,7 +817,7 @@ exports.login = function (req, res) {
               JSON.parse(JSON.stringify(tokendata)),
               process.env.JWT_SECRET,
               {
-                expiresIn: "1h", //10s 4m
+                expiresIn: "15m", //10s 4m
               }
             );
 
@@ -831,8 +831,8 @@ exports.login = function (req, res) {
             );
             const expiresAt = moment()
               .tz(timezone)
-              // .add(1, "hour") // Add 1 hour
-              .add(1, "hour") // Add 5 minute
+              // .add(15, "minute") // Add 1 hour
+              .add(15, "minute") // Add 5 minute
               .toDate(); // Convert to JavaScript Date object
 
             // Save session in database
@@ -1073,7 +1073,7 @@ exports.switchUserRole = async function (req, res) {
     JSON.parse(JSON.stringify(tokendata)),
     process.env.JWT_SECRET,
     {
-      expiresIn: "1h", //10s 4m
+      expiresIn: "15m", //10s 4m
     }
   );
 
@@ -1087,8 +1087,8 @@ exports.switchUserRole = async function (req, res) {
   );
   const expiresAt = moment()
     .tz(timezone)
-    // .add(1, "hour") // Add 1 hour
-    .add(1, "hour") // Add 5 minute
+    // .add(15, "minute") // Add 1 hour
+    .add(15, "minute") // Add 5 minute
     .toDate(); // Convert to JavaScript Date object
 
   // Update session in database
@@ -1144,20 +1144,24 @@ exports.refreshAccessToken = async (req, res) => {
           userId: decoded.userId,
           userRole: decoded.userRole,
         };
-
+  
         var newToken = jwt.sign(
           JSON.parse(JSON.stringify(tokendata)),
           process.env.JWT_SECRET,
           {
-            expiresIn: 120000,
+            expiresIn: "15m", //10s 4m
           }
         );
 
-        // Generate a new access token
+        const expiresAt = moment()
+        .tz(timezone)
+        // .add(15, "minute") // Add 1 hour
+        .add(15, "minute") // Add 5 minute
+        .toDate(); // Convert to JavaScript Date object
 
         // Update session with the new access token
         session.token = newToken;
-        session.expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+        session.expiresAt = expiresAt; // 15 mins
         await session.save();
 
         res.status(200).json({ token: newToken });

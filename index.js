@@ -19,14 +19,6 @@ application.use(
 //use helmet
 application.use(helmet());
 
-// Disable OPTIONS method
-application.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    return res.status(405).send('Method Not Allowed');  // 405 - Method Not Allowed
-  }
-  next();
-})
-
 // Set security headers globally
 application.use((req, res, next) => {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
@@ -36,6 +28,48 @@ application.use((req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block');
   next();
 });
+
+//headers disable
+application.disable('x-powered-by');
+
+application.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+});
+
+application.use((req, res, next) => {
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
+// Middleware to restrict HTTP methods
+application.use((req, res, next) => {
+  const allowedMethods = ['GET', 'POST', 'HEAD', 'PUT', 'DELETE'];
+  if (!allowedMethods.includes(req.method)) {
+      res.status(405).send('Method Not Allowed');
+  } else {
+      next();
+  }
+});
+
+// Middleware to set the 'X-Frame-Options' header
+application.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'DENY');
+  next();
+});
+
+// Use helmet's frameguard to set the X-Frame-Options header
+application.use(helmet.frameguard({ action: 'SAMEORIGIN' }));
+
+// Disable OPTIONS method
+application.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return res.status(405).send('Method Not Allowed');  // 405 - Method Not Allowed
+  }
+  next();
+})
+
+
 
 // Create a write stream (in append mode)
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
