@@ -7,6 +7,7 @@ const Auth = require("../controllers/authController");
 const authenticate = require("../middlewares/authenticate");
 const SECRET_KEY = process.env.CRYPTOJS_SECRET;
 const CryptoJS = require("crypto-js");
+const validator = require("validator");
 
 router.post(
   "/register",
@@ -415,8 +416,23 @@ router.post(
   "/forgot-password",
   [
     check("email")
-      .isEmail()
-      .withMessage("Please provide a valid email address"),
+      
+    .custom((encryptedEmail) => {
+      try {
+        // Decrypt email
+        const bytes = CryptoJS.AES.decrypt(encryptedEmail, SECRET_KEY);
+        const email = bytes.toString(CryptoJS.enc.Utf8);
+
+        // Check if the decrypted email is valid
+        if (!validator.isEmail(email)) {
+          throw new Error("Please provide a valid email address");
+        }
+        return true;
+      } catch (error) {
+        throw new Error("Invalid encrypted email");
+      }
+    })
+    .withMessage("Please provide a validdd email address"),
     check("password")
       .isStrongPassword({
         minLength: 8,
@@ -827,7 +843,7 @@ router.post(
 router.post("/register-GEDCadmin", Auth.registerGEDCAdmin);
 
 router.post("/register-bulk-users", Auth.registerbulkUsers);
-module.exports = router;
+
 
 router.post(
   "/verify-captcha",
@@ -851,3 +867,9 @@ router.post(
   "/encrypt-password",
   Auth.encryptpassword
 );
+
+router.post(
+  "/decrypt-userdetails", authenticate, 
+  Auth.decryptUserDetails
+);
+module.exports = router;

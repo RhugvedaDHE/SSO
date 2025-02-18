@@ -16,7 +16,6 @@ module.exports = async (req, res, next) => {
 
       if (!session || new Date(session.expiresAt) < new Date()) {
         return res.status(401).json({ expired: true });
-        return res.status(401).json({ error: 'Session expired or invalid' });
       }
 
       next();

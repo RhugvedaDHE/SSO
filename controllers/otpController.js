@@ -10,39 +10,53 @@ const {
   SMSNotification,
 } = require("../responseApi");
 const bcrypt = require("bcryptjs");
+const CryptoJS = require("crypto-js");
 require("dotenv").config();
 const Op = require("sequelize").Op;
 
 exports.generate = async function (req, res) {
   var salt = bcrypt.genSaltSync(10);
   const otp = Math.random().toString(36).substr(2, 5);
+
+  //decrypt phone number
+  let to = CryptoJS.AES.decrypt(
+          req.body.to,
+          process.env.CRYPTOJS_SECRET
+        ).toString(CryptoJS.enc.Utf8);
+
+  let type = CryptoJS.AES.decrypt(
+    req.body.type,
+    process.env.CRYPTOJS_SECRET
+  ).toString(CryptoJS.enc.Utf8);
+
+
   // Find any user or user personal detail with matching phone or email
   const [user, userPersonal] = await Promise.all([
     User.findOne({
       where: {
-        [Op.or]: [{ phone: req.body.to }, { email: req.body.to }],
+        [Op.or]: [{ phone: to }, { email: to }],
       },
     }),
     UserPersonalDetails.findOne({
       where: {
-        [Op.or]: [{ phone: req.body.to }, { email: req.body.to }],
+        [Op.or]: [{ phone: to }, { email: to }],
       },
     }),
   ]);
 
   // Check if any record exists
-  if (req.body.type != "forgot_password") {
+  if (type != "forgot_password") {
     if (user || userPersonal) {
       return res
         .status(200)
-        .json(success("Your " + req.body.type + " already exists!"));
+        .json(success("Your " + type + " already exists!"));
     }
   }
   await OTP.findOne({
     where: {
-      details: req.body.to,
+      details: to,
       is_active: true,
-      otp_type: req.body.type,
+      otp_type: type,
     },
   }).then(async (results) => {
     var jsondata = [];
@@ -52,7 +66,7 @@ exports.generate = async function (req, res) {
       jsondata = [];
       jsondata.push({
         attempts: attempts,
-        otp: otp,
+        // otp: otp,
       });
 
       results.attempts = attempts;
@@ -60,19 +74,19 @@ exports.generate = async function (req, res) {
       results.time = Date.now();
       results.save({ fields: ["attempts", "otp", "time"] });
 
-      if (req.body.type == "email" || req.body.type == "forgot_password") {
+      if (type == "email" || type == "forgot_password") {
         //send OTP to email ;
         var subject = "";
-        if (req.body.type == "forgot_password") {
+        if (type == "forgot_password") {
           subject = "Forgot password OTP";
         } else {
           subject = "OTP for SUGAM";
         }
         const template = "otp";
-        console.log("subbbjjeccttt", req.body.type);
+        console.log("subbbjjeccttt", type);
         response = await EmailNotification(
           process.env.EMAIL_FROM,
-          req.body.to,
+          to,
           subject,
           template,
           "",
@@ -88,7 +102,7 @@ exports.generate = async function (req, res) {
           res.status(400).json(errorResponse("Failed to Forward OTP", 400));
         }
       } 
-      // else if (req.body.type == "update_password"){
+      // else if (type == "update_password"){
       //   const template =
       //     "Hello! OTP To update password is " +
       //     otp +
@@ -110,7 +124,7 @@ exports.generate = async function (req, res) {
           otp +
           ". OTP is valid for 10 minutes.-Directorate of Higher Education.";
 
-        response = SMSNotification(req.body.to, template);
+        response = SMSNotification(to, template);
 
         if (response) {
           res
@@ -124,21 +138,21 @@ exports.generate = async function (req, res) {
       console.log("herwwwwwwwwwwwwwwwwwwwwwwwwwwwctAAAAAAAAAAAAAAAAAAAAAe");
       await OTP.create({
         otp: bcrypt.hashSync(otp, salt),
-        otp_type: req.body.type,
-        details: req.body.to,
+        otp_type: type,
+        details: to,
         attempts: 1,
       })
         .then(async (result) => {
           var jsondata = [];
           jsondata.push({
             attempts: 1,
-            otp: otp,
+            // otp: otp,
           });
-          if (req.body.type == "email" || req.body.type == "forgot_password") {
+          if (type == "email" || type == "forgot_password") {
             //send OTP to email ;
 
             var subject = "";
-            if (req.body.type == "forgot_password") {
+            if (type == "forgot_password") {
               subject = "Forgot password OTP";
             } else {
               subject = "OTP for SUGAM";
@@ -146,7 +160,7 @@ exports.generate = async function (req, res) {
             const template = "otp";
             response = await EmailNotification(
               process.env.EMAIL_FROM,
-              req.body.to,
+              to,
               subject,
               template,
               "",
@@ -163,7 +177,7 @@ exports.generate = async function (req, res) {
               res.status(400).json(errorResponse("Failed to Forward OTP", 400));
             }
           }
-          // else if(req.body.type == "update_password"){
+          // else if(type == "update_password"){
           //   var jsondata = [];
           //   jsondata.push({
           //     attempts: 1,
@@ -190,7 +204,7 @@ exports.generate = async function (req, res) {
             var jsondata = [];
             jsondata.push({
               attempts: 1,
-              otp: otp,
+              // otp: otp,
             });
 
             //send OTP to phone
@@ -199,7 +213,7 @@ exports.generate = async function (req, res) {
               otp +
               ". OTP is valid for 10 minutes.-Directorate of Higher Education.";
 
-            response = await SMSNotification(req.body.to, template);
+            response = await SMSNotification(to, template);
 
             if (response) {
               res
@@ -346,10 +360,28 @@ exports.verify = async function (req, res) {
   let otp_verified = false;
 
   try {
+
+    //decrypt phone number
+    let details = CryptoJS.AES.decrypt(
+      req.body.details,
+      process.env.CRYPTOJS_SECRET
+    ).toString(CryptoJS.enc.Utf8);
+
+    let type = CryptoJS.AES.decrypt(
+    req.body.type,
+    process.env.CRYPTOJS_SECRET
+    ).toString(CryptoJS.enc.Utf8);
+
+    let otp = CryptoJS.AES.decrypt(
+      req.body.otp,
+      process.env.CRYPTOJS_SECRET
+      ).toString(CryptoJS.enc.Utf8);
+
+
     const otpResult = await OTP.findOne({
       where: {
-        details: req.body.details,
-        otp_type: req.body.type,
+        details: details,
+        otp_type: type,
       },
     });
 
@@ -378,13 +410,13 @@ exports.verify = async function (req, res) {
           )
         );
     }
-    const isOtpValid = bcrypt.compareSync(req.body.otp, otpResult.otp);
+    const isOtpValid = bcrypt.compareSync(otp, otpResult.otp);
     if (!isOtpValid) {
       await OTP.update({ verify_attempts: otpResult.verify_attempts + 1 }, { where: { details: otpResult.details } });
       return res.status(400).json(errorResponse("Enter a correct OTP!", 400));
     }
 
-    if (req.body.type === "phone") {
+    if (type === "phone") {
       // const user = await User.findOne({
       //   where: { phone: req.body.details },
       // });
@@ -394,7 +426,7 @@ exports.verify = async function (req, res) {
       // await user.save({ fields: ["phone_verified"] });
       phone_verified = true;
       // }
-    } else if (req.body.type === "email") {
+    } else if (type === "email") {
       // const user = await User.findOne({
       //   where: { email: req.body.details },
       // });
@@ -404,7 +436,7 @@ exports.verify = async function (req, res) {
       // await user.save({ fields: ["email_verified"] });
       email_verified = true;
       // }
-    } else if (req.body.type == "update_password"){
+    } else if (type == "update_password"){
       otp_verified = true; // For forgot password case
     }
     else{
@@ -414,12 +446,12 @@ exports.verify = async function (req, res) {
     if (email_verified || phone_verified || otp_verified) {
       return res
         .status(200)
-        .json(success(req.body.type + " verified successfully!"));
+        .json(success(type + " verified successfully!"));
     } else {      
       return res
         .status(400)
         .json(
-          errorResponse(req.body.type + " not verified successfully!", 400)
+          errorResponse(type + " not verified successfully!", 400)
         );
     }
   } catch (error) {
@@ -431,6 +463,12 @@ exports.verifyUpdatepassword = async function (req, res) {
   let otp_verified = false;
 
   try {
+
+    //decrypt
+    let otp = CryptoJS.AES.decrypt(
+      req.body.otp,
+      process.env.CRYPTOJS_SECRET
+      ).toString(CryptoJS.enc.Utf8);
 
     const [user] = await Promise.all([
       User.findOne({
@@ -472,7 +510,7 @@ exports.verifyUpdatepassword = async function (req, res) {
           )
         );
     }
-    const isOtpValid = bcrypt.compareSync(req.body.otp, otpResult.otp);
+    const isOtpValid = bcrypt.compareSync(otp, otpResult.otp);
     if (!isOtpValid) {
       await OTP.update({ verify_attempts: otpResult.verify_attempts + 1 }, { where: { details: otpResult.details } });
       return res.status(400).json(errorResponse("Enter a correct OTP!", 400));

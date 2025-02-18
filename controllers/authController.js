@@ -116,7 +116,6 @@ exports.getUserDetails = function (req, res) {
               } else if (ur.Role.type == "service") {
                 queryOptions.include = [Service];
               }
-
               let cio_ur = await EntityUser.findOne(queryOptions);
 
               cio_name_ur =
@@ -777,9 +776,18 @@ exports.login = function (req, res) {
         .then(async (role) => {
           console.log(role);
           tokendata = {
-            username: user.username,
-            userId: user.id,
-            userRole: role.role_id,
+            username: CryptoJS.AES.encrypt(
+              JSON.stringify(user.username),
+              process.env.CRYPTOJS_SECRET
+            ).toString(),
+            userId: CryptoJS.AES.encrypt(
+              JSON.stringify(user.id),
+              process.env.CRYPTOJS_SECRET
+            ).toString(),
+            userRole: CryptoJS.AES.encrypt(
+              JSON.stringify(role.role_id),
+              process.env.CRYPTOJS_SECRET
+            ).toString(),
           };
           if (!user) {
             res
@@ -803,7 +811,7 @@ exports.login = function (req, res) {
 
           if (result) {
             // Step 2: Check if an existing session exists for this user
-            
+
             const existingSession = await Session.findOne({
               where: { user_id: user.id },
             });
@@ -817,7 +825,7 @@ exports.login = function (req, res) {
               JSON.parse(JSON.stringify(tokendata)),
               process.env.JWT_SECRET,
               {
-                expiresIn: "15m", //10s 4m
+                expiresIn: "1h", //10s 4m
               }
             );
 
@@ -831,8 +839,8 @@ exports.login = function (req, res) {
             );
             const expiresAt = moment()
               .tz(timezone)
-              // .add(15, "minute") // Add 1 hour
-              .add(15, "minute") // Add 5 minute
+              // .add(1, "hour") // Add 1 hour
+              .add(1, "hour") // Add 5 minute
               .toDate(); // Convert to JavaScript Date object
 
             // Save session in database
@@ -846,7 +854,9 @@ exports.login = function (req, res) {
             });
 
             let message = "";
-            existing ? message = "The previous session has been logged out!" : message = "User logged in successfully!" ;
+            existing
+              ? (message = "The previous session has been logged out!")
+              : (message = "User logged in successfully!");
             res.status(200).json(
               success(message, {
                 token: token,
@@ -989,8 +999,13 @@ exports.updatePassword = function (req, res) {
 
 //forgotPassword
 exports.forgotPassword = function (req, res) {
+  let email = CryptoJS.AES.decrypt(
+    req.body.email,
+    process.env.CRYPTOJS_SECRET
+  ).toString(CryptoJS.enc.Utf8);
+
   User.findOne({
-    where: { email: req.body.email },
+    where: { email: email },
   })
     .then((user) => {
       if (user) {
@@ -1064,16 +1079,25 @@ exports.addStatus = async function (req, res) {
 //switch the user role
 exports.switchUserRole = async function (req, res) {
   tokendata = {
-    username: req.user.username,
-    userId: req.user.id,
-    userRole: req.body.role_id,
+    username: CryptoJS.AES.encrypt(
+      req.user.username,
+      process.env.CRYPTOJS_SECRET
+    ).toString(),
+    userId: CryptoJS.AES.encrypt(
+      req.user.id,
+      process.env.CRYPTOJS_SECRET
+    ).toString(),
+    userRole: CryptoJS.AES.encrypt(
+      req.body.role_id,
+      process.env.CRYPTOJS_SECRET
+    ).toString(),
   };
-  
+
   var token = jwt.sign(
     JSON.parse(JSON.stringify(tokendata)),
     process.env.JWT_SECRET,
     {
-      expiresIn: "15m", //10s 4m
+      expiresIn: "1h", //10s 4m
     }
   );
 
@@ -1087,8 +1111,8 @@ exports.switchUserRole = async function (req, res) {
   );
   const expiresAt = moment()
     .tz(timezone)
-    // .add(15, "minute") // Add 1 hour
-    .add(15, "minute") // Add 5 minute
+    // .add(1, "hour") // Add 1 hour
+    .add(1, "hour") // Add 5 minute
     .toDate(); // Convert to JavaScript Date object
 
   // Update session in database
@@ -1106,13 +1130,12 @@ exports.switchUserRole = async function (req, res) {
   session.expiresAt = expiresAt; // 1 hr
   await session.save();
 
-   res.status(200).json(
+  res.status(200).json(
     success("User role switched successfully!", {
       token: token,
       refreshToken: refreshToken,
     })
   );
-
 };
 
 //refresh the token
@@ -1135,29 +1158,45 @@ exports.refreshAccessToken = async (req, res) => {
       return res.status(401).json({ error: "Invalid refresh token" });
     }
 
+    //decrypt the userdetails from the token 
+    const decryptedUserId = CryptoJS.AES.decrypt(decoded.userId, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8);
+    const decryptedUserrole = CryptoJS.AES.decrypt(decoded.userRole, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8);
+    const decryptedUsername = CryptoJS.AES.decrypt(decoded.username, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8);
+    const userId = parseInt(decryptedUserId, 10);
+    const userRole = parseInt(decryptedUserrole, 10);
+
     await User.findOne({
-      where: { id: decoded.userId },
+      where: { id: userId },
     }).then(async (user) => {
       if (user) {
         tokendata = {
-          username: decoded.username,
-          userId: decoded.userId,
-          userRole: decoded.userRole,
+          username: CryptoJS.AES.encrypt(
+            decryptedUsername,
+            process.env.CRYPTOJS_SECRET
+          ).toString(),
+          userId: CryptoJS.AES.encrypt(
+            userId,
+            process.env.CRYPTOJS_SECRET
+          ).toString(),
+          userRole: CryptoJS.AES.encrypt(
+            userRole,
+            process.env.CRYPTOJS_SECRET
+          ).toString(),
         };
-  
+
         var newToken = jwt.sign(
           JSON.parse(JSON.stringify(tokendata)),
           process.env.JWT_SECRET,
           {
-            expiresIn: "15m", //10s 4m
+            expiresIn: "1h", //10s 4m
           }
         );
 
         const expiresAt = moment()
-        .tz(timezone)
-        // .add(15, "minute") // Add 1 hour
-        .add(15, "minute") // Add 5 minute
-        .toDate(); // Convert to JavaScript Date object
+          .tz(timezone)
+          // .add(1, "hour") // Add 1 hour
+          .add(1, "hour") // Add 5 minute
+          .toDate(); // Convert to JavaScript Date object
 
         // Update session with the new access token
         session.token = newToken;
@@ -1363,9 +1402,18 @@ exports.createUserDetailsForEpramaan = async function (req, res) {
   }).then((user) => {
     if (user) {
       tokendata = {
-        username: user.username,
-        userId: user.id,
-        userRole: 7,
+        username: CryptoJS.AES.encrypt(
+          req.user.username,
+          process.env.CRYPTOJS_SECRET
+        ).toString(),
+        userId: CryptoJS.AES.encrypt(
+          req.user.id,
+          process.env.CRYPTOJS_SECRET
+        ).toString(),
+        userRole: CryptoJS.AES.encrypt(
+          7,
+          process.env.CRYPTOJS_SECRET
+        ).toString(),
       };
 
       var token = jwt.sign(
@@ -1419,11 +1467,19 @@ exports.createUserDetailsForEpramaan = async function (req, res) {
                       //   req.body.phone,
                       //   template
                       // );
-
                       tokendata = {
-                        username: createdUser.username,
-                        userId: createdUser.id,
-                        userRole: 7,
+                        username: CryptoJS.AES.encrypt(
+                          createdUser.username,
+                          process.env.CRYPTOJS_SECRET
+                        ).toString(),
+                        userId: CryptoJS.AES.encrypt(
+                          createdUser.id,
+                          process.env.CRYPTOJS_SECRET
+                        ).toString(),
+                        userRole: CryptoJS.AES.encrypt(
+                          7,
+                          process.env.CRYPTOJS_SECRET
+                        ).toString(),
                       };
 
                       var token = jwt.sign(
@@ -1573,72 +1629,101 @@ exports.registerbulkUsers = async function (req, res) {
 
   try {
     for (const entry of dataArray) {
-      const {
-        role_id,
-        firstname,
-        lastname,
-        email,
-        phone,
-        designation_id,
-        employmenttype_id,
-        entity_type_id,
-        cio_id,
-      } = entry;
+      const transaction = await sequelize.transaction(); // Start a transaction for each entry
+      try {
+        const {
+          role_id,
+          firstname,
+          lastname,
+          email,
+          phone,
+          designation_id,
+          employmenttype_id,
+          entity_type_id,
+          cio_id,
+        } = entry;
 
-      console.log(
-        `Name: ${firstname} ${lastname}, Email: ${email}, Phone: ${phone}`
-      );
+        console.log(
+          `Name: ${firstname} ${lastname}, Email: ${email}, Phone: ${phone}`
+        );
 
-      // Generate user credentials
-      const userCredentialsdata = userCredentials(email, phone);
-      const salt = bcrypt.genSaltSync(10);
-      const hash = bcrypt.hashSync(userCredentialsdata.password, salt);
+        // Generate user credentials
+        const userCredentialsdata = userCredentials(email, phone);
+        const salt = bcrypt.genSaltSync(10);
+        const hash = bcrypt.hashSync(userCredentialsdata.password, salt);
 
-      // Create user
-      const user = await User.create({
-        username: userCredentialsdata.username,
-        password: hash,
-        phone,
-        email,
-        status: "VER",
-        is_verified: true,
-      });
+        // Create user
+        const user = await User.create(
+          {
+            username: userCredentialsdata.username,
+            password: hash,
+            phone,
+            email,
+            status: "VER",
+            is_verified: true,
+          },
+          { transaction }
+        );
 
-      // Assign role
-      const userRole = await UserRole.create({
-        user_id: user.id,
-        role_id: role_id,
-        preferred_role: true,
-        is_active: true,
-      });
+        // Assign role
+        const userRole = await UserRole.create(
+          {
+            user_id: user.id,
+            role_id: role_id,
+            preferred_role: true,
+            is_active: true,
+          },
+          { transaction }
+        );
 
-      // Save personal details
-      await UserPersonalDetails.create({
-        user_id: userRole.user_id,
-        firstname,
-        lastname,
-        phone,
-        email,
-      });
+        // Save personal details
+        await UserPersonalDetails.create(
+          {
+            user_id: userRole.user_id,
+            firstname,
+            lastname,
+            phone,
+            email,
+          },
+          { transaction }
+        );
 
-      // Save designation
-      await UserDesignation.create({
-        user_id: userRole.user_id,
-        designation_id,
-        employementtype_id: employmenttype_id,
-      });
+        // Save designation
+        await UserDesignation.create(
+          {
+            user_id: userRole.user_id,
+            designation_id,
+            employementtype_id: employmenttype_id,
+          },
+          { transaction }
+        );
 
-      // Save entity association
-      await EntityUser.create({
-        user_id: userRole.user_id,
-        entity_type_id,
-        cio_id,
-      });
+        // Save entity association
+        await EntityUser.create(
+          {
+            user_id: userRole.user_id,
+            entity_type_id,
+            cio_id,
+          },
+          { transaction }
+        );
 
-      // Optional: Call email notification here if needed
-      console.log("call email Notification function");
+        // Commit the transaction
+        await transaction.commit();
+        console.log("Transaction committed for user:", email);
 
-      // Example: await emailNotificationFunction();
+        // Optional: Call email notification here if needed
+        console.log("Call email notification function");
+        // Example: await emailNotificationFunction();
+      } catch (error) {
+        // Rollback the transaction if any error occurs
+        await transaction.rollback();
+        console.error(
+          `Transaction rolled back for user: ${entry.email}`,
+          error
+        );
+        throw error; // Re-throw to propagate error and stop processing
+      }
     }
 
     res.status(200).json(success("All users registered successfully"));
@@ -1647,6 +1732,86 @@ exports.registerbulkUsers = async function (req, res) {
     res.status(400).json(errorResponse("Failed to register users", 400));
   }
 };
+
+// exports.registerbulkUsers = async function (req, res) {
+//   const dataArray = req.body;
+
+//   try {
+//     for (const entry of dataArray) {
+//       const {
+//         role_id,
+//         firstname,
+//         lastname,
+//         email,
+//         phone,
+//         designation_id,
+//         employmenttype_id,
+//         entity_type_id,
+//         cio_id,
+//       } = entry;
+
+//       console.log(
+//         `Name: ${firstname} ${lastname}, Email: ${email}, Phone: ${phone}`
+//       );
+
+//       // Generate user credentials
+//       const userCredentialsdata = userCredentials(email, phone);
+//       const salt = bcrypt.genSaltSync(10);
+//       const hash = bcrypt.hashSync(userCredentialsdata.password, salt);
+
+//       // Create user
+//       const user = await User.create({
+//         username: userCredentialsdata.username,
+//         password: hash,
+//         phone,
+//         email,
+//         status: "VER",
+//         is_verified: true,
+//       });
+
+//       // Assign role
+//       const userRole = await UserRole.create({
+//         user_id: user.id,
+//         role_id: role_id,
+//         preferred_role: true,
+//         is_active: true,
+//       });
+
+//       // Save personal details
+//       await UserPersonalDetails.create({
+//         user_id: userRole.user_id,
+//         firstname,
+//         lastname,
+//         phone,
+//         email,
+//       });
+
+//       // Save designation
+//       await UserDesignation.create({
+//         user_id: userRole.user_id,
+//         designation_id,
+//         employementtype_id: employmenttype_id,
+//       });
+
+//       // Save entity association
+//       await EntityUser.create({
+//         user_id: userRole.user_id,
+//         entity_type_id,
+//         cio_id,
+//       });
+
+//       // Optional: Call email notification here if needed
+//       console.log("call email Notification function");
+
+//       // Example: await emailNotificationFunction();
+//     }
+
+//     res.status(200).json(success("All users registered successfully"));
+//   } catch (error) {
+//     console.error("Error registering users:", error);
+//     res.status(400).json(errorResponse("Failed to register users", 400));
+//   }
+// };
 
 // exports.registerbulkUsers = async function (req, res) {
 
@@ -1871,41 +2036,82 @@ exports.logout = async (req, res) => {
   }
 };
 
+// exports.expiryCheck = async (req, res) => {
+//   try {
+//     // Check token expiration
+//     const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET);
+
+//     if (decoded.exp) {
+//       const date = new Date(decoded.exp * 1000); // Multiply by 1000 to convert seconds to milliseconds
+
+//       // Format expiration time in the desired timezone using moment-timezone
+//       const formattedExpirationTime = moment(date)
+//         .tz(timezone) // Convert to the specific timezone
+//         .format("YYYY-MM-DD HH:mm:ss"); // Customize the format as needed
+
+//       const currentTime = Math.floor(Date.now() / 1000);
+//       if (decoded.exp < currentTime) {
+//         res
+//           .status(400)
+//           .json(errorResponse({ expired: true }, "Token Expired!"));
+//       } else {
+//         // res.status(200).json(success("Token is still valid! Token will Expire at " + date.toLocaleTimeString(), { expired: false, expiryAt: date.toLocaleTimeString() }));formattedExpirationTime
+//         res
+//           .status(200)
+//           .json(
+//             success(
+//               "Token is still valid! Token will Expire at " +
+//                 formattedExpirationTime,
+//               { expired: false, expiryAt: formattedExpirationTime }
+//             )
+//           );
+//       }
+//     } else {
+//       res.status(400).json(errorResponse({ expired: true }, "Token Expired!"));
+//     }
+//   } catch (error) {
+//     console.error("expiry error:", error);
+//     res.status(500).json({ error: "Expiry Internal server error" });
+//   }
+// };
+
 exports.expiryCheck = async (req, res) => {
   try {
-    // Check token expiration
+    if (!req.body.token) {
+      return res.status(400).json({ error: "Token is required" });
+    }
+
     const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET);
 
-    if (decoded.exp) {
-      const date = new Date(decoded.exp * 1000); // Multiply by 1000 to convert seconds to milliseconds
-
-      // Format expiration time in the desired timezone using moment-timezone
-      const formattedExpirationTime = moment(date)
-        .tz(timezone) // Convert to the specific timezone
-        .format("YYYY-MM-DD HH:mm:ss"); // Customize the format as needed
-
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (decoded.exp < currentTime) {
-        res
-          .status(400)
-          .json(errorResponse({ expired: true }, "Token Expired!"));
-      } else {
-        // res.status(200).json(success("Token is still valid! Token will Expire at " + date.toLocaleTimeString(), { expired: false, expiryAt: date.toLocaleTimeString() }));formattedExpirationTime
-        res
-          .status(200)
-          .json(
-            success(
-              "Token is still valid! Token will Expire at " +
-                formattedExpirationTime, { expired: false, expiryAt: formattedExpirationTime }
-            )
-          );
-      }
-    } else {
-      res.status(400).json(errorResponse({ expired: true }, "Token Expired!"));
+    if (!decoded.exp) {
+      return res.status(400).json({ error: "Token does not contain expiry information" });
     }
+
+    const expiryTime = new Date(decoded.exp * 1000); // Convert seconds to milliseconds
+    const formattedExpiryTime = moment(expiryTime).tz(timezone).format("YYYY-MM-DD HH:mm:ss");
+
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    if (decoded.exp < currentTime) {
+      return res.status(401).json({ expired: true, message: "Token Expired!" });
+    }
+
+    return res.status(200).json({
+      expired: false,
+      expiryAt: formattedExpiryTime,
+      message: `Token is still valid! Expires at ${formattedExpiryTime}`,
+    });
+
   } catch (error) {
-    console.error("expiry error:", error);
-    res.status(500).json({ error: "Expiry Internal server error" });
+    console.error("Expiry error:", error);
+    
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ expired: true, message: "Token Expired!" });
+    } else if (error.name === "JsonWebTokenError") {
+      return res.status(400).json({ error: "Invalid Token!" });
+    }
+
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -1941,7 +2147,38 @@ exports.deleteExpiredTokens = async (req, res) => {
     console.log(`Successfully deleted ${deletedRows} expired tokens.`);
     return deletedRows;
   } catch (error) {
-    console.error('Error deleting expired tokens:', error);
+    console.error("Error deleting expired tokens:", error);
     throw error;
+  }
+};
+
+exports.decryptUserDetails = async (req, res) => {
+  try{
+
+  
+  decrypted = {};
+  
+  Object.entries(req.body).forEach(([key, value]) => {
+    console.log(`${key}: ${value}`);
+
+  // req.body.forEach(userdetail => {
+   
+    
+    const decryptedValue = CryptoJS.AES.decrypt(
+      value,
+      process.env.CRYPTOJS_SECRET
+    ).toString(CryptoJS.enc.Utf8);
+
+    decrypted[key] = JSON.parse(decryptedValue);
+  });
+ 
+  res
+    .status(200)
+    .json(
+      success("Decrypted successfully! ", decrypted)
+    );
+  }catch (error) {
+    console.error("Error decrypting", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
