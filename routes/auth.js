@@ -872,4 +872,11 @@ router.post(
   "/decrypt-userdetails", authenticate, 
   Auth.decryptUserDetails
 );
+
+router.post(
+  "/register-userdetails-client", 
+  Auth.registerUsersFromClient
+);
+
+router.get("/get-user-details-client", authenticate, Auth.getUserDetailsClient);
 module.exports = router;

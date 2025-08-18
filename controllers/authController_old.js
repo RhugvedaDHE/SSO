@@ -286,126 +286,6 @@ exports.getUserDetails = function (req, res) {
     });
 };
 
-//modified as per the client requirements
-exports.getUserDetailsClient = function (req, res) {
-  let queryOptions = {};
-  // var studentDetails =[];
-  UserPersonalDetails.findOne({
-    where: {
-      user_id: req.user.id,
-    },
-    include: [
-      {
-        model: User,
-        attributes: ["email", "phone"],
-      },
-    ],
-  })
-    .then((userPersonalDetails) => {
-      UserRole.findAll({
-        attributes: [],
-        where: {
-          user_id: req.user.id,
-        },
-        include: [
-          {
-            model: Role,
-            attributes: ["id", "name", "type"],
-          },
-        ],
-      })
-        .then(async (userRole) => {
-          let user_roles = [];
-          //if not student
-          let cio_name_ur;
-          for (ur of userRole) {
-           
-            user_roles.push({
-              id: ur.Role.id,
-              name: ur.Role.name,
-              type: ur.Role.type,
-              
-            });
-          } //for userRole
-
-          UserContact.findOne({
-            where: {
-              user_id: req.user.id,
-            },
-            include: [
-              {
-                model: Taluka,
-                attributes: ["name"],
-                where: {
-                  id: {
-                    [Op.ne]: null, // Only include if semester_id is not zero
-                  },
-                },
-              },
-              {
-                model: State,
-                attributes: ["name"],
-                where: {
-                  id: {
-                    [Op.ne]: null, // Only include if semester_id is not zero
-                  },
-                },
-              },
-              {
-                model: District,
-                attributes: ["name"],
-                where: {
-                  id: {
-                    [Op.ne]: null, // Only include if semester_id is not zero
-                  },
-                },
-              },
-              {
-                model: Country,
-                attributes: ["name"],
-                where: {
-                  id: {
-                    [Op.ne]: null, // Only include if semester_id is not zero
-                  },
-                },
-              },
-            ],
-          }).then(async (userContact) => {
-            let selectedRole = await Role.findOne({
-              attributes: ["id", "name", "type"],
-              where: {
-                id: req.user.role_id,
-              },
-            });
-            console.log("USERDETAILS", userPersonalDetails);
-            const response = {
-              User: userPersonalDetails,
-              physically_disabled_title: userPersonalDetails.physically_disabled
-                ? 1
-                : 2,
-              user_role: user_roles.length ? user_roles : userRole, /////////////////////////////////////
-              user_Contact: userContact,
-            };
-
-            response.type = {};
-            response.selected_role = {};
-            let queryOptions = {};
-            let cio = (cio_name = null);
-            let institute;
-            res
-              .status(200)
-              .json(success("User Details fetched successfully", response));
-          });
-        })
-        .catch((error) => {
-          res.status(400).json(errorResponse(error, 400));
-        });
-    })
-    .catch((error) => {
-      res.status(400).json(errorResponse(error, 400));
-    });
-};
-
 exports.register = async function (req, res) {
   const t = await sequelize.transaction();
   try {
@@ -454,7 +334,6 @@ exports.register = async function (req, res) {
     await UserPersonalDetails.create(
       {
         user_id: userRole.user_id,
-        name_as_per_aadhar: req.body.name_as_per_aadhar,
         firstname: req.body.firstname,
         lastname: req.body.lastname,
         phone: req.body.phone,
@@ -620,7 +499,6 @@ exports.registerHSStudent = async function (req, res) {
       }).then((userRole) => {
         UserPersonalDetails.create({
           user_id: userRole.user_id,
-          name_as_per_aadhar: req.body.name_as_per_aadhar,
           firstname: req.body.firstname,
           lastname: req.body.lastname,
           phone: req.body.phone,
@@ -711,7 +589,6 @@ exports.registerAdmins = function (req, res) {
         //Save SuperAdmin Personal Details
         UserPersonalDetails.create({
           user_id: userRole.user_id,
-          name_as_per_aadhar: req.body.name_as_per_aadhar,
           firstname: req.body.firstname,
           lastname: req.body.lastname,
           phone: req.body.phone,
@@ -817,7 +694,6 @@ exports.registerSuperadmin = function (req, res) {
           //Save SuperAdmin Personal Details
           UserPersonalDetails.create({
             user_id: userRole.user_id,
-            name_as_per_aadhar: req.body.name_as_per_aadhar,
             firstname: req.body.firstname,
             lastname: req.body.lastname,
             phone: req.body.phone,
@@ -1282,19 +1158,10 @@ exports.refreshAccessToken = async (req, res) => {
       return res.status(401).json({ error: "Invalid refresh token" });
     }
 
-    //decrypt the userdetails from the token
-    const decryptedUserId = CryptoJS.AES.decrypt(
-      decoded.userId,
-      process.env.CRYPTOJS_SECRET
-    ).toString(CryptoJS.enc.Utf8);
-    const decryptedUserrole = CryptoJS.AES.decrypt(
-      decoded.userRole,
-      process.env.CRYPTOJS_SECRET
-    ).toString(CryptoJS.enc.Utf8);
-    const decryptedUsername = CryptoJS.AES.decrypt(
-      decoded.username,
-      process.env.CRYPTOJS_SECRET
-    ).toString(CryptoJS.enc.Utf8);
+    //decrypt the userdetails from the token 
+    const decryptedUserId = CryptoJS.AES.decrypt(decoded.userId, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8);
+    const decryptedUserrole = CryptoJS.AES.decrypt(decoded.userRole, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8);
+    const decryptedUsername = CryptoJS.AES.decrypt(decoded.username, process.env.CRYPTOJS_SECRET).toString(CryptoJS.enc.Utf8);
     const userId = parseInt(decryptedUserId, 10);
     const userRole = parseInt(decryptedUserrole, 10);
 
@@ -1520,11 +1387,10 @@ exports.verifyStudent = async (req, res) => {
 
 //requirement for users who log in using e-pramaan
 exports.createUserDetailsForEpramaan = async function (req, res) {
-  let existing = false;
   // const result = await sequelize.transaction(async (t) => {
   // var salt = bcrypt.genSaltSync(10);
   // var hash = bcrypt.hashSync(req.body.password, salt);
-  console.log(req.body);
+
   User.findOne({
     where: {
       [Op.or]: [
@@ -1533,84 +1399,34 @@ exports.createUserDetailsForEpramaan = async function (req, res) {
         { email: req.body.email },
       ],
     },
-  }).then(async (user) => {
+  }).then((user) => {
     if (user) {
-      console.log(
-        "***************************************************************************************************************************"
-      );
-      console.log(user);
-      console.log(user.id);
-      console.log(req.body.username);
-      console.log(
-        "***************************************************************************************************************************"
-      );
-
       tokendata = {
         username: CryptoJS.AES.encrypt(
-          req.body.username,
+          req.user.username,
           process.env.CRYPTOJS_SECRET
         ).toString(),
         userId: CryptoJS.AES.encrypt(
-          user.id.toString(),
+          req.user.id,
           process.env.CRYPTOJS_SECRET
         ).toString(),
         userRole: CryptoJS.AES.encrypt(
-          String(7),
+          7,
           process.env.CRYPTOJS_SECRET
         ).toString(),
       };
-
-      const existingSession = await Session.findOne({
-        where: { user_id: user.id },
-      });
-      if (existingSession) {
-        // Invalidate or delete the existing session (log the user out from previous session)
-        await Session.destroy({ where: { user_id: user.id } });
-        existing = true;
-      }
 
       var token = jwt.sign(
         JSON.parse(JSON.stringify(tokendata)),
         process.env.JWT_SECRET,
         {
-          expiresIn: "1h", //10s 4m
+          expiresIn: 120000,
         }
       );
 
-      // Generate Refresh Token
-      const refreshToken = jwt.sign(
-        JSON.parse(JSON.stringify(tokendata)),
-        process.env.REFRESH_TOKEN_SECRET,
-        {
-          expiresIn: "7d", // Longer-lived
-        }
-      );
-      const expiresAt = moment()
-        .tz(timezone)
-        // .add(1, "hour") // Add 1 hour
-        .add(1, "hour") // Add 5 minute
-        .toDate(); // Convert to JavaScript Date object
-
-      // Save session in database
-      // const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-      // const expiresAt = new Date(Date.now() + 180 * 1000); // 10 s //2m
-      await Session.create({
-        user_id: user.id,
-        token,
-        expires_at: expiresAt,
-        refresh_token: refreshToken,
-      });
-
-      let message = "";
-      existing
-        ? (message = "The previous session has been logged out!")
-        : (message = "User logged in successfully!");
-      res.status(200).json(
-        success(message, {
-          token: token,
-          refreshToken: refreshToken,
-        })
-      );
+      res
+        .status(200)
+        .json(success("Student-User logged in successfully", token));
     } else {
       User.create({
         username: req.body.username,
@@ -1631,7 +1447,6 @@ exports.createUserDetailsForEpramaan = async function (req, res) {
             .then((userRole) => {
               UserPersonalDetails.create({
                 user_id: userRole.user_id,
-                name_as_per_aadhar: req.body.name_as_per_aadhar,
                 firstname: req.body.firstname,
                 lastname: req.body.lastname,
                 phone: req.body.phone,
@@ -1641,7 +1456,7 @@ exports.createUserDetailsForEpramaan = async function (req, res) {
                   UserContact.create({
                     user_id: createdUser.id,
                   })
-                    .then(async (userContact) => {
+                    .then((userContact) => {
                       // const template =
                       //   "Hello " +
                       //   req.body.firstname +
@@ -1652,45 +1467,42 @@ exports.createUserDetailsForEpramaan = async function (req, res) {
                       //   req.body.phone,
                       //   template
                       // );
+                      tokendata = {
+                        username: CryptoJS.AES.encrypt(
+                          createdUser.username,
+                          process.env.CRYPTOJS_SECRET
+                        ).toString(),
+                        userId: CryptoJS.AES.encrypt(
+                          createdUser.id,
+                          process.env.CRYPTOJS_SECRET
+                        ).toString(),
+                        userRole: CryptoJS.AES.encrypt(
+                          7,
+                          process.env.CRYPTOJS_SECRET
+                        ).toString(),
+                      };
 
-                      //user created successfully!
                       var token = jwt.sign(
                         JSON.parse(JSON.stringify(tokendata)),
                         process.env.JWT_SECRET,
                         {
-                          expiresIn: "1h", //10s 4m
+                          expiresIn: 120000,
                         }
                       );
 
-                      // Generate Refresh Token
-                      const refreshToken = jwt.sign(
-                        JSON.parse(JSON.stringify(tokendata)),
-                        process.env.REFRESH_TOKEN_SECRET,
-                        {
-                          expiresIn: "7d", // Longer-lived
-                        }
-                      );
-                      const expiresAt = moment()
-                        .tz(timezone)
-                        // .add(1, "hour") // Add 1 hour
-                        .add(1, "hour") // Add 5 minute
-                        .toDate(); // Convert to JavaScript Date object
+                      // var response =
+                      //   notificationController.createNotification(
+                      //     49,
+                      //     userRole.id,
+                      //     "Registration",
+                      //     "Your Resgistration has been created Successfully! "
+                      //   );
 
-                      // Save session in database
-                      // const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-                      // const expiresAt = new Date(Date.now() + 180 * 1000); // 10 s //2m
-                      await Session.create({
-                        token,
-                        expires_at: expiresAt,
-                        refresh_token: refreshToken,
-                      });
-
-                      res.status(200).json(
-                        success("User created in successfully!", {
-                          token: token,
-                          refreshToken: refreshToken,
-                        })
-                      );
+                      res
+                        .status(200)
+                        .json(
+                          success("Student-User created successfully", token)
+                        );
                     })
                     .catch((error) => {
                       res.status(400).json(errorResponse(error, 400));
@@ -1744,7 +1556,6 @@ exports.registerGEDCAdmin = async function (req, res) {
       //Save SuperAdmin Personal Details
       UserPersonalDetails.create({
         user_id: userRole.user_id,
-        name_as_per_aadhar: req.body.name_as_per_aadhar,
         firstname: req.body.firstname,
         lastname: req.body.lastname,
         phone: req.body.phone,
@@ -1822,7 +1633,6 @@ exports.registerbulkUsers = async function (req, res) {
       try {
         const {
           role_id,
-          name_as_per_aadhar,
           firstname,
           lastname,
           email,
@@ -1870,7 +1680,6 @@ exports.registerbulkUsers = async function (req, res) {
         await UserPersonalDetails.create(
           {
             user_id: userRole.user_id,
-            name_as_per_aadhar,
             firstname,
             lastname,
             phone,
@@ -2275,15 +2084,11 @@ exports.expiryCheck = async (req, res) => {
     const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET);
 
     if (!decoded.exp) {
-      return res
-        .status(400)
-        .json({ error: "Token does not contain expiry information" });
+      return res.status(400).json({ error: "Token does not contain expiry information" });
     }
 
     const expiryTime = new Date(decoded.exp * 1000); // Convert seconds to milliseconds
-    const formattedExpiryTime = moment(expiryTime)
-      .tz(timezone)
-      .format("YYYY-MM-DD HH:mm:ss");
+    const formattedExpiryTime = moment(expiryTime).tz(timezone).format("YYYY-MM-DD HH:mm:ss");
 
     const currentTime = Math.floor(Date.now() / 1000);
 
@@ -2296,9 +2101,10 @@ exports.expiryCheck = async (req, res) => {
       expiryAt: formattedExpiryTime,
       message: `Token is still valid! Expires at ${formattedExpiryTime}`,
     });
+
   } catch (error) {
     console.error("Expiry error:", error);
-
+    
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({ expired: true, message: "Token Expired!" });
     } else if (error.name === "JsonWebTokenError") {
@@ -2347,130 +2153,32 @@ exports.deleteExpiredTokens = async (req, res) => {
 };
 
 exports.decryptUserDetails = async (req, res) => {
-  try {
-    decrypted = {};
+  try{
 
-    Object.entries(req.body).forEach(([key, value]) => {
-      console.log(`${key}: ${value}`);
+  
+  decrypted = {};
+  
+  Object.entries(req.body).forEach(([key, value]) => {
+    console.log(`${key}: ${value}`);
 
-      // req.body.forEach(userdetail => {
-
-      const decryptedValue = CryptoJS.AES.decrypt(
-        value,
-        process.env.CRYPTOJS_SECRET
-      ).toString(CryptoJS.enc.Utf8);
-
-      decrypted[key] = JSON.parse(decryptedValue);
-    });
-
-    res.status(200).json(success("Decrypted successfully! ", decrypted));
-  } catch (error) {
-    console.error("Error decrypting", error);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-exports.registerUsersFromClient = async function (req, res) {
-  const transaction = await sequelize.transaction();
-
-  try {
-    // Hash password
-    const decryptedPassword = CryptoJS.AES.decrypt(
-      req.body.password,
+  // req.body.forEach(userdetail => {
+   
+    
+    const decryptedValue = CryptoJS.AES.decrypt(
+      value,
       process.env.CRYPTOJS_SECRET
     ).toString(CryptoJS.enc.Utf8);
 
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(decryptedPassword, salt);
-
-    // Check if user exists
-    const userExists = await User.findOne({
-      where: {
-        [Op.or]: [
-          { phone: req.body.phone },
-          { email: req.body.email },
-        ],
-      },
-      transaction,
-    });
-
-    // Create or update user
-    const [user, created] = await User.upsert(
-      {
-        id: userExists?.id, // important for update
-        username: req.body.email,
-        password: hash,
-        phone: req.body.phone,
-        email: req.body.email,
-        status: "VER",
-      },
-      { transaction, returning: true }
+    decrypted[key] = JSON.parse(decryptedValue);
+  });
+ 
+  res
+    .status(200)
+    .json(
+      success("Decrypted successfully! ", decrypted)
     );
-
-    const userId = user.id;
-
-    // Assign role to the user
-    await UserRole.upsert(
-      {
-        user_id: userId,
-        role_id: req.body.role_id,
-        preferred_role: true,
-      },
-      { transaction }
-    );
-
-    // Create or update personal details
-    await UserPersonalDetails.upsert(
-      {
-        user_id: userId,
-        name_as_per_aadhar: req.body.name_as_per_aadhar,
-        castcategory_id: req.body.castcategory_id,
-        gender: req.body.gender,
-        firstname: req.body.firstname,
-        lastname: req.body.lastname,
-        phone: req.body.phone,
-        email: req.body.email,
-      },
-      { transaction }
-    );
-
-    // Create contact
-    await UserContact.create(
-      {
-        user_id: userId,
-        address: `${req.body.house_no} ${req.body.waddo_street}`,
-        village: req.body.village_panchayat_municipality,
-        district_id: req.body.district,
-        taluka_id: req.body.taluka,
-        constituency_id: req.body.consituency,
-        pincode: req.body.pincode,
-        phone: req.body.phone,
-        email: req.body.email,
-      },
-      { transaction }
-    );
-
-    // If student
-    if (req.body.role_id == 7) {
-      await StudentEnrollment.upsert(
-        {
-          user_id: userId,
-          institute_id: req.body.institute_id,
-          programme_id: req.body.programme_id,
-          current_class_id: req.body.class,
-          current_semester_id: null,
-          subject_id: null,
-        },
-        { transaction }
-      );
-    }
-
-    await transaction.commit();
-    res.status(200).json(success("User created or updated successfully"));
-
-  } catch (error) {
-    await transaction.rollback();
-    console.error("Error registering users:", error);
-    res.status(400).json(errorResponse("Failed to register users", 400));
+  }catch (error) {
+    console.error("Error decrypting", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };

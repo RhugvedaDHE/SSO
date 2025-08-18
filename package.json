@@ -27,6 +27,8 @@
     "fs": "^0.0.1-security",
     "g": "^2.0.1",
     "helmet": "^8.0.0",
+    "http-proxy": "^1.18.1",
+    "http-proxy-middleware": "^3.0.5",
     "ifsc": "^2.0.28",
     "jose": "^4.8.3",
     "jsonwebtoken": "^9.0.0",

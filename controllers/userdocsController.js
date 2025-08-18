@@ -286,7 +286,7 @@ exports.findByDocTypeId = async (req, res) => {
 
       //const filePath = uploadUrl+"/user/"+userId+"/"+rm.filename;
       const filePath =
-      process.env.REQUEST_PROTOCOL + "://" + req.get("host") + "/static/user/" + rm.filename;
+        req.protocol + "://" + req.get("host") + "/static/user/" + rm.filename;
 
       docsData.push({
         id: rm.id,
@@ -330,7 +330,7 @@ exports.findAll = async (req, res) => {
 
       //const filePath = uploadUrl+"/user/"+userId+"/"+rm.filename;
       const filePath =
-      process.env.REQUEST_PROTOCOL + "://" + req.get("host") + "/static/user/" + rm.filename;
+        req.protocol + "://" + req.get("host") + "/static/user/" + rm.filename;
 
       docsData.push({
         id: rm.id,
@@ -484,7 +484,7 @@ exports.findOne = (req, res) => {
       if (data) {
         var docsData = [];
         const filePath =
-        process.env.REQUEST_PROTOCOL +
+          req.protocol +
           "://" +
           req.get("host") +
           "/static/user/" +
@@ -704,7 +704,7 @@ exports.createUndertakingPdf = async function (req, res) {
       jsondata.push({
         filename: fileName,
         fileurl:
-        process.env.REQUEST_PROTOCOL + "://" + req.get("host") + "/static/user/" + fileName,
+          req.protocol + "://" + req.get("host") + "/static/user/" + fileName,
       });
       res
         .status(200)
@@ -846,7 +846,7 @@ exports.downloadSignedUndertakingPdf = async function (req, res) {
               .json(
                 success(
                   "Student Undertaking document created successfully!",
-                  process.env.REQUEST_PROTOCOL +
+                  req.protocol +
                     "://" +
                     req.get("host") +
                     "/static/user/" +

@@ -293,6 +293,7 @@ exports.getStudentDetails = async function (req, res) {
       attributes: [
         "firstname",
         "lastname",
+        "name_as_per_aadhar",
         "gender",
         "email",
         "phone",
@@ -655,6 +656,7 @@ exports.getStudentDetails = async function (req, res) {
       enrollment_id: studentEntrollmentData.id,
       firstname: userdetails.firstname,
       lastname: userdetails.lastname,
+      name_as_per_aadhar: userdetails.name_as_per_aadhar,
       gender: userdetails.gender,
       gender_title: genderDetails ? genderDetails.name : null,
       castecategory: userdetails.castecategory_id,

@@ -26,7 +26,6 @@ module.exports = passport => {
             console.log("suerid", decryptedUsername)
             User.findByPk(userId)
                 .then(user => {
-                    console.log(user)
                     user.role_id = userRole;
                     if (user) return done(null, user);
                     return done(null, false);

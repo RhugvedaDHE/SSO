@@ -39,7 +39,6 @@ exports.get = async function (req, res) {
         is_active: true,
       },
     });
-
     for (const serviceRole of serviceroles) {
       let service1 = await Service.findOne({
         where: {
@@ -47,19 +46,17 @@ exports.get = async function (req, res) {
           is_active: true,
         },
       });
-      if (service1) {
-        services.push({
-          id: service1.id,
-          name: service1.name,
-          url: service1.url,
-          image_url:
-            req.protocol +
-            "://" +
-            req.get("host") +
-            "/static/service/" +
-            service1.image_url,
-        });
-      }
+      services.push({
+        id: service1.id,
+        name: service1.name,
+        url: service1.url,
+        image_url:
+          req.protocol +
+          "://" +
+          req.get("host") +
+          "/static/service/" +
+          service1.image_url,
+      });
     }
     res
       .status(200)

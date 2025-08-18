@@ -15,6 +15,7 @@ require("dotenv").config();
 const Op = require("sequelize").Op;
 
 exports.generate = async function (req, res) {
+    console.log("tytpe is : ", req.body.type)
   var salt = bcrypt.genSaltSync(10);
   const otp = Math.random().toString(36).substr(2, 5);
 
@@ -25,10 +26,11 @@ exports.generate = async function (req, res) {
         ).toString(CryptoJS.enc.Utf8);
 
   let type = CryptoJS.AES.decrypt(
-    req.body.type,
-    process.env.CRYPTOJS_SECRET
-  ).toString(CryptoJS.enc.Utf8);
-
+          req.body.type,
+          process.env.CRYPTOJS_SECRET
+        ).toString(CryptoJS.enc.Utf8);
+        // type = type.trim().toLowerCase();
+console.log("decrtpted tyyypppeeee iiiissssss:", type )
 
   // Find any user or user personal detail with matching phone or email
   const [user, userPersonal] = await Promise.all([
@@ -66,7 +68,7 @@ exports.generate = async function (req, res) {
       jsondata = [];
       jsondata.push({
         attempts: attempts,
-        // otp: otp,
+        otp: otp,
       });
 
       results.attempts = attempts;
@@ -101,7 +103,7 @@ exports.generate = async function (req, res) {
         } else {
           res.status(400).json(errorResponse("Failed to Forward OTP", 400));
         }
-      } 
+      }
       // else if (type == "update_password"){
       //   const template =
       //     "Hello! OTP To update password is " +
@@ -146,7 +148,7 @@ exports.generate = async function (req, res) {
           var jsondata = [];
           jsondata.push({
             attempts: 1,
-            // otp: otp,
+            otp: otp,
           });
           if (type == "email" || type == "forgot_password") {
             //send OTP to email ;
@@ -199,12 +201,12 @@ exports.generate = async function (req, res) {
           //   } else {
           //     res.status(400).json(errorResponse("Failed to Forward OTP", 400));
           //   }
-          // } 
+          // }
           else {
             var jsondata = [];
             jsondata.push({
               attempts: 1,
-              // otp: otp,
+              otp: otp,
             });
 
             //send OTP to phone
@@ -272,7 +274,7 @@ exports.generateUpdatePassword = async function (req, res) {
       jsondata = [];
       jsondata.push({
         attempts: attempts,
-        // otp: otp,
+        otp: otp,
       });
 
       results.attempts = attempts;
@@ -307,13 +309,13 @@ exports.generateUpdatePassword = async function (req, res) {
           var jsondata = [];
           jsondata.push({
             attempts: 1,
-            // otp: otp,
+            otp: otp,
           });
           // if(req.body.type == "update_password"){
             var jsondata = [];
             jsondata.push({
               attempts: 1,
-              // otp: otp,
+              otp: otp,
             });
 
             //send OTP to phone
@@ -399,8 +401,8 @@ exports.verify = async function (req, res) {
         .json(errorResponse("Time's up! Please try again!", 400));
     }
 
-    if (otpResult.verify_attempts >= 3) { 
-      await OTP.update({ verify_attempts_time:  Date.now()}, { where: { details: otpResult.details } });     
+    if (otpResult.verify_attempts >= 3) {
+      await OTP.update({ verify_attempts_time:  Date.now()}, { where: { details: otpResult.details } });    
       return res
         .status(400)
         .json(
@@ -499,8 +501,8 @@ exports.verifyUpdatepassword = async function (req, res) {
         .json(errorResponse("Time's up! Please try again!", 400));
     }
 
-    if (otpResult.verify_attempts >= 3) { 
-      await OTP.update({ verify_attempts_time:  Date.now()}, { where: { details: otpResult.details } });     
+    if (otpResult.verify_attempts >= 3) {
+      await OTP.update({ verify_attempts_time:  Date.now()}, { where: { details: otpResult.details } });    
       return res
         .status(400)
         .json(

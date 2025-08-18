@@ -10,9 +10,19 @@ const morgan = require('morgan');
 const winston = require('winston');
 const cors = require("cors");
 const helmet = require('helmet');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+const crypto = require("crypto");
+
 application.use(
   cors({
-    origin: "*",
+    // origin: "*",
+    methods: 'GET, POST, PUT, DELETE',
+    allowedHeaders: 'Content-Type, Authorization',
+    preflightContinue: false, // Stop forwarding preflight requests
+    optionsSuccessStatus: 204, // Return 204 for preflight
+    maxAge: 86400 // Cache preflight for 1 day (86400 seconds)
+//     // origin: "http://14.139.114.20:5000",
+    // origin: "http://14.139.114.20:3000",
   })
 );
 
@@ -26,6 +36,8 @@ application.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
   next();
 });
 
@@ -361,3 +373,81 @@ application.use(function (err, req, res, next) {
     error: process.env.NODE_ENV === "development" ? err.stack : {},
   });
 });
+
+//epramaan
+application.get('/api/v1/e-pramaan/get-hmacc', (req, res) => {
+  console.log("in linkURLL api");
+  const clientId = "100001119"; //your service ID
+  const scope = "openid";
+  const stateIdUnprocessed = crypto.randomUUID();
+  const stateId = stateIdUnprocessed.replace(/[^a-zA-Z0-9]/g, "");
+  const redirectUri = "http://14.139.114.25:5000/dashboard"; //your URL goes here (SSO success URL)
+  const requestUri =
+    "https://epstg.meripehchaan.gov.in/openid/jwt/processJwtAuthGrantRequest.do";
+  const responseType = "code";
+  const aesKey = "b4c78596-a2aa-441b-afe7-85844bec3457"; //your AES key goes here
+  const nonceValueUnprocessed = crypto.randomUUID();
+  const nonceValue = nonceValueUnprocessed.replace(/[^a-zA-Z0-9]/g, "");
+  const base64url = require("base64url");
+  const codeVerifierUnprocessed = crypto.randomBytes(24).toString("hex");
+  const codeVerifier = codeVerifierUnprocessed.replace(/[^a-zA-Z0-9]/g, "");
+  const base64Digest = crypto
+    .createHash("sha256")
+    .update(codeVerifier)
+    .digest("base64");
+  const codeChallenge = base64url.fromBase64(base64Digest);
+  const codeChallengeMethod = "S256";
+  const inputValue =
+    clientId +
+    aesKey +
+    stateId +
+    nonceValue +
+    redirectUri +
+    scope +
+    codeChallenge;
+  const apiHmac = crypto
+    .createHmac("sha256", aesKey)
+    .update(inputValue)
+    .digest("base64");
+
+  const link =
+    "https://epstg.meripehchaan.gov.in/openid/jwt/processJwtAuthGrantRequest.do?&scope=" +
+    scope +
+    "&response_type=" +
+    responseType +
+    "&redirect_uri=" +
+    redirectUri +
+    "&state=" +
+    stateId +
+    "&code_challenge_method=" +
+    codeChallengeMethod +
+    "&nonce=" +
+    nonceValue +
+    "&client_id=" +
+    clientId +
+    "&code_challenge=" +
+    codeChallenge +
+    "&request_uri=" +
+    requestUri +
+    "&apiHmac=" +
+    apiHmac +
+    "";
+
+  // console.log("Link = " + link);
+  // console.log("stateId = " + stateId);
+  // console.log("nonce = " + nonceValue);
+  // console.log("codeChallenge = " + codeChallenge);
+  // console.log("apiHmac = " + apiHmac);
+  // console.log("inputValue = " + inputValue);
+  // console.log("codeVerifier = " + codeVerifier);
+
+  const data = [link, clientId, nonceValue, codeVerifier, stateId];
+try {
+    const parsedUrl = new URL(link); // Ensure it's a valid URL
+    return res.redirect(parsedUrl.href); // ✅ Proper way to go to ePramaan
+  } catch (err) {
+    console.error('Invalid URL', err);
+    return res.status(400).send('Invalid redirect URL');
+  }
+});
+//epramaan end

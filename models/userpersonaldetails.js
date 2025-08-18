@@ -33,6 +33,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   UserPersonalDetails.init({
     user_id: DataTypes.INTEGER,
+    name_as_per_aadhar: DataTypes.STRING,
     firstname: DataTypes.STRING,
     lastname: DataTypes.STRING,
     gender: DataTypes.INTEGER,

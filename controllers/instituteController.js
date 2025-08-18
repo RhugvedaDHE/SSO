@@ -301,7 +301,7 @@ exports.getInstituteProgrammesSubjects = async function (req, res) {
     institute.programmeSubjects.forEach((ps) => {
       if (ps.UserDoc) {
         ps.UserDoc.filename =
-          "https" +
+          req.protocol +
           "://" +
           req.get("host") +
           "/static/user/" +
