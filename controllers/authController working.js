@@ -26,8 +26,6 @@ const EntityUser = require("../models").EntityUser;
 const InstituteProgramme = require("../models").InstituteProgramme;
 const OTP = require("../models").OTP;
 const Session = require("../models").Session;
-const NICAddress = require("../models").NICAddress;
-const NICVillageCity = require("../models").NICVillageCity;
 const tokenList = {};
 const CryptoJS = require("crypto-js");
 const axios = require("axios");
@@ -62,7 +60,7 @@ exports.getUserDetails = function (req, res) {
     include: [
       {
         model: User,
-        attributes: ["username", "email", "phone"],
+        attributes: ["email", "phone"],
       },
     ],
   })
@@ -2457,7 +2455,6 @@ exports.registerUsersFromClient = async function (req, res) {
       await existingDetails.update(
         {
           user_id: userId,
-          reg_no: req.body.userid,
           name_as_per_aadhar: req.body.NameInAadhar,
           castcategory_id: req.body.Category,
           gender: req.body.Gender,
@@ -2473,7 +2470,6 @@ exports.registerUsersFromClient = async function (req, res) {
       await UserPersonalDetails.create(
         {
           user_id: userId,
-          reg_no: req.body.userid,
           name_as_per_aadhar: req.body.NameInAadhar,
           castcategory_id: req.body.Category,
           gender: req.body.Gender,
@@ -2493,50 +2489,43 @@ exports.registerUsersFromClient = async function (req, res) {
     //   'Authorization': '12345-ABCDE-67890-FGHIJ',
     //   // 'Content-Type': 'application/json'
     // };
-    // var NICTalukas = [
-    //   {
-    //     "Sr#": 1,
-    //     "Village Code": 626635,
-    //     "Village Name": "Tiracol",
-    //     "Assembly Code": null,
-    //     "Assembly Name": null,
-    //     "Taluka Code": "1 ",
-    //     "Taluka Name": "Pernemm ",
-    //     "District code": "N",
-    //     "District Name": "North Goa"
-    //   },
-    //   {
-    //     "Sr#": 2,
-    //     "Village Code": 626636,
-    //     "Village Name": "Querim",
-    //     "Assembly Code": null,
-    //     "Assembly Name": null,
-    //     "Taluka Code": "1 ",
-    //     "Taluka Name": "Pernem ",
-    //     "District code": "N",
-    //     "District Name": "North Goa"
-    //   },]
+    var NICTalukas = [
+      {
+        "Sr#": 1,
+        "Village Code": 626635,
+        "Village Name": "Tiracol",
+        "Assembly Code": null,
+        "Assembly Name": null,
+        "Taluka Code": "1 ",
+        "Taluka Name": "Pernemm ",
+        "District code": "N",
+        "District Name": "North Goa"
+      },
+      {
+        "Sr#": 2,
+        "Village Code": 626636,
+        "Village Name": "Querim",
+        "Assembly Code": null,
+        "Assembly Name": null,
+        "Taluka Code": "1 ",
+        "Taluka Name": "Pernem ",
+        "District code": "N",
+        "District Name": "North Goa"
+      },]
 
     var taluka;
-    
-    let nicTaluka = null;
-
-    const NICTalukas = await NICAddress.findAll();
-
-    for (const village of NICTalukas) {
-      const talukaName = village.taluka_name?.trim();
-
-      nicTaluka = await Taluka.findOne({
-        where: { name: talukaName }
-      });
-
-      if (nicTaluka) {
-        break; // Stop at first match
-      }
-    }
-
-      
-
+    var nicTaluka;
+    // await axios.get(url, { headers })
+    //   .then(async NICTalukas => {
+    //     console.log("******************************************************************************", NICTalukas);
+        
+        //compare NIC taluka with our talukas
+        for (const village of NICTalukas) {
+          const talukaName = village["Taluka Name"]?.trim(); // clean whitespace
+          nicTaluka = await Taluka.findOne({
+            where: { name: talukaName }
+          });
+        };
       // })
       // .catch(error => {
       //   console.error('Error getting NICTalukas:', error.message);
@@ -2586,15 +2575,12 @@ exports.registerUsersFromClient = async function (req, res) {
     var villageName;
     var village;
     //compare NIC taluka with our talukas
-    await NICVillageCity .findAll({
-      }).then(async (NICVillages) => {
-      for (const village of NICVillages) {
+    for (const village of NICVillages) {
 
-        if (village.village_code == Number(req.body.CityVillage)) {
-          villageName = village.village_name;
-        }
-      };
-    });
+      if (village["Village Code"] == Number(req.body.CityVillage)) {
+        villageName = village["Village Name"];
+      }
+    };
     // await axios.get('http://10.155.18.16/MasterDataAPI/api/masterdata?table=tbl_VillageCity', { headers })
     //   .then(async NICVillages => {
     //     console.log("******************************************************************************", NICVillages);
@@ -2759,99 +2745,4 @@ exports.registerUsersFromClient = async function (req, res) {
     console.error("Error registering users:", error);
     res.status(400).json(errorResponse("Failed to register users", 400));
   }
-};
-
-//parikshak
-const crypto = require('crypto'); //using crypto js library for encryption
-
-const iv = Buffer.from('2E8734EFABDDF3DA'); //Please dont change iv value 
-
-function getKey(secretKey){
-  return crypto.createHash('sha256').update(secretKey).digest();
-}
-
-function encrypt(secretKey, text) {
-  const cipher = crypto.createCipheriv('aes-256-cbc', getKey(secretKey), iv);
-  let encrypted = cipher.update(text, 'utf8', 'base64');
-  encrypted += cipher.final('base64');
-  return encrypted;
-}
-
-function sha256Hash(inputString) {
-  const hash = crypto.createHash('sha256');
-  hash.update(inputString, 'utf8'); 
-  return hash.digest('hex'); 
-}
-
-function generateSecureRandomString(length) {
-  return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
-}
-
-exports.registerUsersFromClientParikshak = async function (req, res) {
-  const username = req.body.username; // you might need to prepend some characters in username for university identification eg: goau_test_student
-  const data = {"username": username, "session": req.body.token}; // sessionHash is randomly generated string used for user identification at verification api
-  const secretKey = "NuFmw8PaYJ!A$Qxs"; //Please change key if needed
-  const encData = encrypt(secretKey, JSON.stringify(data));
-  const checksum = sha256Hash(encData);
-
-  console.log("Encrypted:", encData);
-  console.log("checksum:", checksum);
-
-  const url = `https://parikshak.in/loginSSO.html?username=${encodeURIComponent(username)}&encData=${encodeURIComponent(encData)}&checksum=${encodeURIComponent(checksum)}`;
-  // send above url string to user and open in new tab for authentication 
-  res.status(200).json(
-      success("Parikshak URL generated successfully!", {
-        url: url
-      })
-    ); 
-};
-
-exports.verifyUsersFromClientParikshak = async function (req, res) {
-
-  //parikshak will send the username
-  //find the user id from that
-  // check for the token if it is expired
-  //if expired, generate a new one
-  // or   
-  try {
-    if (!req.body.token) {
-      return res.status(400).json({ error: "Token is required" });
-    }
-
-    const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET);
-
-    if (!decoded.exp) {
-      return res
-        .status(400)
-        .json({ error: "Token does not contain expiry information" });
-    }
-
-    const expiryTime = new Date(decoded.exp * 1000); // Convert seconds to milliseconds
-    const formattedExpiryTime = moment(expiryTime)
-      .tz(timezone)
-      .format("YYYY-MM-DD HH:mm:ss");
-
-    const currentTime = Math.floor(Date.now() / 1000);
-
-    if (decoded.exp < currentTime) {
-      return res.status(401).json({ expired: true, message: "Token Expired!" });
-    }
-
-    return res.status(200).json({
-      expired: false,
-      expiryAt: formattedExpiryTime,
-      message: `Token is still valid! Expires at ${formattedExpiryTime}`,
-    });
-  } catch (error) {
-    console.error("Expiry error:", error);
-
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ expired: true, message: "Token Expired!" });
-    } else if (error.name === "JsonWebTokenError") {
-      return res.status(400).json({ error: "Invalid Token!" });
-    }
-
-    return res.status(500).json({ error: "Internal server error" });
-  }
-
 };

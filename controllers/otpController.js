@@ -24,14 +24,16 @@ exports.generate = async function (req, res) {
           req.body.to,
           process.env.CRYPTOJS_SECRET
         ).toString(CryptoJS.enc.Utf8);
-
+  
+      
   let type = CryptoJS.AES.decrypt(
           req.body.type,
           process.env.CRYPTOJS_SECRET
         ).toString(CryptoJS.enc.Utf8);
         // type = type.trim().toLowerCase();
 console.log("decrtpted tyyypppeeee iiiissssss:", type )
-
+console.log("decrtpted tooooo iiiissssss:", to )
+console.log("from email is: ", process.env.EMAIL_FROM)
   // Find any user or user personal detail with matching phone or email
   const [user, userPersonal] = await Promise.all([
     User.findOne({

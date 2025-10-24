@@ -694,7 +694,7 @@ exports.createUndertakingPdf = async function (req, res) {
     });
 
     if (response) {
-      let userDoc = await UserDocs.findOne({
+      let userDoc = await userDocs.findOne({
         where: {
           user_id: req.user.id,
           doc_type_id: 22,
@@ -827,7 +827,7 @@ exports.downloadSignedUndertakingPdf = async function (req, res) {
           // });
 
           if (response) {
-            let userDoc = UserDocs.findOne({
+            let userDoc = userDocs.findOne({
               where: {
                 user_id: userid,
                 doc_type_id: 22,

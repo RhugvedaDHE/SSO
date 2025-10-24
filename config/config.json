@@ -1,8 +1,8 @@
 {
   "development": {
     "username": "postgres",
-    "password": "123456789",
-    "database": "sso",
+    "password": "admin1234",
+    "database": "ssonew",
     "host": "127.0.0.1",
     "dialect": "postgres",
     "dialectOptions": {
@@ -12,8 +12,8 @@
   },
   "test": {
     "username": "postgres",
-    "password": "123456789",
-    "database": "sso",
+    "password": "admin1234",
+    "database": "ssonew",
     "host": "127.0.0.1",
     "dialect": "postgres",
     "dialectOptions": {
@@ -23,8 +23,8 @@
   },
   "production": {
     "username": "postgres",
-    "password": "123456789",
-    "database": "sso",
+    "password": "admin1234",
+    "database": "ssonew",
     "host": "127.0.0.1",
     "dialect": "postgres",
     "dialectOptions": {

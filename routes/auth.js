@@ -879,4 +879,25 @@ router.post(
 );
 
 router.get("/get-user-details-client", authenticate, Auth.getUserDetailsClient);
+
+router.get('/.well-known/openid-configuration', (req, res) => {
+  const issuer = 'https://sugamaadharapi.unigoa.ac.in';  // use your real issuer
+  res.json({
+    issuer: issuer,
+    jwks_uri: 'Not Applicable',
+    authorization_endpoint: `${issuer}/api/v1/auth`,          // optional
+    token_endpoint: `${issuer}/api/v1/auth/register-userdetails-client`,                  // optional
+    userinfo_endpoint: `${issuer}/api/v1/auth/get-user-details-client`,            // optional
+    response_types_supported: ['token'],
+    subject_types_supported: ['public'],
+    id_token_signing_alg_values_supported: ['HS256'],   // or 'HS256'
+    scopes_supported: ['openid', 'profile', 'email'],
+    token_endpoint_auth_methods_supported: ['client_secret_post'],
+    claims_supported: ['sub', 'email', 'name', 'iat', 'exp'],
+  });
+});
+
+router.post("/register-users-from-parikshak", authenticate, Auth.registerUsersFromClientParikshak);
+router.get("/decrypt-users-from-parikshak", authenticate, Auth.verifyUsersFromClientParikshak);
+
 module.exports = router;

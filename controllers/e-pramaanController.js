@@ -49,15 +49,17 @@ fileio();
 
 exports.createUniquecode = async (req, res) => {
   console.log("in linkURL api");
-  const clientId = "100001119"; //your service ID
+  // const clientId = "100001119"; //staging 
+  const clientId = "100001640"; //your service ID
   const scope = "openid";
   const stateIdUnprocessed = crypto.randomUUID();
   const stateId = stateIdUnprocessed.replace(/[^a-zA-Z0-9]/g, "");
   const redirectUri = "https://sugamaadhar.unigoa.ac.in/dashboard"; //your URL goes here (SSO success URL)
-  const requestUri =
-    "https://epstg.meripehchaan.gov.in/openid/jwt/processJwtAuthGrantRequest.do";
+  // const requestUri = "https://epstg.meripehchaan.gov.in/openid/jwt/processJwtAuthGrantRequest.do";  //staging URL
+  const requestUri = "https://epramaan.meripehchaan.gov.in/openid/jwt/processJwtAuthGrantRequest.do";
   const responseType = "code";
-  const aesKey = "b4c78596-a2aa-441b-afe7-85844bec3457"; //your AES key goes here
+  // const aesKey = "b4c78596-a2aa-441b-afe7-85844bec3457"; //Staging AES key goes here 
+  const aesKey = "4841bfdb-8f32-4aa2-a0cb-cf38fa89269c"; //your AES key goes here 
   const nonceValueUnprocessed = crypto.randomUUID();
   const nonceValue = nonceValueUnprocessed.replace(/[^a-zA-Z0-9]/g, "");
   const base64url = require("base64url");
@@ -83,7 +85,8 @@ exports.createUniquecode = async (req, res) => {
     .digest("base64");
 
   const link =
-    "https://epstg.meripehchaan.gov.in/openid/jwt/processJwtAuthGrantRequest.do?&scope=" +
+    "https://epramaan.meripehchaan.gov.in/openid/jwt/processJwtAuthGrantRequest.do?&scope=" +  
+    // "https://epstg.meripehchaan.gov.in/openid/jwt/processJwtAuthGrantRequest.do?&scope=" +  // staging URL
     // "https://sugamaadhar.unigoa.ac.in/aadhaar-sso?&scope=" + 
     scope +
     "&response_type=" +
@@ -154,9 +157,8 @@ exports.createJWT = async (req, res) => {
     code: [authCode],
     grant_type: ["authorization_code"],
     scope: ["openid"],
-    redirect_uri: [
-      "https://epstg.meripehchaan.gov.in/openid/jwt/processJwtTokenRequest.do",
-    ],
+    // redirect_uri: ["https://epstg.meripehchaan.gov.in/openid/jwt/processJwtTokenRequest.do", ], //staging url
+    redirect_uri: ["https://epramaan.meripehchaan.gov.in/openid/jwt/processJwtTokenRequest.do", ],
     request_uri: [
       "http://localhost:3000/get-jwt", // your backend API's controller URL, ,here backend server runs on port 5050
     ],
@@ -167,7 +169,8 @@ exports.createJWT = async (req, res) => {
 
   var config = {
     method: "post",
-    url: "https://epstg.meripehchaan.gov.in/openid/jwt/processJwtTokenRequest.do",
+    // url: "https://epstg.meripehchaan.gov.in/openid/jwt/processJwtTokenRequest.do", // staging URL
+    url: "https://epramaan.meripehchaan.gov.in/openid/jwt/processJwtTokenRequest.do", 
     headers: {
       "Content-Type": "application/json",
       Cookie: "upid=55FCA86C177AFFC95D36768176345C31",
@@ -253,6 +256,7 @@ exports.createJWT = async (req, res) => {
           phone: decode.mobile_number,
         },
       }).then(async (user) => {
+        console.log("User is *************************************************************************", user)
         if (user) {
           //create a session in db and generate token and refresh token for the user
           tokendata = {
@@ -310,9 +314,6 @@ exports.createJWT = async (req, res) => {
                   expires_at: expiresAt,
                   refresh_token: refreshToken,
                 });
-          
-
-
           res
             .status(200)
             .json(
@@ -351,7 +352,7 @@ exports.createJWT = async (req, res) => {
 exports.logout = async (req, res) => {
   //inputValue = clientId+sessionId+iss+logoutRequestId+sub+redirectUrl
   const requestData = request.body;
-  const clientId = "100001119"; //service ID
+  const clientId = "100001640"; //service ID
   const sessionId = requestData.sessionId; //get it from JWT
   const iss = "ePramaan";
   const logoutRequestIdUnprocessed = crypto.randomUUID();
