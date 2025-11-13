@@ -205,9 +205,8 @@ exports.uploadDoc = async (req, res) => {
       // Remove the file if it exceeds the limit
       fs.unlinkSync(req.file.path); // Optionally remove the file from the filesystem
       return res.status(400).json({
-        message: `Error: ${fileExtension.toUpperCase()} files must be smaller than ${
-          fileSizeLimit / (1024 * 1024)
-        }MB`,
+        message: `Error: ${fileExtension.toUpperCase()} files must be smaller than ${fileSizeLimit / (1024 * 1024)
+          }MB`,
       });
     }
 
@@ -522,6 +521,139 @@ exports.findOne = (req, res) => {
     });
 };
 
+const STATIC_TOKEN = 'a8f3c1d7-5e4b-49f2-9b2e-6f1a3d0c7b5e';
+// Retrieve all UserDocs from the database. (MPGSS)
+exports.getUndertakingWithStaticToken = async (req, res) => {
+  console.log(req.body.user_id);
+  const authHeader = req.headers['authorization'];
+
+  if (!authHeader) {
+    res
+      .status(401)
+      .json(success("Authorization header missing!"));
+  }
+
+  // 2. Extract the token from "Bearer <token>"
+  const tokenParts = authHeader.split(' ');
+  if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
+    res
+      .status(401)
+      .json(success("Invalid authorization format!"));
+  }
+
+  const token = tokenParts[1];
+
+  // 3. Compare with your static token
+  if (token !== STATIC_TOKEN) {
+    res
+      .status(403)
+      .json(success("Invalid Token!"));
+  }
+
+  const userId = req.body.user_id;
+  var condition = userId ? { user_id: { [Op.eq]: userId } } : null;
+
+  const data = await userDocs.findOne({
+    where: {
+      user_id: userId,
+      doc_type_id: 22
+    }
+  });
+
+  if (data) {
+
+
+    //take document type details and add to array below
+    let docTypeData = await docType.findOne({
+      where: {
+        id: 22,
+      },
+    });
+
+    //const filePath = uploadUrl+"/user/"+userId+"/"+rm.filename;
+
+
+    let docsData = [];
+    const filePath =
+      req.protocol + "://" + req.get("host") + "/static/mpgss/user/" + data.filename;
+
+    docsData.push({
+      id: data.id,
+      doc_type_id: data.doc_type_id,
+      doc_type_name: docTypeData ? docTypeData.name : null,
+      filename: data.filename,
+      filepath: filePath,
+    });
+    res
+      .status(200)
+      .json(success("User undertaking fetched successfully!", docsData));
+
+  }
+  else {
+    res
+      .status(400)
+      .json(errorResponse(`Cannot find Student's Documents`, 400));
+  }
+};
+
+// Controller function to handle the request for file access
+exports.viewUndertakingWithStaticToken = async (req, res, next) => {
+  const { filename } = req.params;
+  try {
+
+    const authHeader = req.headers['authorization'];
+
+  if (!authHeader) {
+    res
+      .status(401)
+      .json(success("Authorization header missing!"));
+  }
+
+  // 2. Extract the token from "Bearer <token>"
+  const tokenParts = authHeader.split(' ');
+  if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
+    res
+      .status(401)
+      .json(success("Invalid authorization format!"));
+  }
+
+  const token = tokenParts[1];
+
+  // 3. Compare with your static token
+  if (token !== STATIC_TOKEN) {
+    res
+      .status(403)
+      .json(success("Invalid Token!"));
+  }
+  
+    // Check if the file exists and belongs to the logged-in user
+    const file = await userDocs.findOne({ where: { filename } });
+
+    if (!file) {
+      return res.status(404).send("File not found");
+    }
+
+    // if (file.user_id !== userId) {
+    //   return res.status(403).send("Access denied");
+    // }
+
+    // Construct file path
+    const filePath = path.join(__dirname, "..", "uploads", "user", filename);
+
+    // Serve the file
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error("Error serving file:", err);
+        next(err);
+      }
+    });
+  } catch (error) {
+    console.error("Error accessing file:", error);
+    res.status(500).send("Server error");
+  }
+};
+
+
 // Delete a UserDocs with the specified id in the request
 exports.delete = async (req, res) => {
   const user_id = req.user.id;
@@ -569,7 +701,7 @@ exports.delete = async (req, res) => {
 // exports.delete = (req, res) => {
 //   const user_id = req.user.id;
 //   const id = req.body.doc_id;
-  
+
 //   userDocs
 //     .destroy({
 //       where: {
@@ -662,26 +794,26 @@ exports.createUndertakingPdf = async function (req, res) {
     pdfDoc.pipe(fs.createWriteStream("D:/sso/uploads/user/" + fileName));
     pdfDoc.text(
       "UNDERTAKING \n \n  I, Mr./Miss." +
-        user.firstname +
-        " " +
-        user.lastname +
-        ", hereby, undertake that I have made myself aware of the terms and conditions" +
-        "of the Goa Government Scheme for financial assistance for higher education/technical education under" +
-        "SANT SOHIROBANATH AMBIYE DNYANVRUDDHI SHISHYAVRUTTI (BURSARY SCHEME) \n and I" +
-        "promise to abide by them. I further state that the above information given herein is true to the best of my" +
-        "knowledge and belief. I have not suppressed any relevant information in respect of my application. In the" +
-        "event of any information furnished by me herein, is found to be false or incorrect and/or in the event of any" +
-        "suppression of relevant/ necessary data proved against me, I have noted that I would be disqualified from the" +
-        "scheme and the amount disbursed to me shall become repayable, immediately." +
-        "I further declare that I am not availing any Financial Assistance from the Government under any other" +
-        "scheme through the institution.\n \n \n " +
-        "Dated: \n" +
-        new Date() +
-        "\n \n \n" +
-        "Signature of the Applicant\n\n \n \n" +
-        user.firstname +
-        " " +
-        user.lastname
+      user.firstname +
+      " " +
+      user.lastname +
+      ", hereby, undertake that I have made myself aware of the terms and conditions" +
+      "of the Goa Government Scheme for financial assistance for higher education/technical education under" +
+      "SANT SOHIROBANATH AMBIYE DNYANVRUDDHI SHISHYAVRUTTI (BURSARY SCHEME) \n and I" +
+      "promise to abide by them. I further state that the above information given herein is true to the best of my" +
+      "knowledge and belief. I have not suppressed any relevant information in respect of my application. In the" +
+      "event of any information furnished by me herein, is found to be false or incorrect and/or in the event of any" +
+      "suppression of relevant/ necessary data proved against me, I have noted that I would be disqualified from the" +
+      "scheme and the amount disbursed to me shall become repayable, immediately." +
+      "I further declare that I am not availing any Financial Assistance from the Government under any other" +
+      "scheme through the institution.\n \n \n " +
+      "Dated: \n" +
+      new Date() +
+      "\n \n \n" +
+      "Signature of the Applicant\n\n \n \n" +
+      user.firstname +
+      " " +
+      user.lastname
     );
     pdfDoc.end();
 
@@ -847,10 +979,10 @@ exports.downloadSignedUndertakingPdf = async function (req, res) {
                 success(
                   "Student Undertaking document created successfully!",
                   req.protocol +
-                    "://" +
-                    req.get("host") +
-                    "/static/user/" +
-                    filename
+                  "://" +
+                  req.get("host") +
+                  "/static/user/" +
+                  filename
                 )
               );
           }

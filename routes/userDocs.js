@@ -60,4 +60,7 @@ router.delete("/", userDocs.deleteAll);
 //not in use
 router.get("/static/user/:filename", authenticate, userDocs.getFile);
 
+//get student undertaking without token (MPGSS)
+router.post("/get/undertaking", userDocs.getUndertakingWithStaticToken);
+
 module.exports = router;

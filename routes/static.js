@@ -13,6 +13,9 @@ console.log("In static routes");
 
 //check file ownership
 router.get("/user/:filename", authenticate, userDocs.getFile);
+//MPGSS
+router.get("/mpgss/user/:filename", userDocs.viewUndertakingWithStaticToken);
+
 router.get("/notoken/user/:filename", userDocs.getFileNoToken);
 // router.get("/user/:filename", userDocs.getFile);
 module.exports = router;

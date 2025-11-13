@@ -62,7 +62,7 @@ exports.getUserDetails = function (req, res) {
     include: [
       {
         model: User,
-        attributes: ["username", "email", "phone"],
+        attributes: ["username", "email", "phone", "country_code"],
       },
     ],
   })
