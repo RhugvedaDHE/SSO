@@ -260,6 +260,114 @@ exports.uploadDoc = async (req, res) => {
   });
 };
 
+
+//upload Doc without the token. WITH id. MPGSS
+// Controller function for uploading documents with ID
+exports.uploadDocWithId = async (req, res) => {
+  upload(req, res, async (err) => {
+    // Handle global Multer errors
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ message: `Multer error: ${err.message}` });
+    } else if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+
+    // Check if a file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded!" });
+    }
+
+    // //check for malicious content
+    // // Perform malware scanning
+    // try {
+    //   await scanFileForMaliciousContent(req.file);
+    // } catch (scanErr) {
+    //   // Remove the file if malicious content is detected
+    //   fs.unlinkSync(req.file.path);
+    //   return res.status(400).json({ message: scanErr.message });
+    // }
+
+    // Perform size check after the file upload
+    const fileExtension = path
+      .extname(req.file.originalname)
+      .toLowerCase()
+      .replace(".", "");
+    const fileSizeLimit = fileSizeLimits[fileExtension];
+
+    // Check if the uploaded file exceeds the defined size limit
+    if (req.file.size > fileSizeLimit) {
+      // Remove the file if it exceeds the limit
+      fs.unlinkSync(req.file.path); // Optionally remove the file from the filesystem
+      return res.status(400).json({
+        message: `Error: ${fileExtension.toUpperCase()} files must be smaller than ${fileSizeLimit / (1024 * 1024)
+          }MB`,
+      });
+    }
+
+    // If size check passes, proceed with further logic
+    try {
+        const { doc_type_id } = req.body;
+        const filename = req.file.filename;
+
+        const directoryPath = path.resolve(__dirname, "..", "uploads/user");
+
+        // Fetch existing doc
+        const existingDoc = await userDocs.findOne({
+          where: {
+            user_id: req.body.user_id,
+            doc_type_id: Number(doc_type_id),
+          },
+        });
+
+        // Delete old file if exists
+        if (existingDoc?.filename) {
+          const oldFilePath = path.join(directoryPath, existingDoc.filename);
+          if (fs.existsSync(oldFilePath)) {
+            fs.unlinkSync(oldFilePath);
+          }
+        }
+
+        const userDoc = {
+          user_id: req.body.user_id,
+          doc_type_id: Number(doc_type_id),
+          filename,
+          updatedAt: new Date(),
+        };
+
+        // if(req.body.user_type != "hoi"){        
+          // Delete old DB records
+          await userDocs.destroy({
+            where: {
+              user_id: req.body.user_id,
+              doc_type_id: Number(doc_type_id),
+            },
+          });
+        // }
+
+        // Insert new record
+        await userDocs.create(userDoc);
+        
+        //update the esigned status
+        await User.update(
+        {
+          is_esigned: true,
+        },
+        {
+          where: { id: req.body.user_id }
+        }
+      );
+
+        return res.status(200).json({
+          message: "File uploaded & updated successfully!",
+        });
+
+      } catch (error) {
+        console.error("Error uploading document:", error);
+        res.status(500).json({ message: "Failed to upload document." });
+      }
+  });
+};
+
 // Retrieve all UserDocs of a specific doc type id.
 exports.findByDocTypeId = async (req, res) => {
   console.log(req.params.doc_type_id);
@@ -553,7 +661,7 @@ exports.getUndertakingWithStaticToken = async (req, res) => {
   const userId = req.body.user_id;
   var condition = userId ? { user_id: { [Op.eq]: userId } } : null;
 
-  const data = await userDocs.findOne({
+  const data = await userDocs.findAll({
     where: {
       user_id: userId,
       doc_type_id: 22
@@ -562,32 +670,34 @@ exports.getUndertakingWithStaticToken = async (req, res) => {
 
   if (data) {
 
+    data.forEach(async userdoc => {
+      
+    
+      //take document type details and add to array below
+      let docTypeData = await docType.findOne({
+        where: {
+          id: 22,
+        },
+      });
 
-    //take document type details and add to array below
-    let docTypeData = await docType.findOne({
-      where: {
-        id: 22,
-      },
+      //const filePath = uploadUrl+"/user/"+userId+"/"+rm.filename;
+
+
+      let docsData = [];
+      const filePath =
+        "https://" + req.get("host") + "/static/mpgss/user/" + userdoc.filename;
+
+      docsData.push({
+        id: userdoc.id,
+        doc_type_id: userdoc.doc_type_id,
+        doc_type_name: docTypeData ? docTypeData.name : null,
+        filename: userdoc.filename,
+        filepath: filePath,
+      });
+      res
+        .status(200)
+        .json(success("User undertaking fetched successfully!", docsData));
     });
-
-    //const filePath = uploadUrl+"/user/"+userId+"/"+rm.filename;
-
-
-    let docsData = [];
-    const filePath =
-      req.protocol + "://" + req.get("host") + "/static/mpgss/user/" + data.filename;
-
-    docsData.push({
-      id: data.id,
-      doc_type_id: data.doc_type_id,
-      doc_type_name: docTypeData ? docTypeData.name : null,
-      filename: data.filename,
-      filepath: filePath,
-    });
-    res
-      .status(200)
-      .json(success("User undertaking fetched successfully!", docsData));
-
   }
   else {
     res
@@ -603,29 +713,29 @@ exports.viewUndertakingWithStaticToken = async (req, res, next) => {
 
     const authHeader = req.headers['authorization'];
 
-  if (!authHeader) {
-    res
-      .status(401)
-      .json(success("Authorization header missing!"));
-  }
+    if (!authHeader) {
+      res
+        .status(401)
+        .json(success("Authorization header missing!"));
+    }
 
-  // 2. Extract the token from "Bearer <token>"
-  const tokenParts = authHeader.split(' ');
-  if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
-    res
-      .status(401)
-      .json(success("Invalid authorization format!"));
-  }
+    // 2. Extract the token from "Bearer <token>"
+    const tokenParts = authHeader.split(' ');
+    if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
+      res
+        .status(401)
+        .json(success("Invalid authorization format!"));
+    }
 
-  const token = tokenParts[1];
+    const token = tokenParts[1];
 
-  // 3. Compare with your static token
-  if (token !== STATIC_TOKEN) {
-    res
-      .status(403)
-      .json(success("Invalid Token!"));
-  }
-  
+    // 3. Compare with your static token
+    if (token !== STATIC_TOKEN) {
+      res
+        .status(403)
+        .json(success("Invalid Token!"));
+    }
+
     // Check if the file exists and belongs to the logged-in user
     const file = await userDocs.findOne({ where: { filename } });
 
@@ -650,6 +760,48 @@ exports.viewUndertakingWithStaticToken = async (req, res, next) => {
   } catch (error) {
     console.error("Error accessing file:", error);
     res.status(500).send("Server error");
+  }
+};
+
+// Delete a UserDocs with the specified id in the request
+exports.deleteUndertaking = async (req, res) => {
+  const user_id = req.body.user_id;
+  console.log("user id:", req.body.user_id);
+  // const transaction = await sequelize.transaction();
+
+  try {
+    // Delete the user document
+    const num = await userDocs.destroy({
+      where: { 
+        doc_type_id: 22,
+        user_id: req.body.user_id },
+      // transaction,
+    });
+
+    await User.update(
+      {
+        is_esigned: false,
+        esign_message: "Processing!"
+      },
+      {
+        where: { id: req.body.user_id }
+      }
+    );
+
+    // if (num === 1) {
+      // Commit the transaction
+      // await transaction.commit();
+
+      return res.status(200).json(success("Student undertaking was deleted successfully!"));
+    // } else {
+    //   // Rollback the transaction if no document was deleted
+    //   // await transaction.rollback();
+    //   return res.status(400).json(errorResponse(`Cannot delete UserDocs. Maybe it was not found!`, 400));
+    // }
+  } catch (err) {
+    // Rollback the transaction in case of an error
+    // await transaction.rollback();
+    return res.status(400).json(errorResponse(`Error: ${err.message}`, 400));
   }
 };
 

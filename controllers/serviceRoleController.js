@@ -39,6 +39,7 @@ exports.get = async function (req, res) {
         is_active: true,
       },
     });
+    console.log(serviceroles)
     for (const serviceRole of serviceroles) {
       let service1 = await Service.findOne({
         where: {

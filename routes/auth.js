@@ -728,20 +728,20 @@ router.post(
 //profile
 router.post(
   "/update-profile",
-  [
-    check("firstname").isAlpha().withMessage("Please enter a valid First name"),
-    // check("lastname").isAlpha().withMessage("Please enter a valid First name"),
-    check("email").isEmail().withMessage("Please enter a valid Email"),
-    check("phone")
-      .matches(/^[0-9]{10}$/)
-      .withMessage("Phone number must be 10 digits")
-      .isNumeric()
-      .withMessage("Phone number must contain only numeric digits"),
-    check("aadhar")
-      .matches(/^[0-9]{12}$/)
-      .withMessage("Aadhar number must be 12 digits")
-      .isNumeric()
-      .withMessage("Aadhar number must contain only numeric digits"),
+  // [
+    // check("firstname").isAlpha().withMessage("Please enter a valid First name"),
+    // // check("lastname").isAlpha().withMessage("Please enter a valid First name"),
+    // check("email").isEmail().withMessage("Please enter a valid Email"),
+    // check("phone")
+    //   .matches(/^[0-9]{10}$/)
+    //   .withMessage("Phone number must be 10 digits")
+    //   .isNumeric()
+    //   .withMessage("Phone number must contain only numeric digits"),
+    // check("aadhar")
+    //   .matches(/^[0-9]{12}$/)
+    //   .withMessage("Aadhar number must be 12 digits")
+    //   .isNumeric()
+    //   .withMessage("Aadhar number must contain only numeric digits"),
     // check('dob')
     //   .isDate().withMessage('Please select a valid Date of birth')
     // .custom((value) => {
@@ -761,59 +761,59 @@ router.post(
 
     //     return true;
     // })
-    check("physically_disabled")
-      .isBoolean()
-      .withMessage("Please specify if the person is specially abled or not"),
-    check("castecategory_id")
-      .isNumeric()
-      .withMessage("Please enter a valid Caste-category"),
-    check("religion_id")
-      .not()
-      .isEmpty()
-      .withMessage("Religion field is required")
-      .isNumeric()
-      .withMessage("Please enter a valid Religion"),
-    check("nationality")
-      .not()
-      .isEmpty()
-      .withMessage("Nationality field is required")
-      .isNumeric()
-      .withMessage("Please enter a valid Nationality"),
-    check("blood_group")
-      .not()
-      .isEmpty()
-      .withMessage("Blood group field is required")
-      .isNumeric()
-      .withMessage("Please enter a valid Blood group"),
-    check("gender")
-      .not()
-      .isEmpty()
-      .withMessage("Your gender is required")
-      .isNumeric()
-      .withMessage("Please enter a valid Gender"),
-    check("state_id").isNumeric().withMessage("Please select a valid State"),
-    check("district_id")
-      .isNumeric()
-      .withMessage("Please select a valid District"),
-    check("taluka_id").isNumeric().withMessage("Please select a valid Taluka"),
-    check("country_id")
-      .isNumeric()
-      .withMessage("Please select a valid Country"),
-    check("village").isAlpha().withMessage("Please select a valid Village"),
-    check("pincode")
-      .matches(/^[0-9]{6}$/)
-      .withMessage("Pincode number must be 6 digits")
-      .isNumeric()
-      .withMessage("Pincode number must contain only numeric digits"),
-    check("address")
-      .not()
-      .isEmpty()
-      .withMessage("Your address is required")
-      .isLength({ max: 50 })
-      .withMessage("Address must be 50 characters or less"),
-  ],
+  //   check("physically_disabled")
+  //     .isBoolean()
+  //     .withMessage("Please specify if the person is specially abled or not"),
+  //   check("castecategory_id")
+  //     .isNumeric()
+  //     .withMessage("Please enter a valid Caste-category"),
+  //   check("religion_id")
+  //     .not()
+  //     .isEmpty()
+  //     .withMessage("Religion field is required")
+  //     .isNumeric()
+  //     .withMessage("Please enter a valid Religion"),
+  //   check("nationality")
+  //     .not()
+  //     .isEmpty()
+  //     .withMessage("Nationality field is required")
+  //     .isNumeric()
+  //     .withMessage("Please enter a valid Nationality"),
+  //   check("blood_group")
+  //     .not()
+  //     .isEmpty()
+  //     .withMessage("Blood group field is required")
+  //     .isNumeric()
+  //     .withMessage("Please enter a valid Blood group"),
+  //   check("gender")
+  //     .not()
+  //     .isEmpty()
+  //     .withMessage("Your gender is required")
+  //     .isNumeric()
+  //     .withMessage("Please enter a valid Gender"),
+  //   check("state_id").isNumeric().withMessage("Please select a valid State"),
+  //   check("district_id")
+  //     .isNumeric()
+  //     .withMessage("Please select a valid District"),
+  //   check("taluka_id").isNumeric().withMessage("Please select a valid Taluka"),
+  //   check("country_id")
+  //     .isNumeric()
+  //     .withMessage("Please select a valid Country"),
+  //   check("village").isAlpha().withMessage("Please select a valid Village"),
+  //   check("pincode")
+  //     .matches(/^[0-9]{6}$/)
+  //     .withMessage("Pincode number must be 6 digits")
+  //     .isNumeric()
+  //     .withMessage("Pincode number must contain only numeric digits"),
+  //   check("address")
+  //     .not()
+  //     .isEmpty()
+  //     .withMessage("Your address is required")
+  //     .isLength({ max: 50 })
+  //     .withMessage("Address must be 50 characters or less"),
+  // ],
   authenticate,
-  validate,
+  // validate,
   Auth.updateProfile
 );
 
@@ -899,5 +899,9 @@ router.get('/.well-known/openid-configuration', (req, res) => {
 
 router.post("/register-users-from-parikshak", authenticate, Auth.registerUsersFromClientParikshak);
 router.get("/decrypt-users-from-parikshak", authenticate, Auth.verifyUsersFromClientParikshak);
+
+//esign status change
+
+router.post("/esign-status", Auth.esignStatus);
 
 module.exports = router;

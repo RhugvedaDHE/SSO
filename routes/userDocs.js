@@ -30,6 +30,23 @@ router.post(
   userDocs.uploadDoc
 );
 
+//upload doc without token but with ID
+router.post(
+  "/mpgss/uploaddoc",
+  [
+    // check("doc_type_id")
+    // .isNumeric().withMessage((value, { req }) => {
+    //     return `The value '${req.body.doc_type_id}' is not a valid document type ID. Please enter a valid numeric ID.`;
+    //   }),   
+    // check('file').isImage(file).withMessage('Menu Item is required'),
+  ],
+  validate,
+  userDocs.uploadDocWithId
+);
+
+// Delete undertaking with user_id
+router.post("/delete/docs/undertaking", userDocs.deleteUndertaking);
+
 // Retrieve all user docs By DocTypeId
 router.get("/by-doc-type/:doc_type_id", authenticate, userDocs.findByDocTypeId);
 
@@ -60,7 +77,7 @@ router.delete("/", userDocs.deleteAll);
 //not in use
 router.get("/static/user/:filename", authenticate, userDocs.getFile);
 
-//get student undertaking without token (MPGSS)
+//get student undertaking without token (MPGSS) with static token
 router.post("/get/undertaking", userDocs.getUndertakingWithStaticToken);
 
 module.exports = router;

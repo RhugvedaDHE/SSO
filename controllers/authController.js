@@ -1023,20 +1023,24 @@ exports.login = function (req, res) {
 
 //update profile
 exports.updateProfile = async function (req, res) {
+  console.log(req.body);
   await User.update(
     { status: "RESUB", is_verified: false },
     { where: { id: req.user.id } }
   );
 
-  let aadhar_count = await UserPersonalDetails.findAll({
-    where: {
-      aadhar: req.body.aadhar,
-    },
-  });
+  if(req.body.aadhar){
+      let aadhar_count = await UserPersonalDetails.findAll({
+      where: {
+        aadhar: req.body.aadhar,
+      },
+    });
 
-  if (aadhar_count.length > 1) {
-    res.status(400).json(errorResponse("Aadhar number already exists!", 400));
+    if (aadhar_count.length > 1) {
+      res.status(400).json(errorResponse("Aadhar number already exists!", 400));
+    }
   }
+  
   await UserPersonalDetails.update(req.body, {
     where: { user_id: req.user.id },
   })
@@ -1044,13 +1048,11 @@ exports.updateProfile = async function (req, res) {
       UserContact.update(req.body, {
         where: { user_id: req.user.id },
       }).then((response) => {
-        if (response == 1) {
+        
           return res
             .status(200)
             .json(success("User profile was updated successfully!"));
-        } else {
-          return res.status(400).json(errorResponse("Could not update!", 400));
-        }
+        
       });
     })
     .catch((error) => {
@@ -2788,8 +2790,18 @@ function generateSecureRandomString(length) {
 }
 
 exports.registerUsersFromClientParikshak = async function (req, res) {
+ 
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res
+        .status(401)
+        .json({ error: "Token Not found" });
+  }
+
+  const token = authHeader.split(" ")[1]; // after "Bearer"
+  console.log(token);
   const username = req.body.username; // you might need to prepend some characters in username for university identification eg: goau_test_student
-  const data = {"username": username, "session": req.body.token}; // sessionHash is randomly generated string used for user identification at verification api
+  const data = {"username": username, "session": token}; // sessionHash is randomly generated string used for user identification at verification api
   const secretKey = "NuFmw8PaYJ!A$Qxs"; //Please change key if needed
   const encData = encrypt(secretKey, JSON.stringify(data));
   const checksum = sha256Hash(encData);
@@ -2797,7 +2809,7 @@ exports.registerUsersFromClientParikshak = async function (req, res) {
   console.log("Encrypted:", encData);
   console.log("checksum:", checksum);
 
-  const url = `https://parikshak.in/loginSSO.html?username=${encodeURIComponent(username)}&encData=${encodeURIComponent(encData)}&checksum=${encodeURIComponent(checksum)}`;
+  const url = `https://parikshak.in/loginSSO.html?username=${encodeURIComponent(req.body.username)}&encData=${encodeURIComponent(encData)}&checksum=${encodeURIComponent(checksum)}`;
   // send above url string to user and open in new tab for authentication 
   res.status(200).json(
       success("Parikshak URL generated successfully!", {
@@ -2855,3 +2867,26 @@ exports.verifyUsersFromClientParikshak = async function (req, res) {
   }
 
 };
+
+exports.esignStatus = async function (req, res) {
+
+  //esign will call this API to change the status of the esign variable
+  try {
+      await User.update(
+        {
+          is_esigned: false,
+          esign_message: req.body.message
+        },
+        {
+          where: { id: req.body.user_id }
+        }
+      );
+
+    res.status(200).json(
+      success("Status changed Successfully!")
+    ); 
+  } catch (error) {
+      return res.status(500).json({ error: error });
+  }
+
+};  

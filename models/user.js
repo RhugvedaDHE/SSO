@@ -47,6 +47,11 @@ module.exports = (sequelize, DataTypes) => {
       type:DataTypes.BOOLEAN,
       defaultValue: false
     },
+    is_esigned: {
+      type:DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    esign_message: DataTypes.STRING,
     status: DataTypes.STRING,
     verified_by: DataTypes.INTEGER
   }, {

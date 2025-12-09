@@ -13,6 +13,11 @@ const helmet = require('helmet');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const crypto = require("crypto");
 
+
+
+application.use(express.json());
+application.use(express.urlencoded({ extended: true }));
+
 application.use(
   cors({
     // origin: "*",
@@ -159,7 +164,7 @@ var stateRouter = require("./routes/state");
 var districtRouter = require("./routes/district");
 var talukaRouter = require("./routes/taluka");
 var instituteTypeRouter = require("./routes/instituteType");
-var employmentTypeRouter = require("./routes/employmentType");
+var employmentTypeRouter = require("./routes/EmploymentType");
 var serviceRouter = require("./routes/service");
 var serviceRoleRouter = require("./routes/serviceRole");
 var programmeRouter = require("./routes/programme");
@@ -451,3 +456,88 @@ try {
   }
 });
 //epramaan end
+
+//oidc code 
+const session = require('express-session');
+const { Issuer, generators } = require('openid-client');
+
+
+// Simple session setup
+application.use(session({
+  secret: 'super-secret-key',
+  resave: false,
+  saveUninitialized: true
+}));
+
+let client; // will hold OIDC client
+
+(async () => {
+  // Discover OIDC configuration (well-known endpoint)
+  const issuer = await Issuer.discover(process.env.OIDC_ISSUER);
+  client = new issuer.Client({
+    client_id: process.env.CLIENT_ID,
+    client_secret: process.env.CLIENT_SECRET,
+    redirect_uris: [process.env.REDIRECT_URI],
+    response_types: ['code'],
+  });
+})();
+
+// Login route - redirects to OIDC provider
+application.get('/login', (req, res) => {
+  const code_verifier = generators.codeVerifier();
+  const code_challenge = generators.codeChallenge(code_verifier);
+
+  req.session.code_verifier = code_verifier;
+
+  const authorizationUrl = client.authorizationUrl({
+    scope: 'openid profile email',
+    code_challenge,
+    code_challenge_method: 'S256',
+  });
+
+  res.redirect(authorizationUrl);
+});
+
+// Callback route
+application.get('/oidccallback', async (req, res) => {
+  const params = client.callbackParams(req);
+  const tokenSet = await client.callback(process.env.REDIRECT_URI, params, {
+    code_verifier: req.session.code_verifier,
+  });
+
+  req.session.tokenSet = tokenSet;
+  req.session.userinfo = await client.userinfo(tokenSet.access_token);
+
+  res.redirect('/profile');
+});
+
+// Protected route
+application.get('/profile', (req, res) => {
+  if (!req.session.userinfo) {
+    return res.redirect('/login');
+  }
+
+  res.send(`
+    <h1>Hello, ${req.session.userinfo.name}</h1>
+    <pre>${JSON.stringify(req.session.userinfo, null, 2)}</pre>
+    <a href="/logout">Logout</a>
+  `);
+});
+
+// Logout route
+application.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/');
+  });
+});
+
+// Home
+application.get('/', (req, res) => {
+  res.send('<a href="/login">Login with OIDC Provider</a>');
+});
+
+application.listen(process.env.PORT, () => {
+  console.log(`Server running at http://localhost:${process.env.PORT}`);
+});
+
+//oidc code END
