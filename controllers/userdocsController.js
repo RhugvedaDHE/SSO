@@ -632,58 +632,74 @@ exports.findOne = (req, res) => {
 const STATIC_TOKEN = 'a8f3c1d7-5e4b-49f2-9b2e-6f1a3d0c7b5e';
 // Retrieve all UserDocs from the database. (MPGSS)
 exports.getUndertakingWithStaticToken = async (req, res) => {
-  console.log(req.body.user_id);
-  const authHeader = req.headers['authorization'];
+  try {
+    const authHeader = req.headers['authorization'];
 
-  if (!authHeader) {
-    res
-      .status(401)
-      .json(success("Authorization header missing!"));
-  }
-
-  // 2. Extract the token from "Bearer <token>"
-  const tokenParts = authHeader.split(' ');
-  if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
-    res
-      .status(401)
-      .json(success("Invalid authorization format!"));
-  }
-
-  const token = tokenParts[1];
-
-  // 3. Compare with your static token
-  if (token !== STATIC_TOKEN) {
-    res
-      .status(403)
-      .json(success("Invalid Token!"));
-  }
-
-  const userId = req.body.user_id;
-  var condition = userId ? { user_id: { [Op.eq]: userId } } : null;
-
-  const data = await userDocs.findAll({
-    where: {
-      user_id: userId,
-      doc_type_id: 22
+    if (!authHeader) {
+      return res.status(401).json(success("Authorization header missing!"));
     }
-  });
 
-  if (data) {
+    const tokenParts = authHeader.split(' ');
+    if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
+      return res.status(401).json(success("Invalid authorization format!"));
+    }
 
-    data.forEach(async userdoc => {
-      
-    
-      //take document type details and add to array below
-      let docTypeData = await docType.findOne({
-        where: {
-          id: 22,
-        },
+    const token = tokenParts[1];
+    if (token !== STATIC_TOKEN) {
+      return res.status(403).json(success("Invalid Token!"));
+    }
+
+    const userId = req.body.user_id;
+    if (!userId) {
+      return res.status(400).json(errorResponse("user_id is required", 400));
+    }
+
+    // 🔹 Fetch only message column
+    const messageData = await User.findOne({
+      where: { id: userId },
+      attributes: ['esign_message'],
+      raw: true
+    });
+
+    const message = messageData?.esign_message || null;
+
+    const data = await userDocs.findAll({
+      where: {
+        user_id: userId,
+        doc_type_id: 22
+      }
+    });
+
+    if (!data || data.length === 0) {
+      if (message && message.toLowerCase() === "processing!") {
+        return res.status(202).json({
+          rs: "P",
+          rc: "ER202",
+          rd: "Processing",
+          pd: "",
+          em: message,
+          message: "Request is still under processing"
+        });
+      }
+
+      return res.status(203).json({
+        rs: "F",
+        rc: "ER203",
+        rd: "Failure",
+        pd: "",
+        em: message,
+        message: message
       });
+    }
 
-      //const filePath = uploadUrl+"/user/"+userId+"/"+rm.filename;
+    // 🔹 Fetch doc type ONCE
+    const docTypeData = await docType.findOne({
+      where: { id: 22 }
+    });
 
+    const docsData = [];
 
-      let docsData = [];
+    for (const userdoc of data) {
       const filePath =
         "https://" + req.get("host") + "/static/mpgss/user/" + userdoc.filename;
 
@@ -693,16 +709,17 @@ exports.getUndertakingWithStaticToken = async (req, res) => {
         doc_type_name: docTypeData ? docTypeData.name : null,
         filename: userdoc.filename,
         filepath: filePath,
+        message: message
       });
-      res
-        .status(200)
-        .json(success("User undertaking fetched successfully!", docsData));
-    });
-  }
-  else {
-    res
-      .status(400)
-      .json(errorResponse(`Cannot find Student's Documents`, 400));
+    }
+
+    return res
+      .status(200)
+      .json(success("User undertaking fetched successfully!", docsData));
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json(errorResponse("Server error", 500));
   }
 };
 

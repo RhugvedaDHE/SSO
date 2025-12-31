@@ -2273,6 +2273,7 @@ exports.logout = async (req, res) => {
 //   }
 // };
 
+//function checks/verifies the expiry of the token
 exports.expiryCheck = async (req, res) => {
   try {
     if (!req.body.token) {
@@ -2888,5 +2889,4 @@ exports.esignStatus = async function (req, res) {
   } catch (error) {
       return res.status(500).json({ error: error });
   }
-
-};  
+};
