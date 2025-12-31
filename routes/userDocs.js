@@ -10,6 +10,8 @@ const authenticate = require("../middlewares/authenticate");
 
 console.log("In userDocs routes");
 
+router.get("/get/fetch-all-undertakings", userDocs.getAllUndertakings);
+
 // router.post('/create', [
 //     check('role_id').not().isEmpty().withMessage('Role is required'),
 //     check('menuitem_id').not().isEmpty().withMessage('Menu Item is required'),

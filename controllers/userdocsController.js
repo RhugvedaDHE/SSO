@@ -1079,6 +1079,7 @@ exports.createUndertakingPdf = async function (req, res) {
 
 //     };
 
+
 //download undertaking signedoc (called from PHP)
 exports.downloadSignedUndertakingPdf = async function (req, res) {
   const filename = req.params.filename;
@@ -1168,3 +1169,50 @@ exports.downloadSignedUndertakingPdf = async function (req, res) {
         );
     });
 };
+
+
+//fetch all the signed undertakings
+exports.getAllUndertakings = async (req, res) => {
+  console.log("heyyy therer")
+  try {
+    const data = await userDocs.findAll({
+      where: {
+        doc_type_id: 22
+      }
+    });
+
+    if (!data || data.length === 0) {
+      res.status(400).json(errorResponse(` Some error occurred while fetching all UserDocs`, 400));
+    }
+
+    // 🔹 Fetch doc type ONCE
+    const docTypeData = await docType.findOne({
+      where: { id: 22 }
+    });
+
+    const docsData = [];
+
+    for (const userdoc of data) {
+      const filePath =
+        "https://" + req.get("host") + "/static/mpgss/user/" + userdoc.filename;
+
+      docsData.push({
+        id: userdoc.id,
+        doc_type_id: userdoc.doc_type_id,
+        doc_type_name: docTypeData ? docTypeData.name : null,
+        filename: userdoc.filename,
+        filepath: filePath,
+        created_time: new Date(userdoc.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+      });
+    }
+
+    return res
+      .status(200)
+      .json(success("All User undertakings fetched successfully!", docsData));
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json(errorResponse("Server error", 500));
+  }
+};
+
